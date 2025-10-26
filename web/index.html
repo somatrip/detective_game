@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echoes in the Atrium Dialogue Console</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1f2933;
+      color: #f5f7fa;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)),
+        url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80")
+          center/cover no-repeat fixed;
+    }
+
+    .panel {
+      background-color: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 18px;
+      padding: 2.5rem 2.75rem;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(12px);
+      width: min(420px, 90vw);
+    }
+
+    h1 {
+      margin: 0 0 1.5rem;
+      font-size: 1.875rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(226, 232, 240, 0.9);
+    }
+
+    select,
+    button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 1rem;
+      font-family: inherit;
+      background-color: rgba(30, 41, 59, 0.85);
+      color: #f8fafc;
+      box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus,
+    button:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    }
+
+    button {
+      margin-top: 1.5rem;
+      background: linear-gradient(120deg, #38bdf8, #0ea5e9);
+      border: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: linear-gradient(120deg, #0ea5e9, #0284c7);
+    }
+
+    .hint {
+      margin-top: 1.25rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: rgba(203, 213, 225, 0.85);
+    }
+  </style>
+</head>
+<body>
+  <main class="panel" aria-labelledby="panel-title">
+    <h1 id="panel-title">Dialogue Console</h1>
+    <label for="npc-picker">Select an NPC to interrogate</label>
+    <select id="npc-picker" name="npc-picker">
+      <option value="" disabled selected>Choose a character...</option>
+      <option value="lila-chen">Detective Lila Chen</option>
+      <option value="amelia-reyes">Amelia Reyes — Head Engineer</option>
+      <option value="noah-sterling">Noah Sterling — Co-Founder</option>
+      <option value="celeste-ward">Celeste Ward — Jazz Vocalist</option>
+      <option value="gideon-holt">Gideon Holt — Security Director</option>
+      <option value="mira-kline">Dr. Mira Kline — Ethicist Consultant</option>
+      <option value="eddie-voss">Eddie Voss — Bartender</option>
+      <option value="priya-shah">Priya Shah — Investigative Journalist</option>
+      <option value="marcus-vale">Marcus Vale — Stage Manager</option>
+    </select>
+    <button type="button" id="confirm-btn">Open Channel</button>
+    <p class="hint" id="selection-hint">Choose a contact to begin your investigation.</p>
+  </main>
+  <script>
+    const select = document.getElementById("npc-picker");
+    const hint = document.getElementById("selection-hint");
+
+    select.addEventListener("change", () => {
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption && selectedOption.value) {
+        hint.textContent = `Ready to open a secure line with ${selectedOption.text}.`;
+      } else {
+        hint.textContent = "Choose a contact to begin your investigation.";
+      }
+    });
+  </script>
+</body>
+</html>
