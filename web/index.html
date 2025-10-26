@@ -8,7 +8,7 @@
     :root {
       color-scheme: light dark;
       font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f172a;
+      background-color: #1f2933;
       color: #f5f7fa;
     }
 
@@ -21,25 +21,20 @@
       background: linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)),
         url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80")
           center/cover no-repeat fixed;
-      padding: 2rem 1rem;
-      box-sizing: border-box;
     }
 
     .panel {
       background-color: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(148, 163, 184, 0.3);
       border-radius: 18px;
-      padding: 2.25rem;
+      padding: 2.5rem 2.75rem;
       box-shadow: 0 24px 48px rgba(15, 23, 42, 0.55);
       backdrop-filter: blur(12px);
-      width: min(720px, 95vw);
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
+      width: min(420px, 90vw);
     }
 
     h1 {
-      margin: 0;
+      margin: 0 0 1.5rem;
       font-size: 1.875rem;
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -48,15 +43,16 @@
 
     label {
       display: block;
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
       font-weight: 500;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: rgba(226, 232, 240, 0.9);
     }
 
-    select {
+    select,
+    button {
       width: 100%;
       padding: 0.75rem 1rem;
       border-radius: 12px;
@@ -69,373 +65,66 @@
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    select:focus {
+    select:focus,
+    button:focus {
       outline: none;
       border-color: #38bdf8;
       box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    }
+
+    button {
+      margin-top: 1.5rem;
+      background: linear-gradient(120deg, #38bdf8, #0ea5e9);
+      border: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: linear-gradient(120deg, #0ea5e9, #0284c7);
     }
 
     .hint {
-      margin: 0;
+      margin-top: 1.25rem;
       font-size: 0.9rem;
       line-height: 1.6;
       color: rgba(203, 213, 225, 0.85);
-    }
-
-    .chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .chat-log {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      border-radius: 16px;
-      background: rgba(15, 23, 42, 0.6);
-      min-height: 260px;
-      max-height: 420px;
-      overflow-y: auto;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      scroll-behavior: smooth;
-    }
-
-    .chat-message {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .chat-message.user .bubble {
-      align-self: flex-end;
-      background: linear-gradient(130deg, #38bdf8, #0ea5e9);
-      color: #0f172a;
-    }
-
-    .chat-message.assistant .bubble {
-      align-self: flex-start;
-      background: rgba(30, 41, 59, 0.85);
-      color: #f8fafc;
-    }
-
-    .bubble {
-      padding: 0.85rem 1rem;
-      border-radius: 14px;
-      max-width: 85%;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.35);
-    }
-
-    .sender {
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(148, 163, 184, 0.7);
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 70px;
-      max-height: 160px;
-      padding: 0.85rem 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.85);
-      color: inherit;
-      font-family: inherit;
-      font-size: 1rem;
-      resize: vertical;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
-    }
-
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
-    }
-
-    button[type="submit"] {
-      align-self: flex-end;
-      padding: 0.75rem 1.75rem;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(120deg, #38bdf8, #0ea5e9);
-      color: #0f172a;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.2s ease;
-    }
-
-    button[type="submit"]:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.45);
-    }
-
-    button[type="submit"]:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-      box-shadow: none;
-      transform: none;
-    }
-
-    .status {
-      margin: 0;
-      font-size: 0.85rem;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .empty-state {
-      margin: auto;
-      text-align: center;
-      color: rgba(148, 163, 184, 0.75);
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    .error {
-      color: #fda4af;
     }
   </style>
 </head>
 <body>
   <main class="panel" aria-labelledby="panel-title">
-    <header>
-      <h1 id="panel-title">Dialogue Console</h1>
-      <p class="hint" id="selection-hint">Choose a contact to begin your investigation.</p>
-    </header>
-
-    <section>
-      <label for="npc-picker">Select an NPC to interrogate</label>
-      <select id="npc-picker" name="npc-picker" disabled>
-        <option value="" disabled selected>Choose a character...</option>
-      </select>
-    </section>
-
-    <section class="chat-wrapper" aria-live="polite">
-      <div id="chat-log" class="chat-log" aria-label="Conversation history">
-        <div class="empty-state" id="empty-state">Select a character to open a secure line.</div>
-      </div>
-      <form id="chat-form">
-        <label class="visually-hidden" for="message-input">Type your message</label>
-        <textarea id="message-input" name="message" placeholder="Type your question or accusation..." disabled></textarea>
-        <button type="submit" id="send-btn" disabled>Send</button>
-      </form>
-    </section>
-
-    <p class="status" id="connection-status">Backend: awaiting selection.</p>
+    <h1 id="panel-title">Dialogue Console</h1>
+    <label for="npc-picker">Select an NPC to interrogate</label>
+    <select id="npc-picker" name="npc-picker">
+      <option value="" disabled selected>Choose a character...</option>
+      <option value="lila-chen">Detective Lila Chen</option>
+      <option value="amelia-reyes">Amelia Reyes — Head Engineer</option>
+      <option value="noah-sterling">Noah Sterling — Co-Founder</option>
+      <option value="celeste-ward">Celeste Ward — Jazz Vocalist</option>
+      <option value="gideon-holt">Gideon Holt — Security Director</option>
+      <option value="mira-kline">Dr. Mira Kline — Ethicist Consultant</option>
+      <option value="eddie-voss">Eddie Voss — Bartender</option>
+      <option value="priya-shah">Priya Shah — Investigative Journalist</option>
+      <option value="marcus-vale">Marcus Vale — Stage Manager</option>
+    </select>
+    <button type="button" id="confirm-btn">Open Channel</button>
+    <p class="hint" id="selection-hint">Choose a contact to begin your investigation.</p>
   </main>
-
   <script>
     const select = document.getElementById("npc-picker");
     const hint = document.getElementById("selection-hint");
-    const chatLog = document.getElementById("chat-log");
-    const emptyState = document.getElementById("empty-state");
-    const form = document.getElementById("chat-form");
-    const messageInput = document.getElementById("message-input");
-    const sendBtn = document.getElementById("send-btn");
-    const statusEl = document.getElementById("connection-status");
-
-    const conversationHistory = new Map();
-    let activeNpcId = "";
-    let isSending = false;
-
-    const API_BASE = (() => {
-      const origin = window.location.origin;
-      if (origin.includes("localhost:8000") || origin.includes("127.0.0.1:8000")) {
-        return "";
-      }
-      return "http://localhost:8000";
-    })();
-
-    function setStatus(message, isError = false) {
-      statusEl.textContent = message;
-      statusEl.classList.toggle("error", isError);
-    }
-
-    function setControlsDisabled(isDisabled) {
-      messageInput.disabled = isDisabled || !activeNpcId;
-      sendBtn.disabled = isDisabled || !activeNpcId;
-      select.disabled = isDisabled || npcs.length === 0;
-    }
-
-    const npcs = [];
-
-    async function loadNpcRoster() {
-      setStatus("Loading roster…");
-      try {
-        const response = await fetch(`${API_BASE}/api/npcs`);
-        if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}`);
-        }
-        const data = await response.json();
-        if (!data || !Array.isArray(data.npcs)) {
-          throw new Error("Unexpected response format");
-        }
-
-        npcs.splice(0, npcs.length, ...data.npcs);
-        npcs.sort((a, b) => a.display_name.localeCompare(b.display_name));
-
-        while (select.options.length > 1) {
-          select.remove(1);
-        }
-
-        npcs.forEach((npc) => {
-          const option = document.createElement("option");
-          option.value = npc.npc_id;
-          option.textContent = npc.display_name;
-          select.appendChild(option);
-        });
-
-        select.disabled = false;
-        setStatus("Backend: roster loaded. Choose a contact.");
-      } catch (error) {
-        console.error(error);
-        setStatus(
-          "Unable to load NPC roster. Ensure the backend is running on localhost:8000.",
-          true
-        );
-        setControlsDisabled(true);
-      }
-    }
-
-    function renderHistory(npcId) {
-      chatLog.innerHTML = "";
-      const history = conversationHistory.get(npcId) || [];
-
-      if (!history.length) {
-        emptyState.hidden = false;
-        chatLog.appendChild(emptyState);
-        return;
-      }
-
-      emptyState.hidden = true;
-
-      history.forEach((turn) => {
-        const wrapper = document.createElement("div");
-        wrapper.classList.add("chat-message", turn.role);
-
-        const sender = document.createElement("span");
-        sender.classList.add("sender");
-        sender.textContent = turn.role === "user" ? "You" : select.options[select.selectedIndex]?.text || "NPC";
-
-        const bubble = document.createElement("div");
-        bubble.classList.add("bubble");
-        bubble.textContent = turn.content;
-
-        wrapper.appendChild(sender);
-        wrapper.appendChild(bubble);
-        chatLog.appendChild(wrapper);
-      });
-
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    function resetConversation() {
-      messageInput.value = "";
-      if (!activeNpcId) {
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-        chatLog.innerHTML = "";
-        emptyState.hidden = false;
-        chatLog.appendChild(emptyState);
-      }
-    }
 
     select.addEventListener("change", () => {
       const selectedOption = select.options[select.selectedIndex];
-      activeNpcId = selectedOption?.value || "";
-
-      if (activeNpcId) {
-        hint.textContent = `Secure line opened with ${selectedOption.text}.`; 
-        setControlsDisabled(false);
-        renderHistory(activeNpcId);
-        setStatus("Backend: ready.");
-        messageInput.focus();
+      if (selectedOption && selectedOption.value) {
+        hint.textContent = `Ready to open a secure line with ${selectedOption.text}.`;
       } else {
         hint.textContent = "Choose a contact to begin your investigation.";
-        activeNpcId = "";
-        setStatus("Backend: awaiting selection.");
-        resetConversation();
-        setControlsDisabled(false);
       }
     });
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      if (!activeNpcId || isSending) return;
-
-      const message = messageInput.value.trim();
-      if (!message) {
-        setStatus("Please enter a message before sending.", true);
-        return;
-      }
-
-      isSending = true;
-      messageInput.value = "";
-      setControlsDisabled(true);
-      setStatus("Contacting NPC...");
-
-      const existingHistory = conversationHistory.get(activeNpcId) || [];
-      const optimisticHistory = [...existingHistory, { role: "user", content: message }];
-      conversationHistory.set(activeNpcId, optimisticHistory);
-      renderHistory(activeNpcId);
-
-      try {
-        const response = await fetch(`${API_BASE}/api/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            npc_id: activeNpcId,
-            message,
-            history: existingHistory,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => ({}));
-          const detail = errorPayload.detail || response.statusText;
-          throw new Error(detail);
-        }
-
-        const data = await response.json();
-        conversationHistory.set(activeNpcId, data.history);
-        renderHistory(activeNpcId);
-        setStatus("Response received.");
-      } catch (error) {
-        conversationHistory.set(activeNpcId, existingHistory);
-        renderHistory(activeNpcId);
-        console.error(error);
-        const detail = error instanceof Error ? error.message : "Unknown error";
-        setStatus(`Error contacting NPC: ${detail}`, true);
-      } finally {
-        isSending = false;
-        setControlsDisabled(false);
-        messageInput.focus();
-      }
-    });
-
-    loadNpcRoster();
   </script>
 </body>
 </html>
