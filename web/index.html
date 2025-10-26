@@ -227,17 +227,8 @@
 
     <section>
       <label for="npc-picker">Select an NPC to interrogate</label>
-      <select id="npc-picker" name="npc-picker">
+      <select id="npc-picker" name="npc-picker" disabled>
         <option value="" disabled selected>Choose a character...</option>
-        <option value="lila-chen">Detective Lila Chen</option>
-        <option value="amelia-reyes">Amelia Reyes — Head Engineer</option>
-        <option value="noah-sterling">Noah Sterling — Co-Founder</option>
-        <option value="celeste-ward">Celeste Ward — Jazz Vocalist</option>
-        <option value="gideon-holt">Gideon Holt — Security Director</option>
-        <option value="mira-kline">Dr. Mira Kline — Ethicist Consultant</option>
-        <option value="eddie-voss">Eddie Voss — Bartender</option>
-        <option value="priya-shah">Priya Shah — Investigative Journalist</option>
-        <option value="marcus-vale">Marcus Vale — Stage Manager</option>
       </select>
     </section>
 
@@ -280,6 +271,52 @@
     function setStatus(message, isError = false) {
       statusEl.textContent = message;
       statusEl.classList.toggle("error", isError);
+    }
+
+    function setControlsDisabled(isDisabled) {
+      messageInput.disabled = isDisabled || !activeNpcId;
+      sendBtn.disabled = isDisabled || !activeNpcId;
+      select.disabled = isDisabled || npcs.length === 0;
+    }
+
+    const npcs = [];
+
+    async function loadNpcRoster() {
+      setStatus("Loading roster…");
+      try {
+        const response = await fetch(`${API_BASE}/api/npcs`);
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data || !Array.isArray(data.npcs)) {
+          throw new Error("Unexpected response format");
+        }
+
+        npcs.splice(0, npcs.length, ...data.npcs);
+        npcs.sort((a, b) => a.display_name.localeCompare(b.display_name));
+
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+
+        npcs.forEach((npc) => {
+          const option = document.createElement("option");
+          option.value = npc.npc_id;
+          option.textContent = npc.display_name;
+          select.appendChild(option);
+        });
+
+        select.disabled = false;
+        setStatus("Backend: roster loaded. Choose a contact.");
+      } catch (error) {
+        console.error(error);
+        setStatus(
+          "Unable to load NPC roster. Ensure the backend is running on localhost:8000.",
+          true
+        );
+        setControlsDisabled(true);
+      }
     }
 
     function renderHistory(npcId) {
@@ -331,8 +368,7 @@
 
       if (activeNpcId) {
         hint.textContent = `Secure line opened with ${selectedOption.text}.`; 
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
+        setControlsDisabled(false);
         renderHistory(activeNpcId);
         setStatus("Backend: ready.");
         messageInput.focus();
@@ -341,6 +377,7 @@
         activeNpcId = "";
         setStatus("Backend: awaiting selection.");
         resetConversation();
+        setControlsDisabled(false);
       }
     });
 
@@ -356,8 +393,7 @@
 
       isSending = true;
       messageInput.value = "";
-      messageInput.disabled = true;
-      sendBtn.disabled = true;
+      setControlsDisabled(true);
       setStatus("Contacting NPC...");
 
       const existingHistory = conversationHistory.get(activeNpcId) || [];
@@ -394,11 +430,12 @@
         setStatus(`Error contacting NPC: ${detail}`, true);
       } finally {
         isSending = false;
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
+        setControlsDisabled(false);
         messageInput.focus();
       }
     });
+
+    loadNpcRoster();
   </script>
 </body>
 </html>
