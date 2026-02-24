@@ -3,128 +3,2137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Echoes in the Atrium Dialogue Console</title>
+  <title>Echoes in the Atrium</title>
   <style>
+    /* ── Reset & Variables ─────────────────────────────────── */
     :root {
-      color-scheme: light dark;
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #1f2933;
-      color: #f5f7fa;
+      --bg-dark: #0c1018;
+      --bg-panel: #141b27;
+      --bg-panel-alt: #1a2333;
+      --bg-input: #1e293b;
+      --border: rgba(148,163,184,0.18);
+      --border-active: #38bdf8;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-faint: #64748b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56,189,248,0.25);
+      --danger: #f87171;
+      --success: #34d399;
+      --gold: #fbbf24;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
     }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)),
-        url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80")
-          center/cover no-repeat fixed;
+      font-family: var(--font);
+      background: var(--bg-dark);
+      color: var(--text);
+      overflow: hidden;
     }
 
-    .panel {
-      background-color: rgba(15, 23, 42, 0.92);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 18px;
-      padding: 2.5rem 2.75rem;
-      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(12px);
-      width: min(420px, 90vw);
+    /* ── Intro Screen ──────────────────────────────────────── */
+    #intro-screen {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, rgba(12,16,24,0.97), rgba(20,27,39,0.95)),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23ffffff06' fill='none'/%3E%3C/svg%3E");
     }
-
-    h1 {
-      margin: 0 0 1.5rem;
-      font-size: 1.875rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+    #intro-screen.hidden { display: none; }
+    .intro-card {
+      max-width: 640px; width: 90vw;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5);
+      text-align: center;
     }
-
-    label {
-      display: block;
-      margin-bottom: 0.75rem;
-      font-size: 0.95rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: rgba(226, 232, 240, 0.9);
+    .intro-card h1 {
+      font-size: 2rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    select,
-    button {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      font-size: 1rem;
-      font-family: inherit;
-      background-color: rgba(30, 41, 59, 0.85);
-      color: #f8fafc;
-      box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1);
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    .intro-card .subtitle {
+      font-size: 0.95rem; color: var(--text-dim);
+      margin-bottom: 2rem; font-style: italic;
     }
-
-    select:focus,
-    button:focus {
-      outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    .briefing {
+      text-align: left;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--text-dim);
+      max-height: 320px;
+      overflow-y: auto;
     }
-
-    button {
-      margin-top: 1.5rem;
-      background: linear-gradient(120deg, #38bdf8, #0ea5e9);
-      border: none;
+    .briefing strong { color: var(--text); }
+    .briefing .label {
+      display: inline-block;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .briefing p { margin-bottom: 0.75rem; }
+    #start-btn {
+      background: linear-gradient(120deg, var(--accent), #0ea5e9);
+      border: none; border-radius: 10px;
+      padding: 0.85rem 2.5rem;
+      font-size: 1rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #fff; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #start-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+
+    /* ── Main Layout ───────────────────────────────────────── */
+    #game-screen {
+      display: none;
+      height: 100vh;
+      grid-template-columns: 260px 1fr 300px;
+      grid-template-rows: 1fr;
+    }
+    #game-screen.active { display: grid; }
+
+    /* ── Left Sidebar: NPC Roster ──────────────────────────── */
+    .sidebar-left {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 1.25rem 1rem 0.75rem;
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-faint);
+      border-bottom: 1px solid var(--border);
+    }
+    .npc-list {
+      flex: 1; overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .npc-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 0.75rem;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 2px;
+    }
+    .npc-item:hover { background: var(--bg-panel-alt); }
+    .npc-item.active { background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); }
+    .npc-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .npc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .npc-item.active .npc-avatar { border-color: var(--accent); color: var(--accent); }
+    .npc-info { min-width: 0; }
+    .npc-name {
+      font-size: 0.85rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .npc-role {
+      font-size: 0.72rem; color: var(--text-faint);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .npc-badge {
+      margin-left: auto; flex-shrink: 0;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      display: none;
+    }
+    .npc-item.has-talked .npc-badge { display: block; }
+
+    /* Accusation button at bottom of sidebar */
+    .sidebar-actions {
+      padding: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    #accuse-btn {
+      width: 100%;
+      padding: 0.65rem;
+      border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 8px;
+      background: rgba(248,113,113,0.1);
+      color: var(--danger);
+      font-size: 0.8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    #accuse-btn:hover {
+      background: rgba(248,113,113,0.2);
+      border-color: var(--danger);
     }
 
-    button:hover {
-      background: linear-gradient(120deg, #0ea5e9, #0284c7);
+    /* ── Center: Chat Area ─────────────────────────────────── */
+    .chat-area {
+      display: flex; flex-direction: column;
+      background: var(--bg-dark);
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
     }
-
-    .hint {
-      margin-top: 1.25rem;
+    .chat-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      min-height: 60px;
+    }
+    .chat-header-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--bg-input);
+      border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem;
+      color: var(--accent);
+      overflow: hidden;
+    }
+    .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-header-name { font-size: 1rem; font-weight: 600; }
+    .chat-header-status { font-size: 0.78rem; color: var(--text-faint); }
+    /* Portrait display in chat header — large expression portrait */
+    .chat-header-portrait {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      overflow: hidden;
+      background: var(--bg-input);
+      flex-shrink: 0;
+      transition: opacity 0.3s ease;
+    }
+    .chat-header-portrait img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: opacity 0.25s ease;
+    }
+    /* Suspect portrait in accusation modal */
+    .suspect-option img.suspect-portrait {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 0.3rem;
+    }
+    .chat-placeholder {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-faint);
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+    .chat-messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .msg {
+      max-width: 75%;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
       font-size: 0.9rem;
       line-height: 1.6;
-      color: rgba(203, 213, 225, 0.85);
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #1e40af, #1d4ed8);
+      border-bottom-right-radius: 4px;
+    }
+    .msg.assistant {
+      align-self: flex-start;
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg .msg-sender {
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+      color: var(--text-faint);
+    }
+    .msg.user .msg-sender { color: rgba(255,255,255,0.6); }
+    .typing-indicator {
+      align-self: flex-start;
+      padding: 0.8rem 1rem;
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: none;
+    }
+    .typing-indicator.visible { display: flex; gap: 4px; align-items: center; }
+    .typing-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      animation: typingPulse 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingPulse {
+      0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
+      30% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Conversation starters */
+    .chat-starters {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      max-width: 480px;
+      margin: 0 auto;
+      animation: fadeIn 0.4s ease;
+    }
+    .chat-starter-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      line-height: 1.35;
+    }
+    .chat-starter-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+      background: rgba(0, 188, 212, 0.06);
+    }
+
+    /* Chat input */
+    .chat-input-bar {
+      display: none;
+      padding: 1rem 1.5rem;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      gap: 0.75rem; align-items: flex-end;
+    }
+    .chat-input-bar.active { display: flex; }
+    #chat-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: var(--font);
+      resize: none;
+      max-height: 120px;
+      min-height: 42px;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    #chat-input:focus { outline: none; border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--text-faint); }
+    #send-btn {
+      width: 42px; height: 42px;
+      border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+    }
+    #send-btn:hover { transform: scale(1.05); }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    #send-btn svg { width: 18px; height: 18px; }
+
+    /* ── Right Sidebar: Evidence Notebook ───────────────────── */
+    .sidebar-right {
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .evidence-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .evidence-tab {
+      flex: 1;
+      padding: 0.85rem 0.5rem;
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      text-align: center;
+      color: var(--text-faint);
+      background: none; border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .evidence-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .evidence-content {
+      flex: 1; overflow-y: auto;
+      padding: 1rem;
+    }
+    .evidence-panel { display: none; }
+    .evidence-panel.active { display: block; }
+
+    /* Clue items */
+    .clue-item {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .clue-item .clue-label {
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--gold);
+      margin-bottom: 0.25rem;
+    }
+    .clue-item .clue-text {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    /* NPC dossier in notes tab */
+    .dossier-entry {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: border-color 0.2s;
+    }
+    .dossier-entry.has-new-discovery {
+      border-color: var(--gold);
+    }
+    .dossier-header {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+      border-radius: 8px;
+    }
+    .dossier-header:hover { background: var(--bg-panel-alt); }
+    .dossier-chevron {
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+      color: var(--text-faint);
+      transition: transform 0.2s;
+    }
+    .dossier-entry.expanded .dossier-chevron { transform: rotate(90deg); }
+    .dossier-header-info { flex: 1; min-width: 0; }
+    .dossier-entry .dossier-name {
+      font-size: 0.82rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dossier-entry .dossier-detail {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      line-height: 1.3;
+    }
+    .dossier-count-badge {
+      flex-shrink: 0;
+      font-size: 0.6rem; font-weight: 700;
+      min-width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      padding: 0 5px;
+    }
+    .dossier-count-badge.has-new {
+      background: var(--gold);
+      color: var(--bg-dark);
+    }
+    .dossier-body {
+      display: none;
+      padding: 0 0.75rem 0.75rem;
+    }
+    .dossier-entry.expanded .dossier-body { display: block; }
+    .dossier-bio {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .dossier-discoveries {
+      margin-top: 0.5rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .dossier-discoveries-heading {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+    .dossier-discovery-item {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+      padding: 0.3rem 0 0.3rem 0.6rem;
+      border-left: 2px solid var(--accent);
+      margin-bottom: 0.3rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .dossier-discovery-item.new-discovery {
+      border-left-color: var(--gold);
+    }
+    .dossier-no-discoveries {
+      font-size: 0.76rem;
+      color: var(--text-faint);
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .dossier-new-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--bg-dark);
+      background: var(--gold);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      margin-left: 0.4rem;
+    }
+
+    /* ── Accusation Modal ──────────────────────────────────── */
+    #accusation-modal {
+      position: fixed; inset: 0; z-index: 200;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    #accusation-modal.visible { display: flex; }
+    .modal-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: min(500px, 90vw);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5);
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      color: var(--danger);
+    }
+    .modal-card p {
+      font-size: 0.88rem; color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+    .suspect-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .suspect-option {
+      padding: 0.7rem;
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.85rem; font-weight: 500;
+      transition: border-color 0.15s, background 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+    }
+    .suspect-option:hover { border-color: var(--text-faint); }
+    .suspect-option.selected { border-color: var(--danger); background: rgba(248,113,113,0.1); }
+    .modal-actions {
+      display: flex; gap: 0.75rem; justify-content: flex-end;
+    }
+    .modal-actions button {
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    #cancel-accuse {
+      background: var(--bg-input);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    #confirm-accuse {
+      background: var(--danger);
+      color: #fff;
+    }
+    #confirm-accuse:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Outcome Screen ────────────────────────────────────── */
+    #outcome-screen {
+      position: fixed; inset: 0; z-index: 300;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+    }
+    #outcome-screen.visible { display: flex; }
+    .outcome-card {
+      max-width: 520px; width: 90vw;
+      background: var(--bg-panel);
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+    }
+    .outcome-card h2 {
+      font-size: 1.8rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .outcome-card.correct h2 { color: var(--success); }
+    .outcome-card.wrong h2 { color: var(--danger); }
+    .outcome-card .outcome-text {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+    #restart-btn {
+      background: linear-gradient(120deg, var(--accent), #0ea5e9);
+      border: none; border-radius: 10px;
+      padding: 0.8rem 2rem;
+      font-size: 0.95rem; font-weight: 600;
+      color: #fff; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* ── Scrollbar Styling ─────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.35); }
+
+    /* ── Language Toggle ──────────────────────────────────── */
+    .lang-toggle {
+      display: inline-flex;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .lang-btn {
+      padding: 0.3rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      background: var(--bg-input);
+      color: var(--text-faint);
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .lang-btn:not(.active):hover {
+      background: var(--bg-panel-alt);
+      color: var(--text);
+    }
+    .intro-lang-row {
+      margin-bottom: 1.5rem;
+    }
+    .chat-header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Voice: Mic Button ──────────────────────────────── */
+    #mic-btn {
+      width: 42px; height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-input);
+      color: var(--text-faint);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #mic-btn:hover { color: var(--text); border-color: var(--text-faint); }
+    #mic-btn.recording {
+      background: rgba(248,113,113,0.15);
+      border-color: var(--danger);
+      color: var(--danger);
+      animation: micPulse 1.5s infinite;
+    }
+    #mic-btn.processing {
+      color: var(--accent);
+      border-color: var(--accent);
+      cursor: wait;
+    }
+    #mic-btn.voice-mode {
+      background: rgba(56,189,248,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    #mic-btn.voice-mode.recording {
+      background: rgba(248,113,113,0.15);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    #mic-btn.voice-mode.waiting {
+      background: rgba(56,189,248,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+      opacity: 0.6;
+      cursor: default;
+    }
+    #mic-btn svg { width: 18px; height: 18px; }
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(248,113,113,0); }
+    }
+
+    /* ── Voice: Audio Toggle ────────────────────────────── */
+    #audio-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-input);
+      color: var(--text-faint);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #audio-toggle:hover { color: var(--text); }
+    #audio-toggle.active {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    #audio-toggle svg { width: 16px; height: 16px; }
+
+    /* ── Settings Button ───────────────────────────────── */
+    #settings-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-input);
+      color: var(--text-faint);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #settings-btn:hover { color: var(--text); border-color: var(--text-dim); }
+    #settings-btn svg { width: 16px; height: 16px; }
+
+    /* ── Settings Modal ────────────────────────────────── */
+    #settings-modal {
+      position: fixed; inset: 0; z-index: 250;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    #settings-modal.visible { display: flex; }
+    .settings-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 90%; max-width: 360px;
+      overflow: hidden;
+    }
+    .settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-header h2 {
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); margin: 0;
+    }
+    .settings-close-btn {
+      background: none; border: none;
+      color: var(--text-faint); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+      padding: 0 0.2rem;
+      transition: color 0.15s;
+    }
+    .settings-close-btn:hover { color: var(--text); }
+    .settings-body { padding: 1rem 1.25rem; }
+    .settings-row { margin-bottom: 0.75rem; }
+    .settings-row:last-child { margin-bottom: 0; }
+    .settings-danger-btn {
+      width: 100%; padding: 0.65rem;
+      border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 8px;
+      background: rgba(248,113,113,0.1);
+      color: var(--danger);
+      font-size: 0.8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .settings-danger-btn:hover {
+      background: rgba(248,113,113,0.2);
+      border-color: var(--danger);
+    }
+    .settings-cancel-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-input);
+      color: var(--text-dim);
+      font-size: 0.8rem; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .settings-cancel-btn:hover {
+      background: var(--bg-panel-alt);
+      border-color: var(--text-dim);
+    }
+    .settings-confirm {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .settings-confirm p {
+      color: var(--text-dim); font-size: 0.82rem;
+      margin: 0 0 0.75rem; line-height: 1.4;
+    }
+    .settings-confirm-actions {
+      display: flex; gap: 0.5rem; justify-content: flex-end;
+    }
+    .settings-confirm-actions .settings-danger-btn {
+      width: auto; padding: 0.5rem 1rem;
+    }
+
+    /* ── Voice: Per-message replay button ──────────────── */
+    .msg-audio-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 0.4rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-faint);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .msg-audio-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .msg-audio-btn.playing { color: var(--accent); border-color: var(--accent); }
+    .msg-audio-btn svg { width: 12px; height: 12px; }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      #game-screen.active { grid-template-columns: 1fr; }
+      .sidebar-left, .sidebar-right { display: none; }
     }
   </style>
 </head>
 <body>
-  <main class="panel" aria-labelledby="panel-title">
-    <h1 id="panel-title">Dialogue Console</h1>
-    <label for="npc-picker">Select an NPC to interrogate</label>
-    <select id="npc-picker" name="npc-picker">
-      <option value="" disabled selected>Choose a character...</option>
-      <option value="lila-chen">Detective Lila Chen</option>
-      <option value="amelia-reyes">Amelia Reyes — Head Engineer</option>
-      <option value="noah-sterling">Noah Sterling — Co-Founder</option>
-      <option value="celeste-ward">Celeste Ward — Jazz Vocalist</option>
-      <option value="gideon-holt">Gideon Holt — Security Director</option>
-      <option value="mira-kline">Dr. Mira Kline — Ethicist Consultant</option>
-      <option value="eddie-voss">Eddie Voss — Bartender</option>
-      <option value="priya-shah">Priya Shah — Investigative Journalist</option>
-      <option value="marcus-vale">Marcus Vale — Stage Manager</option>
-    </select>
-    <button type="button" id="confirm-btn">Open Channel</button>
-    <p class="hint" id="selection-hint">Choose a contact to begin your investigation.</p>
-  </main>
-  <script>
-    const select = document.getElementById("npc-picker");
-    const hint = document.getElementById("selection-hint");
 
-    select.addEventListener("change", () => {
-      const selectedOption = select.options[select.selectedIndex];
-      if (selectedOption && selectedOption.value) {
-        hint.textContent = `Ready to open a secure line with ${selectedOption.text}.`;
-      } else {
-        hint.textContent = "Choose a contact to begin your investigation.";
+<!-- ════════ Intro Screen ════════ -->
+<div id="intro-screen">
+  <div class="intro-card">
+    <h1 data-i18n="intro.title">Echoes in the Atrium</h1>
+    <p class="subtitle" data-i18n="intro.subtitle">A Murder Mystery Investigation</p>
+    <div class="intro-lang-row">
+      <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="sr">SR</button>
+      </div>
+    </div>
+    <div class="briefing">
+      <span class="label" data-i18n="intro.briefing_label">Case Briefing</span>
+      <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Adrian Shore, CEO of Vireo Dynamics, found dead in his private skydeck office at the Skyline Atrium in Chicago.</p>
+      <p data-i18n="intro.time_of_death" data-i18n-html><strong>Time of Death:</strong> Approximately 11:58 PM, during the midnight product reveal gala for Project Calypso — a neural interface rumored to redefine human-machine collaboration.</p>
+      <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> The lights flickered during the unveiling. When power was restored, Shore was found dead. Stormy weather delayed first responders, giving suspects time to coordinate alibis.</p>
+      <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
+      <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
+      <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> NPCs will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
+    </div>
+    <button id="start-btn" data-i18n="intro.start">Begin Investigation</button>
+  </div>
+</div>
+
+<!-- ════════ Game Screen ════════ -->
+<div id="game-screen">
+
+  <!-- Left: NPC Roster -->
+  <aside class="sidebar-left">
+    <div class="sidebar-header" data-i18n="sidebar.header">Persons of Interest</div>
+    <div class="npc-list" id="npc-list"></div>
+    <div class="sidebar-actions">
+      <button id="accuse-btn" data-i18n="sidebar.accuse">Make an Accusation</button>
+    </div>
+  </aside>
+
+  <!-- Center: Chat -->
+  <section class="chat-area">
+    <div class="chat-header" id="chat-header" style="display:none">
+      <div class="chat-header-avatar" id="header-avatar"></div>
+      <div>
+        <div class="chat-header-name" id="header-name"></div>
+        <div class="chat-header-status" id="header-status" data-i18n="chat.status_available">Available for questioning</div>
+      </div>
+      <div class="chat-header-right">
+        <button id="audio-toggle" title="Toggle NPC voice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="sr">SR</button>
+        </div>
+        <button id="settings-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="chat-placeholder" id="chat-placeholder" data-i18n="chat.placeholder">
+      Select a person of interest to begin interrogation.
+    </div>
+    <div class="chat-messages" id="chat-messages" style="display:none"></div>
+    <div class="typing-indicator" id="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+    <div class="chat-input-bar" id="chat-input-bar">
+      <button id="mic-btn" title="Record voice message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+      </button>
+      <textarea id="chat-input" rows="1" placeholder="Type your question..." data-i18n-placeholder="chat.input_placeholder"></textarea>
+      <button id="send-btn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Right: Evidence Notebook -->
+  <aside class="sidebar-right">
+    <div class="evidence-tabs">
+      <button class="evidence-tab active" data-tab="evidence" data-i18n="evidence.tab">Evidence</button>
+      <button class="evidence-tab" data-tab="notes" data-i18n="evidence.dossiers_tab">Dossiers</button>
+      <button class="evidence-tab" data-tab="timeline" data-i18n="evidence.timeline_tab">Timeline</button>
+    </div>
+    <div class="evidence-content">
+      <div class="evidence-panel active" id="panel-evidence">
+        <div class="empty-state" id="evidence-empty" data-i18n="evidence.empty">No evidence collected yet. Interrogate suspects to uncover clues.</div>
+        <div id="evidence-list"></div>
+      </div>
+      <div class="evidence-panel" id="panel-notes">
+        <div id="dossier-list"></div>
+      </div>
+      <div class="evidence-panel" id="panel-timeline">
+        <div class="empty-state" id="timeline-empty" data-i18n="evidence.timeline_empty">Events will appear here as you piece together what happened.</div>
+        <div id="timeline-list"></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ════════ Settings Modal ════════ -->
+<div id="settings-modal">
+  <div class="settings-card">
+    <div class="settings-header">
+      <h2 data-i18n="settings.title">Settings</h2>
+      <button id="settings-close" class="settings-close-btn">&times;</button>
+    </div>
+    <div class="settings-body">
+      <div id="settings-restart-row" class="settings-row">
+        <button id="settings-restart-btn" class="settings-danger-btn" data-i18n="settings.restart">Restart Investigation</button>
+      </div>
+      <div id="settings-restart-confirm" class="settings-confirm" style="display:none;">
+        <p data-i18n="settings.restart_confirm">Are you sure? All progress will be lost.</p>
+        <div class="settings-confirm-actions">
+          <button id="settings-restart-cancel" class="settings-cancel-btn" data-i18n="settings.restart_cancel">Cancel</button>
+          <button id="settings-restart-yes" class="settings-danger-btn" data-i18n="settings.restart_yes">Yes, restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Accusation Modal ════════ -->
+<div id="accusation-modal">
+  <div class="modal-card">
+    <h2 data-i18n="accuse.title">Formal Accusation</h2>
+    <p data-i18n="accuse.description">This is irreversible. Select the person you believe committed the murder and present your case. Choose carefully — an incorrect accusation will damage your investigation.</p>
+    <div class="suspect-grid" id="suspect-grid"></div>
+    <div class="modal-actions">
+      <button id="cancel-accuse" data-i18n="accuse.cancel">Cancel</button>
+      <button id="confirm-accuse" disabled data-i18n="accuse.confirm">Confirm Accusation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Outcome Screen ════════ -->
+<div id="outcome-screen">
+  <div class="outcome-card" id="outcome-card">
+    <h2 id="outcome-title"></h2>
+    <div class="outcome-text" id="outcome-text"></div>
+    <button id="restart-btn" data-i18n="outcome.restart">New Investigation</button>
+  </div>
+</div>
+
+<script src="i18n.js?v=2"></script>
+<script>
+/* ================================================================
+   ECHOES IN THE ATRIUM — Game Frontend
+   ================================================================ */
+(() => {
+  "use strict";
+
+  const API_BASE = window.location.origin;
+  const CULPRIT_ID = "noah-sterling";
+
+  /* ── NPC metadata (initials & order; roles come from i18n) ── */
+  const NPC_META = {
+    "lila-chen":     { initials: "LC", order: 0 },
+    "amelia-reyes":  { initials: "AR", order: 1 },
+    "noah-sterling": { initials: "NS", order: 2 },
+    "celeste-ward":  { initials: "CW", order: 3 },
+    "gideon-holt":   { initials: "GH", order: 4 },
+    "mira-kline":    { initials: "MK", order: 5 },
+    "eddie-voss":    { initials: "EV", order: 6 },
+    "priya-shah":    { initials: "PS", order: 7 },
+    "marcus-vale":   { initials: "MV", order: 8 },
+  };
+
+  const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
+  const _portraitCache = {};   // npcId:expression → true/false (image exists)
+  let currentExpression = {};  // npcId → last known expression
+
+  function portraitUrl(npcId, expression = "neutral") {
+    return `portraits/${npcId}/${expression}.webp`;
+  }
+
+  /** Build an <img> element for a portrait, falling back to initials on error. */
+  function portraitImg(npcId, expression = "neutral", size = 36) {
+    const meta = NPC_META[npcId] || { initials: "?" };
+    const img = new Image(size, size);
+    img.src = portraitUrl(npcId, expression);
+    img.alt = meta.initials;
+    img.loading = "lazy";
+    img.onerror = function() {
+      // Replace with initials text on load failure
+      this.parentElement.textContent = meta.initials;
+    };
+    return img;
+  }
+
+  /** Update the chat header portrait to the given expression. */
+  function setHeaderExpression(npcId, expression) {
+    if (!VALID_EXPRESSIONS.includes(expression)) expression = "neutral";
+    currentExpression[npcId] = expression;
+    const img = headerAvatar.querySelector("img");
+    if (img) {
+      img.src = portraitUrl(npcId, expression);
+    } else {
+      // Re-create portrait img (previous may have fallen back to text)
+      headerAvatar.innerHTML = "";
+      headerAvatar.appendChild(portraitImg(npcId, expression, 40));
+    }
+  }
+
+  function npcRole(npcId) {
+    return t("role." + npcId);
+  }
+
+  /* ── State ──────────────────────────────────────────────── */
+  let npcs = [];                     // array of {npc_id, display_name}
+  let activeNpcId = null;
+  let conversations = {};            // npc_id -> [{role, content}, ...]
+  let evidence = [];                 // [{id, label, text, source}]
+  let timeline = [];                 // [{time, event}]
+  let discoveries = {};            // npc_id -> [{id, text, evidenceId, timestamp, isNew}]
+  let sending = false;
+  let accusationTarget = null;
+
+  /* ── Voice State ─────────────────────────────────── */
+  let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+  let isTranscribing = false;
+  let audioCache = new Map();
+  let currentAudio = null;
+  let npcVoices = {};
+  let voiceMode = false;
+  let silenceTimer = null;
+  let audioContext = null;
+  let analyserNode = null;
+  let silenceCheckRAF = null;
+
+  /* ── DOM refs ───────────────────────────────────────────── */
+  const $ = (s) => document.querySelector(s);
+  const introScreen    = $("#intro-screen");
+  const gameScreen     = $("#game-screen");
+  const startBtn       = $("#start-btn");
+  const npcListEl      = $("#npc-list");
+  const chatHeader     = $("#chat-header");
+  const headerAvatar   = $("#header-avatar");
+  const headerName     = $("#header-name");
+  const headerStatus   = $("#header-status");
+  const chatPlaceholder= $("#chat-placeholder");
+  const chatMessages   = $("#chat-messages");
+  const typingIndicator= $("#typing-indicator");
+  const chatInputBar   = $("#chat-input-bar");
+  const chatInput      = $("#chat-input");
+  const sendBtn        = $("#send-btn");
+  const accuseBtn      = $("#accuse-btn");
+  const accusationModal= $("#accusation-modal");
+  const suspectGrid    = $("#suspect-grid");
+  const cancelAccuse   = $("#cancel-accuse");
+  const confirmAccuse  = $("#confirm-accuse");
+  const outcomeScreen  = $("#outcome-screen");
+  const outcomeCard    = $("#outcome-card");
+  const outcomeTitle   = $("#outcome-title");
+  const outcomeText    = $("#outcome-text");
+  const restartBtn     = $("#restart-btn");
+  const evidenceList   = $("#evidence-list");
+  const evidenceEmpty  = $("#evidence-empty");
+  const dossierList    = $("#dossier-list");
+  const timelineList   = $("#timeline-list");
+  const timelineEmpty  = $("#timeline-empty");
+  const micBtn         = $("#mic-btn");
+  const audioToggle    = $("#audio-toggle");
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function saveState() {
+    try {
+      localStorage.setItem("echoes_state", JSON.stringify({
+        conversations, evidence, timeline, activeNpcId, discoveries,
+      }));
+    } catch {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem("echoes_state");
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.conversations) conversations = s.conversations;
+      if (s.evidence) evidence = s.evidence;
+      if (s.timeline) timeline = s.timeline;
+      if (s.activeNpcId) activeNpcId = s.activeNpcId;
+      if (s.discoveries) discoveries = s.discoveries;
+    } catch {}
+  }
+
+  function clearState() {
+    if (voiceMode) exitVoiceMode();
+    conversations = {};
+    evidence = [];
+    timeline = [];
+    discoveries = {};
+    activeNpcId = null;
+    localStorage.removeItem("echoes_state");
+    for (const url of audioCache.values()) URL.revokeObjectURL(url);
+    audioCache.clear();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  }
+
+  /* ── Initialize ─────────────────────────────────────────── */
+  async function init() {
+    loadState();
+    try {
+      const res = await fetch(`${API_BASE}/api/npcs`);
+      const data = await res.json();
+      npcs = data.npcs.sort((a, b) => {
+        const oa = NPC_META[a.npc_id]?.order ?? 99;
+        const ob = NPC_META[b.npc_id]?.order ?? 99;
+        return oa - ob;
+      });
+      for (const npc of npcs) {
+        if (npc.voice) npcVoices[npc.npc_id] = npc.voice;
       }
+    } catch {
+      npcs = Object.entries(NPC_META).map(([id, m]) => ({
+        npc_id: id,
+        display_name: id.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" "),
+      }));
+    }
+    renderNpcList();
+    renderDossiers();
+    renderEvidence();
+    renderTimeline();
+
+    if (activeNpcId) {
+      selectNpc(activeNpcId);
+    }
+  }
+
+  /* ── Render NPC List ────────────────────────────────────── */
+  function renderNpcList() {
+    npcListEl.innerHTML = "";
+    for (const npc of npcs) {
+      const meta = NPC_META[npc.npc_id] || { initials: "?" };
+      const item = document.createElement("div");
+      item.className = "npc-item" + (npc.npc_id === activeNpcId ? " active" : "");
+      if (conversations[npc.npc_id]?.length) item.classList.add("has-talked");
+      item.dataset.npcId = npc.npc_id;
+      item.innerHTML = `
+        <div class="npc-avatar"></div>
+        <div class="npc-info">
+          <div class="npc-name">${npc.display_name.split(" — ")[0]}</div>
+          <div class="npc-role">${npcRole(npc.npc_id)}</div>
+        </div>
+        <div class="npc-badge" title="${t('chat.badge_title')}"></div>
+      `;
+      const avatarEl = item.querySelector(".npc-avatar");
+      avatarEl.appendChild(portraitImg(npc.npc_id, "neutral", 36));
+      item.addEventListener("click", () => selectNpc(npc.npc_id));
+      npcListEl.appendChild(item);
+    }
+  }
+
+  /* ── Select NPC ─────────────────────────────────────────── */
+  function selectNpc(npcId) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (voiceMode) exitVoiceMode();
+    activeNpcId = npcId;
+    const npc = npcs.find(n => n.npc_id === npcId);
+    const meta = NPC_META[npcId] || {};
+
+    // Update sidebar selection
+    document.querySelectorAll(".npc-item").forEach(el => {
+      el.classList.toggle("active", el.dataset.npcId === npcId);
     });
-  </script>
+
+    // Show chat header with portrait
+    chatHeader.style.display = "flex";
+    const expr = currentExpression[npcId] || "neutral";
+    headerAvatar.innerHTML = "";
+    headerAvatar.appendChild(portraitImg(npcId, expr, 40));
+    headerName.textContent = npc?.display_name?.split(" — ")[0] || npcId;
+    headerStatus.textContent = t("chat.status_available");
+
+    // Show chat area
+    chatPlaceholder.style.display = "none";
+    chatMessages.style.display = "flex";
+    chatInputBar.classList.add("active");
+
+    // Render conversation history
+    renderMessages();
+    chatInput.focus();
+    saveState();
+  }
+
+  /* ── Render Messages ────────────────────────────────────── */
+  function renderMessages() {
+    chatMessages.innerHTML = "";
+    const history = conversations[activeNpcId] || [];
+
+    if (history.length === 0) {
+      const hint = document.createElement("div");
+      hint.id = "chat-empty-hint";
+      hint.style.cssText = "text-align:center; color:var(--text-faint); font-size:0.85rem; padding:2rem; font-style:italic;";
+      const npcName = npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "this person";
+      hint.textContent = t("chat.hint", { name: npcName });
+      chatMessages.appendChild(hint);
+
+      // Conversation starter buttons
+      const startersDiv = document.createElement("div");
+      startersDiv.className = "chat-starters";
+      for (let n = 1; n <= 3; n++) {
+        const key = `starter.${activeNpcId}.${n}`;
+        const text = t(key);
+        if (text === key) continue; // skip if no translation
+        const btn = document.createElement("button");
+        btn.className = "chat-starter-btn";
+        btn.textContent = text;
+        btn.addEventListener("click", () => sendMessage(text));
+        startersDiv.appendChild(btn);
+      }
+      if (startersDiv.children.length > 0) {
+        chatMessages.appendChild(startersDiv);
+      }
+    }
+
+    for (let i = 0; i < history.length; i++) {
+      appendMessageBubble(history[i].role, history[i].content, i);
+    }
+    scrollToBottom();
+  }
+
+  function appendMessageBubble(role, content, messageIndex) {
+    const div = document.createElement("div");
+    div.className = `msg ${role}`;
+    const senderLabel = role === "user" ? t("chat.sender_you") :
+      (npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "NPC");
+
+    let html = `<div class="msg-sender">${senderLabel}</div>${escapeHtml(content)}`;
+
+    if (role === "assistant" && activeNpcId && messageIndex !== undefined) {
+      const cacheKey = `${activeNpcId}:${messageIndex}`;
+      html += `
+        <button class="msg-audio-btn" data-cache-key="${cacheKey}"
+                data-npc-id="${activeNpcId}" data-msg-index="${messageIndex}"
+                title="${t('voice.replay_title')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>`;
+    }
+
+    div.innerHTML = html;
+
+    const replayBtn = div.querySelector(".msg-audio-btn");
+    if (replayBtn) {
+      replayBtn.addEventListener("click", () => {
+        const npcId = replayBtn.dataset.npcId;
+        const idx = parseInt(replayBtn.dataset.msgIndex, 10);
+        const msgContent = (conversations[npcId] || [])[idx]?.content;
+        if (msgContent) speakText(msgContent, npcId, replayBtn.dataset.cacheKey);
+      });
+    }
+
+    chatMessages.appendChild(div);
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  /* ── Send Message ───────────────────────────────────────── */
+  async function sendMessage(overrideText) {
+    const text = overrideText || chatInput.value.trim();
+    if (!text || !activeNpcId || sending) return;
+
+    sending = true;
+    sendBtn.disabled = true;
+    if (!overrideText) { chatInput.value = ""; autoResize(); }
+
+    // Init conversation array if needed
+    if (!conversations[activeNpcId]) conversations[activeNpcId] = [];
+
+    // Remove the empty-state hint and starters if present
+    const hint = document.getElementById("chat-empty-hint");
+    if (hint) hint.remove();
+    const starters = chatMessages.querySelector(".chat-starters");
+    if (starters) starters.remove();
+
+    // Add user bubble
+    conversations[activeNpcId].push({ role: "user", content: text });
+    const userIdx = conversations[activeNpcId].length - 1;
+    appendMessageBubble("user", text, userIdx);
+    scrollToBottom();
+
+    // Show typing indicator
+    typingIndicator.classList.add("visible");
+    chatMessages.appendChild(typingIndicator);
+    scrollToBottom();
+    headerStatus.textContent = t("chat.status_responding");
+
+    try {
+      const historyForApi = conversations[activeNpcId].slice(0, -1); // exclude latest user msg
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          npc_id: activeNpcId,
+          message: text,
+          history: historyForApi,
+          language: window.currentLang || "en",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Server error" }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      conversations[activeNpcId].push({ role: "assistant", content: data.reply });
+
+      // Hide typing, show response
+      typingIndicator.classList.remove("visible");
+      const assistantIdx = conversations[activeNpcId].length - 1;
+      appendMessageBubble("assistant", data.reply, assistantIdx);
+      scrollToBottom();
+
+      // Auto-play TTS only in voice mode (text chat stays silent)
+      if (voiceMode) {
+        const cacheKey = `${activeNpcId}:${assistantIdx}`;
+        speakText(data.reply, activeNpcId, cacheKey);
+      }
+
+      // Process server-detected evidence
+      detectEvidence(data.evidence_ids || [], activeNpcId);
+
+      // Update NPC expression portrait
+      if (data.expression) {
+        setHeaderExpression(activeNpcId, data.expression);
+      }
+
+      // Mark NPC as talked-to in sidebar
+      const sidebarItem = document.querySelector(`.npc-item[data-npc-id="${activeNpcId}"]`);
+      if (sidebarItem) sidebarItem.classList.add("has-talked");
+
+    } catch (err) {
+      typingIndicator.classList.remove("visible");
+      const errDiv = document.createElement("div");
+      errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
+      errDiv.textContent = t("chat.error", { message: err.message });
+      chatMessages.appendChild(errDiv);
+      scrollToBottom();
+      // Remove the failed user message from history
+      conversations[activeNpcId].pop();
+    }
+
+    headerStatus.textContent = t("chat.status_available");
+    sending = false;
+    sendBtn.disabled = !chatInput.value.trim();
+    saveState();
+  }
+
+  /* ── Evidence Detection ─────────────────────────────────── */
+  /* Evidence catalog — simple ID→label lookup (detection is now server-side via LLM tagging) */
+  const EVIDENCE_CATALOG = {
+    "oil-trace":            { label: "Antique Oil Trace" },
+    "burned-notebook":      { label: "Burned Notebook Fragment" },
+    "keycard-logs":         { label: "Keycard Access Logs" },
+    "key-trail":            { label: "Maintenance Key Trail" },
+    "power-outage":         { label: "Power Outage Evidence" },
+    "encrypted-schedule":   { label: "Encrypted Schedule" },
+    "financial-misconduct": { label: "Financial Misconduct" },
+    "oil-cufflinks":        { label: "Oil on Cufflinks" },
+    "surveillance":         { label: "Surveillance Footage" },
+    "secret-affair":        { label: "Secret Affair" },
+    "audio-recording":      { label: "Audio Recording" },
+    "access-log":           { label: "Unauthorized Access Log" },
+    "tampered-drink":       { label: "Tampered Drink" },
+    "leaked-docs":          { label: "Leaked Documents" },
+    "defense-contract":     { label: "Secret Defense Contract" },
+    "blackmail":            { label: "Blackmail Evidence" },
+    "data-sales":           { label: "Illegal Data Sales" },
+    "lighting-board":       { label: "Altered Lighting Board" },
+    "backdoor-elevator":    { label: "Backdoor Elevator Access" },
+    "calypso-harm":         { label: "Calypso Test Casualties" },
+    "plagiarism":           { label: "Plagiarized Research" },
+    "nda-ip":               { label: "NDA / IP Theft" },
+  };
+
+  /* ── Discovery Map: evidence → NPC dossier notes ───────── */
+  const DISCOVERY_MAP = [
+    { evidenceId: "access-log",        npcId: "amelia-reyes",   discoveryId: "amelia-office-access",  textKey: "discovery.amelia-office-access" },
+    { evidenceId: "calypso-harm",      npcId: "amelia-reyes",   discoveryId: "amelia-beta-test",      textKey: "discovery.amelia-beta-test" },
+    { evidenceId: "nda-ip",            npcId: "amelia-reyes",   discoveryId: "amelia-nda",            textKey: "discovery.amelia-nda" },
+    { evidenceId: "defense-contract",  npcId: "noah-sterling",  discoveryId: "noah-defense-deal",     textKey: "discovery.noah-defense-deal" },
+    { evidenceId: "financial-misconduct", npcId: "noah-sterling", discoveryId: "noah-financial",      textKey: "discovery.noah-financial" },
+    { evidenceId: "oil-cufflinks",     npcId: "noah-sterling",  discoveryId: "noah-oil-cufflinks",    textKey: "discovery.noah-oil-cufflinks" },
+    { evidenceId: "encrypted-schedule", npcId: "noah-sterling", discoveryId: "noah-board-vote",       textKey: "discovery.noah-board-vote" },
+    { evidenceId: "data-sales",        npcId: "noah-sterling",  discoveryId: "noah-data-sales",       textKey: "discovery.noah-data-sales" },
+    { evidenceId: "blackmail",         npcId: "noah-sterling",  discoveryId: "noah-blackmail",        textKey: "discovery.noah-blackmail" },
+    { evidenceId: "secret-affair",     npcId: "celeste-ward",   discoveryId: "celeste-affair",        textKey: "discovery.celeste-affair" },
+    { evidenceId: "audio-recording",   npcId: "celeste-ward",   discoveryId: "celeste-audio-memo",    textKey: "discovery.celeste-audio-memo" },
+    { evidenceId: "surveillance",      npcId: "gideon-holt",    discoveryId: "gideon-sensors",        textKey: "discovery.gideon-sensors" },
+    { evidenceId: "backdoor-elevator", npcId: "gideon-holt",    discoveryId: "gideon-elevator",       textKey: "discovery.gideon-elevator" },
+    { evidenceId: "tampered-drink",    npcId: "gideon-holt",    discoveryId: "gideon-drill",          textKey: "discovery.gideon-drill" },
+    { evidenceId: "leaked-docs",       npcId: "mira-kline",     discoveryId: "mira-whistleblower",    textKey: "discovery.mira-whistleblower" },
+    { evidenceId: "leaked-docs",       npcId: "priya-shah",     discoveryId: "priya-leaked-emails",   textKey: "discovery.priya-leaked-emails" },
+    { evidenceId: "tampered-drink",    npcId: "eddie-voss",     discoveryId: "eddie-sedative",        textKey: "discovery.eddie-sedative" },
+    { evidenceId: "key-trail",         npcId: "eddie-voss",     discoveryId: "eddie-key",             textKey: "discovery.eddie-key" },
+    { evidenceId: "lighting-board",    npcId: "marcus-vale",    discoveryId: "marcus-lighting",       textKey: "discovery.marcus-lighting" },
+    { evidenceId: "power-outage",      npcId: "marcus-vale",    discoveryId: "marcus-power",          textKey: "discovery.marcus-power" },
+  ];
+
+  function detectDiscoveries(newEvidenceId) {
+    let dossierUpdated = false;
+
+    for (const mapping of DISCOVERY_MAP) {
+      if (mapping.evidenceId !== newEvidenceId) continue;
+      if (!discoveries[mapping.npcId]) discoveries[mapping.npcId] = [];
+      if (discoveries[mapping.npcId].find(d => d.id === mapping.discoveryId)) continue;
+
+      discoveries[mapping.npcId].push({
+        id: mapping.discoveryId,
+        text: mapping.textKey,
+        evidenceId: mapping.evidenceId,
+        timestamp: Date.now(),
+        isNew: true,
+      });
+      // Auto-expand the dossier with new info
+      expandedDossiers.add(mapping.npcId);
+      dossierUpdated = true;
+    }
+
+    if (dossierUpdated) {
+      renderDossiers();
+      flashDossierTab();
+    }
+  }
+
+  function flashDossierTab() {
+    const tab = document.querySelector('.evidence-tab[data-tab="notes"]');
+    if (!tab) return;
+    tab.style.color = "var(--gold)";
+    setTimeout(() => { tab.style.color = ""; }, 3000);
+  }
+
+  function clearNewDiscoveryFlags() {
+    let changed = false;
+    for (const npcId of Object.keys(discoveries)) {
+      for (const d of discoveries[npcId]) {
+        if (d.isNew) { d.isNew = false; changed = true; }
+      }
+    }
+    if (changed) {
+      renderDossiers();
+      saveState();
+    }
+  }
+
+  function detectEvidence(evidenceIds, npcId) {
+    const npcName = npcs.find(n => n.npc_id === npcId)?.display_name?.split(" — ")[0] || npcId;
+    let found = false;
+
+    for (const id of evidenceIds) {
+      if (evidence.find(e => e.id === id)) continue; // already known
+      const meta = EVIDENCE_CATALOG[id];
+      if (!meta) continue; // unknown ID
+      evidence.push({
+        id: id,
+        label: meta.label,
+        text: t("evidence.mentioned_by", { name: npcName }),
+        source: npcId,
+      });
+      found = true;
+      detectDiscoveries(id);
+    }
+
+    if (found) {
+      renderEvidence();
+      // Flash the evidence tab
+      const tab = document.querySelector('.evidence-tab[data-tab="evidence"]');
+      tab.style.color = "var(--gold)";
+      setTimeout(() => { tab.style.color = ""; }, 2000);
+    }
+  }
+
+  /* ── Render Evidence ────────────────────────────────────── */
+  function renderEvidence() {
+    evidenceList.innerHTML = "";
+    evidenceEmpty.style.display = evidence.length ? "none" : "block";
+    for (const e of evidence) {
+      const div = document.createElement("div");
+      div.className = "clue-item";
+      div.innerHTML = `<div class="clue-label">${escapeHtml(e.label)}</div>
+        <div class="clue-text">${escapeHtml(e.text)}</div>`;
+      evidenceList.appendChild(div);
+    }
+  }
+
+  /* ── Render Dossiers ────────────────────────────────────── */
+  let expandedDossiers = new Set();  // track which NPC dossiers are expanded
+
+  function renderDossiers() {
+    dossierList.innerHTML = "";
+    for (const npc of npcs) {
+      const npcId = npc.npc_id;
+      const npcDiscoveries = discoveries[npcId] || [];
+      const hasNew = npcDiscoveries.some(d => d.isNew);
+      const isExpanded = expandedDossiers.has(npcId);
+
+      const div = document.createElement("div");
+      div.className = "dossier-entry" + (isExpanded ? " expanded" : "") + (hasNew ? " has-new-discovery" : "");
+      div.dataset.npcId = npcId;
+
+      // Clickable header with chevron + name/role + optional count badge
+      let headerHtml = `
+        <div class="dossier-header">
+          <svg class="dossier-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <div class="dossier-header-info">
+            <div class="dossier-name">${escapeHtml(npc.display_name.split(" — ")[0])}</div>
+            <div class="dossier-detail">${escapeHtml(npcRole(npcId))}</div>
+          </div>`;
+      if (npcDiscoveries.length > 0) {
+        headerHtml += `<span class="dossier-count-badge${hasNew ? " has-new" : ""}">${npcDiscoveries.length}</span>`;
+      }
+      headerHtml += `</div>`;
+
+      // Collapsible body with bio + discoveries
+      let bodyHtml = `<div class="dossier-body">`;
+
+      // Static bio
+      const bioKey = `dossier.${npcId}.bio`;
+      const bioText = t(bioKey);
+      if (bioText !== bioKey) {
+        bodyHtml += `<div class="dossier-bio">${escapeHtml(bioText)}</div>`;
+      }
+
+      // Dynamic discoveries
+      bodyHtml += `<div class="dossier-discoveries">`;
+      bodyHtml += `<div class="dossier-discoveries-heading">${escapeHtml(t("dossier.discoveries_heading"))}</div>`;
+      if (npcDiscoveries.length > 0) {
+        for (const d of npcDiscoveries) {
+          const discoveryText = t(d.text);
+          const isNew = d.isNew ? " new-discovery" : "";
+          const badge = d.isNew ? ` <span class="dossier-new-badge">${escapeHtml(t("dossier.new_badge"))}</span>` : "";
+          bodyHtml += `<div class="dossier-discovery-item${isNew}">${escapeHtml(discoveryText)}${badge}</div>`;
+        }
+      } else {
+        bodyHtml += `<div class="dossier-no-discoveries">${escapeHtml(t("dossier.no_discoveries"))}</div>`;
+      }
+      bodyHtml += `</div>`;
+
+      bodyHtml += `</div>`;
+
+      div.innerHTML = headerHtml + bodyHtml;
+
+      // Toggle expand/collapse on header click
+      div.querySelector(".dossier-header").addEventListener("click", () => {
+        if (expandedDossiers.has(npcId)) {
+          expandedDossiers.delete(npcId);
+          div.classList.remove("expanded");
+        } else {
+          expandedDossiers.add(npcId);
+          div.classList.add("expanded");
+        }
+      });
+
+      dossierList.appendChild(div);
+    }
+  }
+
+  /* ── Render Timeline ────────────────────────────────────── */
+  function renderTimeline() {
+    timelineList.innerHTML = "";
+    timelineEmpty.style.display = timeline.length ? "none" : "block";
+    for (const t of timeline) {
+      const div = document.createElement("div");
+      div.className = "clue-item";
+      div.innerHTML = `<div class="clue-label">${escapeHtml(t.time)}</div>
+        <div class="clue-text">${escapeHtml(t.event)}</div>`;
+      timelineList.appendChild(div);
+    }
+  }
+
+  /* ── Auto-resize textarea ───────────────────────────────── */
+  function autoResize() {
+    chatInput.style.height = "auto";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
+  }
+
+  /* ── Settings Modal ──────────────────────────────────────── */
+  const settingsModal     = $("#settings-modal");
+  const settingsBtn       = $("#settings-btn");
+  const settingsCloseBtn  = $("#settings-close");
+  const settingsRestartBtn   = $("#settings-restart-btn");
+  const settingsRestartRow   = $("#settings-restart-row");
+  const settingsRestartConfirm = $("#settings-restart-confirm");
+  const settingsRestartCancel  = $("#settings-restart-cancel");
+  const settingsRestartYes     = $("#settings-restart-yes");
+
+  function openSettings() {
+    // Reset to default view (hide confirmation)
+    settingsRestartRow.style.display = "";
+    settingsRestartConfirm.style.display = "none";
+    settingsModal.classList.add("visible");
+  }
+
+  function closeSettings() {
+    settingsModal.classList.remove("visible");
+  }
+
+  settingsBtn.addEventListener("click", openSettings);
+  settingsCloseBtn.addEventListener("click", closeSettings);
+  settingsModal.addEventListener("click", (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+
+  settingsRestartBtn.addEventListener("click", () => {
+    settingsRestartRow.style.display = "none";
+    settingsRestartConfirm.style.display = "";
+  });
+
+  settingsRestartCancel.addEventListener("click", () => {
+    settingsRestartRow.style.display = "";
+    settingsRestartConfirm.style.display = "none";
+  });
+
+  settingsRestartYes.addEventListener("click", () => {
+    closeSettings();
+    clearState();
+    // Hide game screen, show intro
+    gameScreen.style.display = "none";
+    chatHeader.style.display = "none";
+    chatMessages.style.display = "none";
+    chatInputBar.classList.remove("active");
+    chatPlaceholder.style.display = "";
+    introScreen.classList.remove("hidden");
+    renderEvidence();
+    renderTimeline();
+    renderDossiers();
+    expandedDossiers.clear();
+  });
+
+  /* ── Accusation System ──────────────────────────────────── */
+  function openAccusationModal() {
+    accusationTarget = null;
+    confirmAccuse.disabled = true;
+    suspectGrid.innerHTML = "";
+
+    const suspects = npcs.filter(n => n.npc_id !== "lila-chen");
+    for (const s of suspects) {
+      const btn = document.createElement("div");
+      btn.className = "suspect-option";
+      // Add portrait + name
+      const img = portraitImg(s.npc_id, "neutral", 48);
+      img.className = "suspect-portrait";
+      btn.appendChild(img);
+      btn.appendChild(document.createTextNode(s.display_name.split(" — ")[0]));
+      btn.dataset.npcId = s.npc_id;
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".suspect-option").forEach(el => el.classList.remove("selected"));
+        btn.classList.add("selected");
+        accusationTarget = s.npc_id;
+        confirmAccuse.disabled = false;
+      });
+      suspectGrid.appendChild(btn);
+    }
+    accusationModal.classList.add("visible");
+  }
+
+  function closeAccusationModal() {
+    accusationModal.classList.remove("visible");
+    accusationTarget = null;
+  }
+
+  function resolveAccusation() {
+    if (!accusationTarget) return;
+    const target = accusationTarget;
+    closeAccusationModal();
+
+    const correct = target === CULPRIT_ID;
+    const accusedName = npcs.find(n => n.npc_id === target)?.display_name?.split(" — ")[0] || target;
+
+    outcomeCard.className = "outcome-card " + (correct ? "correct" : "wrong");
+
+    const interviewCount = Object.keys(conversations).filter(k => conversations[k].length > 0).length;
+    if (correct) {
+      outcomeTitle.textContent = t("outcome.correct_title");
+      outcomeText.innerHTML = t("outcome.correct_text", {
+        name: escapeHtml(accusedName),
+        evidenceCount: evidence.length,
+        interviewCount: interviewCount,
+      });
+    } else {
+      outcomeTitle.textContent = t("outcome.wrong_title");
+      outcomeText.innerHTML = t("outcome.wrong_text", { name: escapeHtml(accusedName) });
+    }
+    outcomeScreen.classList.add("visible");
+  }
+
+  /* ── Event Listeners ────────────────────────────────────── */
+  startBtn.addEventListener("click", () => {
+    introScreen.classList.add("hidden");
+    gameScreen.classList.add("active");
+  });
+
+  chatInput.addEventListener("input", () => {
+    autoResize();
+    sendBtn.disabled = !chatInput.value.trim() || sending;
+  });
+
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener("click", () => sendMessage());
+
+  accuseBtn.addEventListener("click", openAccusationModal);
+  cancelAccuse.addEventListener("click", closeAccusationModal);
+  confirmAccuse.addEventListener("click", resolveAccusation);
+
+  restartBtn.addEventListener("click", () => {
+    clearState();
+    outcomeScreen.classList.remove("visible");
+    gameScreen.classList.remove("active");
+    introScreen.classList.remove("hidden");
+    chatHeader.style.display = "none";
+    chatPlaceholder.style.display = "flex";
+    chatMessages.style.display = "none";
+    chatMessages.innerHTML = "";
+    chatInputBar.classList.remove("active");
+    init();
+  });
+
+  // Evidence tabs
+  document.querySelectorAll(".evidence-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".evidence-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".evidence-panel").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(`panel-${tab.dataset.tab}`).classList.add("active");
+      // Clear "NEW" badges when viewing dossiers
+      if (tab.dataset.tab === "notes") clearNewDiscoveryFlags();
+    });
+  });
+
+  // Close modal on backdrop click
+  accusationModal.addEventListener("click", (e) => {
+    if (e.target === accusationModal) closeAccusationModal();
+  });
+
+  /* ── Voice: Audio Toggle ────────────────────────────────── */
+  function updateAudioToggle() {
+    audioToggle.classList.toggle("active", audioEnabled);
+    audioToggle.title = audioEnabled ? t("voice.audio_on") : t("voice.audio_off");
+  }
+
+  audioToggle.addEventListener("click", () => {
+    audioEnabled = !audioEnabled;
+    localStorage.setItem("echoes_audio", audioEnabled);
+    updateAudioToggle();
+    if (!audioEnabled && currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+  });
+
+  /* ── Voice: TTS Playback ───────────────────────────────── */
+  async function speakText(text, npcId, cacheKey) {
+    if (audioCache.has(cacheKey)) {
+      playAudioBlob(audioCache.get(cacheKey), cacheKey);
+      return;
+    }
+
+    const voice = npcVoices[npcId] || "alloy";
+    try {
+      const res = await fetch(`${API_BASE}/api/speak`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice }),
+      });
+      if (!res.ok) throw new Error(`TTS failed: HTTP ${res.status}`);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      audioCache.set(cacheKey, blobUrl);
+      playAudioBlob(blobUrl, cacheKey);
+    } catch (err) {
+      console.error("TTS error:", err);
+    }
+  }
+
+  function playAudioBlob(blobUrl, cacheKey) {
+    if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+
+    const audio = new Audio(blobUrl);
+    currentAudio = audio;
+
+    const replayBtn = document.querySelector(`.msg-audio-btn[data-cache-key="${cacheKey}"]`);
+    if (replayBtn) replayBtn.classList.add("playing");
+    if (activeNpcId) headerStatus.textContent = t("voice.status_speaking");
+
+    audio.onended = () => {
+      currentAudio = null;
+      if (replayBtn) replayBtn.classList.remove("playing");
+      if (activeNpcId) headerStatus.textContent = t("chat.status_available");
+      // In voice mode, auto-resume listening after NPC finishes speaking
+      if (voiceMode && !sending) {
+        setTimeout(() => { if (voiceMode) startRecording(); }, 400);
+      }
+    };
+    audio.onerror = () => {
+      currentAudio = null;
+      if (replayBtn) replayBtn.classList.remove("playing");
+      if (activeNpcId) headerStatus.textContent = t("chat.status_available");
+      if (voiceMode && !sending) {
+        setTimeout(() => { if (voiceMode) startRecording(); }, 400);
+      }
+    };
+    audio.play().catch(console.error);
+  }
+
+  /* ── Voice: Microphone Recording with Silence Detection ── */
+  const SILENCE_THRESHOLD = 0.01;   // RMS below this = silence
+  const SILENCE_DURATION  = 1500;   // ms of silence before auto-stop
+
+  async function startRecording() {
+    if (isRecording || isTranscribing || sending) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus" : "audio/webm",
+      });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stopSilenceDetection();
+        stream.getTracks().forEach(track => track.stop());
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
+        if (blob.size < 100) {
+          // Too short — if voice mode, resume listening
+          if (voiceMode) setTimeout(() => { if (voiceMode) startRecording(); }, 300);
+          return;
+        }
+        await transcribeAudio(blob);
+      };
+
+      // Set up silence detection with Web Audio API
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      analyserNode = audioContext.createAnalyser();
+      analyserNode.fftSize = 2048;
+      source.connect(analyserNode);
+
+      let silentSince = null;
+      let hasSpoken = false;
+      const dataArray = new Float32Array(analyserNode.fftSize);
+
+      function checkSilence() {
+        if (!isRecording) return;
+        analyserNode.getFloatTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
+        const rms = Math.sqrt(sum / dataArray.length);
+
+        if (rms > SILENCE_THRESHOLD) {
+          hasSpoken = true;
+          silentSince = null;
+        } else if (hasSpoken) {
+          if (!silentSince) silentSince = Date.now();
+          else if (Date.now() - silentSince > SILENCE_DURATION) {
+            // User stopped talking — auto-stop recording
+            stopRecording();
+            return;
+          }
+        }
+        silenceCheckRAF = requestAnimationFrame(checkSilence);
+      }
+
+      mediaRecorder.start();
+      isRecording = true;
+      micBtn.classList.remove("processing", "waiting");
+      micBtn.classList.add("recording");
+      micBtn.title = t("voice.mic_recording");
+      if (voiceMode) headerStatus.textContent = t("voice.listening");
+
+      silenceCheckRAF = requestAnimationFrame(checkSilence);
+    } catch (err) {
+      if (err.name === "NotAllowedError") {
+        alert(t("voice.mic_denied"));
+        exitVoiceMode();
+      } else {
+        alert(t("voice.mic_error", { message: err.message }));
+        exitVoiceMode();
+      }
+    }
+  }
+
+  function stopSilenceDetection() {
+    if (silenceCheckRAF) { cancelAnimationFrame(silenceCheckRAF); silenceCheckRAF = null; }
+    if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
+    analyserNode = null;
+  }
+
+  function stopRecording() {
+    stopSilenceDetection();
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    isRecording = false;
+    micBtn.classList.remove("recording");
+    if (!voiceMode) micBtn.title = t("voice.mic_title");
+  }
+
+  /* ── Voice Mode Toggle ─────────────────────────────────── */
+  function enterVoiceMode() {
+    voiceMode = true;
+    audioEnabled = true;
+    localStorage.setItem("echoes_audio", "true");
+    updateAudioToggle();
+    micBtn.classList.add("voice-mode");
+    micBtn.title = t("voice.mode_active");
+    startRecording();
+  }
+
+  function exitVoiceMode() {
+    voiceMode = false;
+    if (isRecording) stopRecording();
+    micBtn.classList.remove("voice-mode", "recording", "processing", "waiting");
+    micBtn.title = t("voice.mic_title");
+    if (activeNpcId && !sending) headerStatus.textContent = t("chat.status_available");
+  }
+
+  micBtn.addEventListener("click", () => {
+    if (isTranscribing || sending) return;
+    if (voiceMode) {
+      exitVoiceMode();
+    } else if (isRecording) {
+      stopRecording();
+    } else {
+      enterVoiceMode();
+    }
+  });
+
+  /* ── Voice: Transcription ──────────────────────────────── */
+  async function transcribeAudio(blob) {
+    isTranscribing = true;
+    micBtn.classList.remove("recording");
+    micBtn.classList.add("processing");
+    micBtn.title = t("voice.mic_processing");
+    if (voiceMode) headerStatus.textContent = t("voice.mic_processing");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+      formData.append("language", window.currentLang || "en");
+
+      const res = await fetch(`${API_BASE}/api/transcribe`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Transcription error" }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.text && data.text.trim()) {
+        if (voiceMode) {
+          // Auto-send in voice mode
+          micBtn.classList.remove("processing");
+          micBtn.classList.add("waiting");
+          await sendMessage(data.text.trim());
+        } else {
+          // Manual mode: put text in textarea for review
+          chatInput.value = data.text.trim();
+          autoResize();
+          sendBtn.disabled = false;
+          chatInput.focus();
+        }
+      } else if (voiceMode) {
+        // No speech detected — resume listening
+        setTimeout(() => { if (voiceMode) startRecording(); }, 300);
+      }
+    } catch (err) {
+      const errDiv = document.createElement("div");
+      errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
+      errDiv.textContent = t("voice.mic_error", { message: err.message });
+      chatMessages.appendChild(errDiv);
+      scrollToBottom();
+      // On error in voice mode, resume listening after a pause
+      if (voiceMode) setTimeout(() => { if (voiceMode) startRecording(); }, 1000);
+    } finally {
+      isTranscribing = false;
+      micBtn.classList.remove("processing");
+      if (!voiceMode) micBtn.title = t("voice.mic_title");
+    }
+  }
+
+  // Hide mic if browser doesn't support it
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    micBtn.style.display = "none";
+  }
+
+  /* ── Language Toggle ────────────────────────────────────── */
+  function initLanguage() {
+    const saved = localStorage.getItem("echoes_lang") || "en";
+    window.currentLang = saved;
+    applyLanguage(saved);
+  }
+
+  function switchLanguage(lang) {
+    applyLanguage(lang);
+    // Re-render dynamic content that uses t()
+    renderNpcList();
+    renderDossiers();
+    renderEvidence();
+    renderTimeline();
+    if (activeNpcId) renderMessages();
+  }
+
+  document.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.addEventListener("click", () => switchLanguage(btn.dataset.lang));
+  });
+
+  /* ── Boot ───────────────────────────────────────────────── */
+  initLanguage();
+  updateAudioToggle();
+  init();
+})();
+</script>
 </body>
 </html>

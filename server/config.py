@@ -1,11 +1,23 @@
 """Application settings for the detective game backend."""
 
 from functools import lru_cache
-from pydantic import BaseSettings, Field
+
+from pydantic import AliasChoices, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration values loaded from environment variables."""
+    """Runtime configuration values loaded from environment variables.
+
+    Fields are read from env vars with the ECHO_ prefix first, falling back to
+    standard names (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY) for convenience.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="ECHO_",
+        env_file=".env",
+        case_sensitive=False,
+    )
 
     llm_provider: str = Field(
         default="openai",
@@ -14,17 +26,33 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(
         default=None,
         description="API key used when the OpenAI provider is selected.",
-        env="OPENAI_API_KEY",
+        validation_alias=AliasChoices("ECHO_OPENAI_API_KEY", "OPENAI_API_KEY"),
     )
     openai_model: str = Field(
         default="gpt-3.5-turbo",
         description="Chat model name to use for OpenAI completions.",
     )
-
-    class Config:
-        env_prefix = "ECHO_"
-        env_file = ".env"
-        case_sensitive = False
+    openai_tts_model: str = Field(
+        default="tts-1",
+        description="TTS model for voice synthesis ('tts-1' or 'tts-1-hd').",
+    )
+    openai_tts_voice: str = Field(
+        default="alloy",
+        description="Default OpenAI TTS voice. Per-NPC overrides are in npc_registry.",
+    )
+    openai_stt_model: str = Field(
+        default="whisper-1",
+        description="Speech-to-text model for transcription.",
+    )
+    anthropic_api_key: str | None = Field(
+        default=None,
+        description="API key used when the Anthropic provider is selected.",
+        validation_alias=AliasChoices("ECHO_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
+    )
+    anthropic_model: str = Field(
+        default="claude-sonnet-4-20250514",
+        description="Model name to use for Anthropic completions.",
+    )
 
 
 @lru_cache
