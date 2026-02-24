@@ -6,6 +6,7 @@ from typing import Callable, Dict
 
 from ..config import settings
 from .base import LLMClient
+from .anthropic_client import AnthropicLLMClient
 from .local_stub import LocalEchoLLMClient
 from .openai_client import OpenAILLMClient
 
@@ -14,6 +15,10 @@ _PROVIDER_BUILDERS: Dict[str, Callable[[], LLMClient]] = {
     "openai": lambda: OpenAILLMClient(
         api_key=settings.openai_api_key or "",
         model=settings.openai_model,
+    ),
+    "anthropic": lambda: AnthropicLLMClient(
+        api_key=settings.anthropic_api_key or "",
+        model=settings.anthropic_model,
     ),
     "local": LocalEchoLLMClient,
 }
