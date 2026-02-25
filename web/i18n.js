@@ -9,10 +9,11 @@ window.I18N = {
     "intro.briefing_label": "Case Briefing",
     "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.",
     "intro.time_of_death": "<strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.",
-    "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis. Forensics recovered a burned notebook fragment and traces of antique machine oil near the body.",
+    "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
+    "intro.starting_evidence": "<strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
     "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
     "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.",
-    "intro.tip": "<strong>Tip:</strong> NPCs will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
+    "intro.tip": "<strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
     "intro.start": "Begin Investigation",
 
     // Hub screen
@@ -30,14 +31,17 @@ window.I18N = {
     "chat.sender_you": "You",
     "chat.error": "Error: {message}. Check that the server is running.",
     "chat.badge_title": "Interviewed",
+    "chat.discovery_label": "Discovery",
 
     // Evidence panel
-    "evidence.tab": "Evidence",
+    "evidence.tab": "Evidence and Discoveries",
     "evidence.dossiers_tab": "Dossiers",
     "evidence.timeline_tab": "Timeline",
     "evidence.empty": "No evidence collected yet. Interrogate suspects to uncover clues.",
     "evidence.timeline_empty": "Events will appear here as you piece together what happened.",
     "evidence.mentioned_by": "Mentioned by {name} during interrogation.",
+    "evidence.crime_scene": "Recovered from the crime scene by forensics.",
+    "evidence.security_systems": "Obtained from hotel security systems.",
 
     // Evidence labels (for i18n support in evidence catalog)
     "evidence.oil-trace_label": "Antique Oil Trace",
@@ -89,8 +93,8 @@ window.I18N = {
     "voice.mic_processing": "Transcribing\u2026",
     "voice.mic_denied": "Microphone access denied. Please allow microphone access in browser settings.",
     "voice.mic_error": "Recording error: {message}",
-    "voice.audio_on": "NPC voice: ON",
-    "voice.audio_off": "NPC voice: OFF",
+    "voice.audio_on": "Voice: ON",
+    "voice.audio_off": "Voice: OFF",
     "voice.replay_title": "Replay audio",
     "voice.status_speaking": "Speaking\u2026",
     "voice.listening": "Listening\u2026",
@@ -176,6 +180,33 @@ window.I18N = {
     "starter.marcus-vale.2": "Did anyone leave the stage area during the outage?",
     "starter.marcus-vale.3": "Did you notice anyone backstage who shouldn't have been there?",
 
+    // Interrogation pills
+    "interrogation.pressure_label": "Pressure:",
+    "interrogation.rapport_label": "Rapport:",
+    "interrogation.calm": "Calm",
+    "interrogation.tense": "Tense",
+    "interrogation.shaken": "Shaken",
+    "interrogation.cornered": "Cornered",
+    "interrogation.cold": "Cold",
+    "interrogation.neutral": "Neutral",
+    "interrogation.open": "Open",
+    "interrogation.trusting": "Trusting",
+
+    // Endgame
+    "endgame.title": "All Critical Evidence Gathered",
+    "endgame.description": "You have gathered all the key evidence needed to build a case. Review your evidence, make an accusation, or continue investigating for additional details.",
+    "endgame.review": "Review Evidence",
+    "endgame.accuse": "Make Accusation",
+    "endgame.continue": "Keep Investigating",
+    "endgame.accuse_cta": "Ready to Make Your Accusation?",
+
+    // Evidence groups
+    "evidence.group_physical": "Physical Evidence",
+    "evidence.group_documentary": "Documents & Records",
+    "evidence.group_testimony": "Witness Testimony",
+    "evidence.group_access": "Access & Opportunity",
+    "evidence.group_motive": "Motive",
+
     // Settings
     "settings.title": "Settings",
     "settings.restart": "Restart Investigation",
@@ -191,7 +222,8 @@ window.I18N = {
     "intro.briefing_label": "Brifing o Slu\u010daju",
     "intro.victim": "<strong>\u017drtva:</strong> D\u017eulijan Merser, harizamti\u010dan preduzetnik i direktor startapa Panopticon za nadzor, prona\u0111en mrtav u opservatoriji na krovu hotela Lyric Atrium.",
     "intro.time_of_death": "<strong>Vreme smrti:</strong> Pribli\u017eno 23:40, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih. \u017drtva je ubijena anti\u010dkim postolem teleskopa.",
-    "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije. Forenzi\u010dari su prona\u0161li spaljen fragment bele\u017enice i tragove anti\u010dkog ma\u0161inskog ulja pored tela.",
+    "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije.",
+    "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> i tragove <em>anti\u010dkog ma\u0161inskog ulja</em> pored tela. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
     "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte devet osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
     "intro.your_partner": "<strong>Va\u0161 partner:</strong> Detektiv Lila \u010cen \u0107e vam pomo\u0107i sa takti\u010dkim savetima i pravnim smernicama. Po\u010dnite sa njom za pregled slu\u010daja.",
     "intro.tip": "<strong>Savet:</strong> Likovi \u0107e pa\u017eeljivo \u010duvati svoje tajne. Predstavite dokaze i izgradite pritisak da probijete njihovu odbranu. Obratite pa\u017enju na kontradikcije izme\u0111u svedo\u010denja.",
@@ -212,14 +244,17 @@ window.I18N = {
     "chat.sender_you": "Vi",
     "chat.error": "Gre\u0161ka: {message}. Proverite da li server radi.",
     "chat.badge_title": "Ispitan/a",
+    "chat.discovery_label": "Otkri\u0107e",
 
     // Evidence panel
-    "evidence.tab": "Dokazi",
+    "evidence.tab": "Dokazi i otkri\u0107a",
     "evidence.dossiers_tab": "Dosijei",
     "evidence.timeline_tab": "Hronologija",
     "evidence.empty": "Nema prikupljenih dokaza. Ispitajte osumnji\u010dene da biste otkrili tragove.",
     "evidence.timeline_empty": "Doga\u0111aji \u0107e se pojaviti ovde dok sklapate sliku o tome \u0161ta se desilo.",
     "evidence.mentioned_by": "Pomenuo/la {name} tokom ispitivanja.",
+    "evidence.crime_scene": "Prona\u0111eno na mestu zlo\u010dina od strane forenzi\u010dara.",
+    "evidence.security_systems": "Dobijeno iz hotelskih sigurnosnih sistema.",
 
     // Evidence labels
     "evidence.oil-trace_label": "Trag Anti\u010dkog Ulja",
@@ -271,8 +306,8 @@ window.I18N = {
     "voice.mic_processing": "Transkribovanje\u2026",
     "voice.mic_denied": "Pristup mikrofonu odbijen. Dozvolite pristup mikrofonu u pode\u0161avanjima pregledača.",
     "voice.mic_error": "Gre\u0161ka snimanja: {message}",
-    "voice.audio_on": "Glas NPC-a: UKLJU\u010cEN",
-    "voice.audio_off": "Glas NPC-a: ISKLJU\u010cEN",
+    "voice.audio_on": "Glas: UKLJU\u010cEN",
+    "voice.audio_off": "Glas: ISKLJU\u010cEN",
     "voice.replay_title": "Ponovo pusti audio",
     "voice.status_speaking": "Govori\u2026",
     "voice.listening": "Slu\u0161am\u2026",
@@ -357,6 +392,33 @@ window.I18N = {
     "starter.marcus-vale.1": "Bili ste iza scene tokom nestanka struje. \u0160ta se desilo?",
     "starter.marcus-vale.2": "Da li je neko napustio prostor scene tokom nestanka struje?",
     "starter.marcus-vale.3": "Da li ste primetili nekoga iza scene ko nije trebalo da bude tamo?",
+
+    // Interrogation pills
+    "interrogation.pressure_label": "Pritisak:",
+    "interrogation.rapport_label": "Odnos:",
+    "interrogation.calm": "Miran",
+    "interrogation.tense": "Napet",
+    "interrogation.shaken": "Uzdrman",
+    "interrogation.cornered": "Prikle\u0161ten",
+    "interrogation.cold": "Hladan",
+    "interrogation.neutral": "Neutralan",
+    "interrogation.open": "Otvoren",
+    "interrogation.trusting": "Poverljiv",
+
+    // Endgame
+    "endgame.title": "Svi Klju\u010dni Dokazi Prikupljeni",
+    "endgame.description": "Prikupili ste sve klju\u010dne dokaze potrebne za izgradnju slu\u010daja. Pregledajte dokaze, podnesite optu\u017enicu ili nastavite istragu za dodatne detalje.",
+    "endgame.review": "Pregledaj Dokaze",
+    "endgame.accuse": "Podnesi Optu\u017enicu",
+    "endgame.continue": "Nastavi Istragu",
+    "endgame.accuse_cta": "Spremni za Optu\u017enicu?",
+
+    // Evidence groups
+    "evidence.group_physical": "Fizi\u010dki Dokazi",
+    "evidence.group_documentary": "Dokumenti i Zapisi",
+    "evidence.group_testimony": "Svedo\u010denja",
+    "evidence.group_access": "Pristup i Prilika",
+    "evidence.group_motive": "Motiv",
 
     // Settings
     "settings.title": "Pode\u0161avanja",

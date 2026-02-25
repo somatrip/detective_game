@@ -27,6 +27,22 @@ class ChatRequest(BaseModel):
         default="en",
         description="Language code for NPC responses ('en' or 'sr').",
     )
+    pressure: int = Field(
+        default=0,
+        ge=0,
+        le=100,
+        description="Current hidden pressure value for this NPC (0–100).",
+    )
+    rapport: int = Field(
+        default=25,
+        ge=0,
+        le=100,
+        description="Current hidden rapport value for this NPC (0–100). Starts at 25 (neutral).",
+    )
+    player_evidence_ids: List[str] = Field(
+        default_factory=list,
+        description="Evidence IDs the player has collected so far.",
+    )
 
 
 class ChatResponse(BaseModel):
@@ -42,6 +58,30 @@ class ChatResponse(BaseModel):
     expression: str = Field(
         default="neutral",
         description="NPC emotional expression for this reply.",
+    )
+    pressure: int = Field(
+        default=0,
+        description="Updated hidden pressure value after this turn.",
+    )
+    rapport: int = Field(
+        default=25,
+        description="Updated hidden rapport value after this turn.",
+    )
+    pressure_band: str = Field(
+        default="calm",
+        description="Qualitative pressure band (calm/tense/shaken/cornered).",
+    )
+    rapport_band: str = Field(
+        default="neutral",
+        description="Qualitative rapport band (cold/neutral/open/trusting).",
+    )
+    tactic_type: str = Field(
+        default="open_ended",
+        description="Classified interrogation tactic for this turn.",
+    )
+    evidence_strength: str = Field(
+        default="none",
+        description="Classified evidence strength for this turn.",
     )
 
 

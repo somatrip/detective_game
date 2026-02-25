@@ -3,25 +3,45 @@
 from __future__ import annotations
 
 import io
+import logging
 import pathlib
 import re
-from typing import List, Tuple
+from typing import List
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import AsyncOpenAI
 
 from .config import settings
+from .interrogation import build_interrogation_context, process_turn
+from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import create_llm_client
 from .llm.base import ChatMessage, LLMClient
 from .npc_registry import WORLD_CONTEXT_PROMPT, get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger(__name__)
+
 _WEB_DIR = pathlib.Path(__file__).resolve().parent.parent / "web"
 
 app = FastAPI(title="Echoes in the Atrium Backend", version="0.1.0")
+
+
+@app.exception_handler(Exception)
+async def _global_exception_handler(request: Request, exc: Exception):
+    """Catch-all: ensure every error returns JSON so the client can parse it."""
+    log.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {type(exc).__name__}: {exc}"},
+    )
 
 
 if settings.llm_provider.lower() != "openai":  # allow running UI from file:// or another port
@@ -62,50 +82,19 @@ def _get_openai_client() -> AsyncOpenAI:
     return _openai_client
 
 
-# ── Evidence tag parsing ─────────────────────────────────────────────────────
+# ── Stray tag stripping (safety fallback) ────────────────────────────────────
+# The main LLM no longer receives evidence-tagging instructions, but may still
+# occasionally produce stray tags.  Strip them from the displayed response.
 
-_EVIDENCE_TAG_RE = re.compile(r'\[(?:EVIDENCE|EVIDENCIJA|DOKAZ):\s*([^\]]+)\]', re.IGNORECASE)
-_EXPRESSION_TAG_RE = re.compile(r'\[(?:EXPRESSION|IZRAŽAJ|IZRAZAJ|IZRAZ):\s*(\w+)\]', re.IGNORECASE)
-_VALID_EXPRESSIONS = {"neutral", "guarded", "distressed", "angry", "contemplative", "smirking"}
-# Map common Serbian expression translations back to English
-_EXPRESSION_ALIASES: dict[str, str] = {
-    "pometen": "contemplative", "zamišljen": "contemplative", "zamisljen": "contemplative",
-    "neutralan": "neutral", "neutralno": "neutral", "miran": "neutral",
-    "oprezan": "guarded", "uznemiren": "distressed", "ljut": "angry",
-    "besan": "angry", "podrugljiv": "smirking", "ironičan": "smirking",
-}
+_STRAY_TAG_RE = re.compile(
+    r'\[(?:EVIDENCE|EVIDENCIJA|DOKAZ|EXPRESSION|IZRAŽAJ|IZRAZAJ|IZRAZ):\s*[^\]]*\]',
+    re.IGNORECASE,
+)
 
 
-def parse_evidence_tags(raw_reply: str) -> Tuple[str, List[str]]:
-    """Strip ``[EVIDENCE: id1, id2]`` tags from the LLM reply.
-
-    Returns a (clean_reply, evidence_ids) tuple.
-    Handles English and Serbian variants, and tags anywhere in the text.
-    """
-    all_ids: List[str] = []
-    for match in _EVIDENCE_TAG_RE.finditer(raw_reply):
-        evidence_str = match.group(1)
-        all_ids.extend(eid.strip() for eid in evidence_str.split(",") if eid.strip())
-    clean_reply = _EVIDENCE_TAG_RE.sub("", raw_reply).strip()
-    return clean_reply, all_ids
-
-
-def parse_expression_tag(raw_reply: str) -> Tuple[str, str]:
-    """Strip ``[EXPRESSION: mood]`` tags from the LLM reply.
-
-    Returns a (clean_reply, expression) tuple.  Falls back to "neutral".
-    Handles English and Serbian variants, and tags anywhere in the text.
-    """
-    expression = "neutral"
-    for match in _EXPRESSION_TAG_RE.finditer(raw_reply):
-        raw_expr = match.group(1).lower().strip()
-        if raw_expr in _VALID_EXPRESSIONS:
-            expression = raw_expr
-        elif raw_expr in _EXPRESSION_ALIASES:
-            expression = _EXPRESSION_ALIASES[raw_expr]
-    clean_reply = _EXPRESSION_TAG_RE.sub("", raw_reply).strip()
-    clean_reply = raw_reply[: match.start()].strip()
-    return clean_reply, expression
+def _strip_stray_tags(text: str) -> str:
+    """Remove any leftover [EVIDENCE: ...] or [EXPRESSION: ...] tags."""
+    return _STRAY_TAG_RE.sub("", text).strip()
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -129,7 +118,16 @@ async def list_available_npcs():
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -> ChatResponse:
-    """Send the player's message to the LLM and return the NPC's reply."""
+    """Send the player's message to the LLM and return the NPC's reply.
+
+    Pipeline per turn:
+    1. Classify the player's tactic & evidence strength  (secondary LLM)
+    2. Compute pressure/rapport deltas                   (deterministic)
+    3. Build interrogation context prompt                 (deterministic)
+    4. Generate NPC response                              (main LLM)
+    5. Detect evidence & expression from response         (secondary LLM)
+    6. Return everything to the client
+    """
 
     try:
         npc_profile = get_npc_profile(request.npc_id)
@@ -139,9 +137,58 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     history: List[ChatTurn] = list(request.history)
     history.append(ChatTurn(role="user", content=request.message))
 
+    # ── Step 1: Classify the player's turn (secondary LLM) ──────────────
+    log.info("[chat] Step 1: classifying turn for npc=%s", request.npc_id)
+    try:
+        classification = await classify_player_turn(
+            message=request.message,
+            npc_id=request.npc_id,
+            player_evidence_ids=list(request.player_evidence_ids),
+            conversation_history=[t.model_dump() for t in request.history],
+        )
+    except Exception as exc:
+        log.exception("[chat] Step 1 FAILED: classify_player_turn")
+        raise HTTPException(status_code=502, detail=f"Classifier error: {exc}") from exc
+    tactic_type = classification["tactic_type"]
+    evidence_strength = classification["evidence_strength"]
+    log.info("[chat] Step 1 result: tactic=%s evidence=%s", tactic_type, evidence_strength)
+
+    # ── Step 2: Compute pressure/rapport deltas ─────────────────────────
+    log.info("[chat] Step 2: computing deltas (pressure=%d, rapport=%d)", request.pressure, request.rapport)
+    try:
+        interrogation_result = process_turn(
+            tactic_type=tactic_type,
+            evidence_strength=evidence_strength,
+            npc_id=request.npc_id,
+            current_pressure=request.pressure,
+            current_rapport=request.rapport,
+        )
+    except Exception as exc:
+        log.exception("[chat] Step 2 FAILED: process_turn")
+        raise HTTPException(status_code=500, detail=f"Interrogation engine error: {exc}") from exc
+    log.info("[chat] Step 2 result: pressure=%d→%s, rapport=%d→%s",
+             interrogation_result["pressure"], interrogation_result["pressure_band"],
+             interrogation_result["rapport"], interrogation_result["rapport_band"])
+
+    # ── Step 3: Build interrogation context prompt ──────────────────────
+    try:
+        interrogation_prompt = build_interrogation_context(
+            npc_id=request.npc_id,
+            pressure_val=interrogation_result["pressure"],
+            rapport_val=interrogation_result["rapport"],
+            tactic_type=tactic_type,
+            evidence_strength=evidence_strength,
+        )
+    except Exception as exc:
+        log.exception("[chat] Step 3 FAILED: build_interrogation_context")
+        raise HTTPException(status_code=500, detail=f"Context builder error: {exc}") from exc
+
+    # ── Step 4: Generate NPC response (main LLM) ───────────────────────
+    log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
     system_messages: List[ChatMessage] = [
         {"role": "system", "content": WORLD_CONTEXT_PROMPT},
         {"role": "system", "content": npc_profile.system_prompt},
+        {"role": "system", "content": interrogation_prompt},
     ]
 
     if request.language == "sr":
@@ -151,20 +198,20 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
                 "IMPORTANT: The player has chosen Serbian as their language. "
                 "You MUST respond entirely in Serbian (Latin script). "
                 "Stay in character and maintain the same personality, secrets, "
-                "and conversational rules, but speak Serbian. "
-                "CRITICAL: Keep ALL tags in English exactly as specified — "
-                "[EVIDENCE: id] and [EXPRESSION: mood]. Do NOT translate "
-                "tag names into Serbian."
+                "and conversational rules, but speak Serbian."
             ),
         })
 
-    llm_messages: List[ChatMessage] = [*system_messages, *(_turn.model_dump() for _turn in history)]
+    llm_messages: List[ChatMessage] = [
+        *system_messages,
+        *(_turn.model_dump() for _turn in history),
+    ]
 
     try:
-        reply = await llm.generate(npc_id=request.npc_id, messages=llm_messages)
+        raw_reply = await llm.generate(npc_id=request.npc_id, messages=llm_messages)
     except Exception as exc:
         detail = str(exc)
-        # Surface helpful messages for common API errors
+        log.error("[chat] Step 4 FAILED: LLM generate — %s", detail)
         if "insufficient_quota" in detail or "exceeded" in detail.lower():
             detail = "OpenAI quota exceeded. Add credits at platform.openai.com/settings/organization/billing"
         elif "invalid_api_key" in detail or "Incorrect API key" in detail:
@@ -172,19 +219,43 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
         elif "authentication" in detail.lower():
             detail = f"Authentication failed: {detail}"
         raise HTTPException(status_code=502, detail=detail) from exc
+    log.info("[chat] Step 4 done: reply length=%d chars", len(raw_reply))
 
-    # Parse both tags from the raw LLM output (expression first since it
-    # appears after the evidence tag).
-    step1, expression = parse_expression_tag(reply)
-    clean_reply, evidence_ids = parse_evidence_tags(step1)
+    # Strip any stray tags the LLM may have produced out of habit
+    clean_reply = _strip_stray_tags(raw_reply)
+
+    # ── Step 5: Detect evidence & expression (secondary LLM) ───────────
+    log.info("[chat] Step 5: detecting evidence & expression")
+    try:
+        detection = await detect_evidence(
+            npc_response=clean_reply,
+            npc_id=request.npc_id,
+            already_collected=list(request.player_evidence_ids),
+            player_message=request.message,
+        )
+    except Exception as exc:
+        log.exception("[chat] Step 5 FAILED: detect_evidence")
+        raise HTTPException(status_code=502, detail=f"Evidence detector error: {exc}") from exc
+    evidence_ids: List[str] = detection["evidence_ids"]
+    expression: str = detection["expression"]
+    log.info("[chat] Step 5 result: evidence=%s expression=%s", evidence_ids, expression)
+
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
+    # ── Step 6: Return combined response ───────────────────────────────
+    log.info("[chat] Step 6: returning response for npc=%s", request.npc_id)
     return ChatResponse(
         reply=clean_reply,
         npc_id=request.npc_id,
         history=history,
         evidence_ids=evidence_ids,
         expression=expression,
+        pressure=interrogation_result["pressure"],
+        rapport=interrogation_result["rapport"],
+        pressure_band=interrogation_result["pressure_band"],
+        rapport_band=interrogation_result["rapport_band"],
+        tactic_type=tactic_type,
+        evidence_strength=evidence_strength,
     )
 
 

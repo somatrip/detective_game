@@ -32,6 +32,9 @@
       --manila-border: #c4a96a;
       --manila-fold-highlight: #faf0db;
       --screen-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --noir-shadow: rgba(0,0,0,0.4);
+      --gold-dim: rgba(251,191,36,0.12);
+      --gold-border: rgba(251,191,36,0.3);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
@@ -289,6 +292,45 @@
       border-bottom: 1px solid var(--border);
     }
 
+    /* ── Case Board Briefing ─────────────────────────────── */
+    .caseboard-briefing-section { padding: 0; }
+    .caseboard-briefing-toggle {
+      all: unset;
+      display: block;
+      width: 100%;
+      cursor: pointer;
+      padding: 1.25rem;
+      box-sizing: border-box;
+    }
+    .caseboard-briefing-toggle h3 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cb-briefing-chevron {
+      transition: transform 0.25s ease;
+      color: var(--gold);
+    }
+    .caseboard-briefing-toggle[aria-expanded="true"] .cb-briefing-chevron {
+      transform: rotate(180deg);
+    }
+    .caseboard-briefing-body {
+      display: none;
+      padding: 0 1.25rem 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+      margin: 0 1.25rem;
+      padding-top: 1rem;
+    }
+    .caseboard-briefing-body.open {
+      display: block;
+    }
+    .caseboard-briefing-body strong { color: var(--text); }
+    .caseboard-briefing-body p { margin-bottom: 0.75rem; }
+    .caseboard-briefing-body p:last-child { margin-bottom: 0; }
+
     /* ── Chat Screen ───────────────────────────────────────── */
     #chat-screen {
       display: none;
@@ -303,11 +345,11 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1.5rem;
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      min-height: 56px;
+      min-height: 72px;
     }
 
     /* Manila folder back button */
@@ -371,6 +413,7 @@
       overflow: hidden;
     }
     .portrait-frame {
+      position: relative;
       flex: 1 1 0%;
       min-height: 150px;
       overflow: hidden;
@@ -408,6 +451,216 @@
       color: var(--text-dim);
       font-style: italic;
     }
+    .portrait-status:empty { display: none; }
+
+    /* ── Portrait Info Button + Bio Tooltip ─────────────── */
+    .portrait-info-btn {
+      position: absolute;
+      top: 0.5rem; right: 0.5rem;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.5);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2;
+      transition: background 0.2s, color 0.2s;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .portrait-info-btn:hover {
+      background: rgba(0,0,0,0.75);
+      color: var(--text);
+    }
+    .portrait-bio-tooltip {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(12,16,24,0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      padding: 2.5rem 1rem 1rem;
+      overflow-y: auto;
+      z-index: 1;
+      animation: fadeIn 0.2s ease;
+    }
+    .portrait-bio-tooltip.visible { display: block; }
+
+    /* ── Chat Discovery Card ───────────────────────────── */
+    .chat-discovery-card {
+      margin: 0.5rem 1rem;
+      padding: 0.6rem 0.8rem;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-left: 3px solid var(--gold);
+      border-radius: 8px;
+      animation: discoveryReveal 0.5s ease;
+    }
+    .discovery-card-icon {
+      float: left;
+      margin-right: 0.5rem;
+      margin-top: 0.1rem;
+      color: var(--gold);
+    }
+    .discovery-card-label {
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--gold); margin-bottom: 0.15rem;
+    }
+    .discovery-card-text {
+      font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+    }
+    @keyframes discoveryReveal {
+      0%   { opacity: 0; transform: translateY(8px); border-left-color: transparent; }
+      50%  { border-left-color: var(--gold); }
+      100% { opacity: 1; transform: none; }
+    }
+
+    /* ── Interrogation Icon Gauges ──────────────────────── */
+    .interrogation-gauges {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-left: auto;
+      margin-right: 0.5rem;
+    }
+    .gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      position: relative;
+    }
+    .gauge-icon {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 6px rgba(0,0,0,0.6));
+      transition: all 0.4s ease;
+    }
+    .gauge-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: center;
+      white-space: nowrap;
+      transition: color 0.3s;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    /* Pressure label colors by band */
+    .gauge-pressure.calm .gauge-label     { color: var(--success); }
+    .gauge-pressure.tense .gauge-label    { color: var(--gold); }
+    .gauge-pressure.shaken .gauge-label   { color: #fb923c; }
+    .gauge-pressure.cornered .gauge-label { color: var(--danger); }
+    /* Rapport label colors by band */
+    .gauge-rapport.cold .gauge-label      { color: var(--text-faint); }
+    .gauge-rapport.neutral .gauge-label   { color: var(--text-dim); }
+    .gauge-rapport.open .gauge-label      { color: var(--accent); }
+    .gauge-rapport.trusting .gauge-label  { color: var(--success); }
+    /* Band-colored icon glow */
+    .gauge-pressure.calm .gauge-icon     { filter: drop-shadow(0 0 8px rgba(52,211,153,0.4)) drop-shadow(0 0 16px rgba(52,211,153,0.15)); }
+    .gauge-pressure.tense .gauge-icon    { filter: drop-shadow(0 0 8px rgba(251,191,36,0.5)) drop-shadow(0 0 16px rgba(251,191,36,0.2)); }
+    .gauge-pressure.shaken .gauge-icon   { filter: drop-shadow(0 0 10px rgba(251,146,60,0.5)) drop-shadow(0 0 20px rgba(251,146,60,0.2)); }
+    .gauge-pressure.cornered .gauge-icon { filter: drop-shadow(0 0 12px rgba(248,113,113,0.6)) drop-shadow(0 0 24px rgba(248,113,113,0.25)); }
+    .gauge-rapport.cold .gauge-icon      { filter: drop-shadow(0 0 6px rgba(100,116,139,0.3)) drop-shadow(0 0 12px rgba(100,116,139,0.1)); }
+    .gauge-rapport.neutral .gauge-icon   { filter: drop-shadow(0 0 8px rgba(148,163,184,0.35)) drop-shadow(0 0 14px rgba(148,163,184,0.15)); }
+    .gauge-rapport.open .gauge-icon      { filter: drop-shadow(0 0 10px rgba(56,189,248,0.5)) drop-shadow(0 0 18px rgba(56,189,248,0.2)); }
+    .gauge-rapport.trusting .gauge-icon  { filter: drop-shadow(0 0 12px rgba(52,211,153,0.55)) drop-shadow(0 0 22px rgba(52,211,153,0.25)); }
+    /* Pulse animation on state change */
+    .gauge-icon.pulse {
+      animation: gauge-pulse 0.6s ease;
+    }
+    @keyframes gauge-pulse {
+      0%   { transform: scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.3)); }
+      50%  { transform: scale(1.15); filter: drop-shadow(0 0 20px rgba(251,191,36,0.8)); }
+      100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.3)); }
+    }
+
+    /* ── Endgame Modal ───────────────────────────────────── */
+    #case-ready-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #case-ready-modal.visible { display: flex; }
+    .case-ready-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--gold);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 480px;
+      text-align: center;
+    }
+    .case-ready-card h2 {
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+    .case-ready-card p {
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .case-ready-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .case-ready-actions button {
+      padding: 0.65rem 1.2rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .case-ready-actions button:first-child {
+      background: var(--gold);
+      color: #1a1a1a;
+      border-color: var(--gold);
+      font-weight: 600;
+    }
+    .case-ready-actions button:hover {
+      filter: brightness(1.15);
+    }
+
+    /* Evidence group headers */
+    .evidence-group-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.75rem 0 0.25rem;
+      border-bottom: 1px solid rgba(251,191,36,0.2);
+      margin-bottom: 0.4rem;
+    }
+    .evidence-accuse-cta {
+      display: block;
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.7rem;
+      border-radius: 0.5rem;
+      border: 2px solid var(--danger);
+      background: rgba(248,113,113,0.1);
+      color: var(--danger);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .evidence-accuse-cta:hover {
+      background: rgba(248,113,113,0.2);
+    }
 
     /* Chat right column */
     .chat-right-col {
@@ -432,7 +685,10 @@
       padding: 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.1rem;
+      background:
+        linear-gradient(180deg, rgba(12,16,24,0.7) 0%, transparent 80px, transparent calc(100% - 80px), rgba(12,16,24,0.7) 100%),
+        url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff03' fill='none'/%3E%3C/svg%3E");
     }
     .msg {
       max-width: 75%;
@@ -445,42 +701,52 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .msg.user {
       align-self: flex-end;
-      background: linear-gradient(135deg, #1e40af, #1d4ed8);
+      background: linear-gradient(135deg, rgba(30,64,175,0.85), rgba(29,78,216,0.9));
+      border: 1px solid rgba(59,130,246,0.2);
       border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-family: var(--font-mono), var(--font);
+      font-size: 0.85rem;
+      letter-spacing: -0.01em;
     }
     .msg.assistant {
       align-self: flex-start;
-      background: var(--bg-panel-alt);
+      background: linear-gradient(135deg, var(--bg-panel-alt), rgba(20,27,39,0.95));
       border: 1px solid var(--border);
+      border-left: 3px solid var(--gold-border);
       border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px var(--noir-shadow), inset 0 1px 0 rgba(255,255,255,0.03);
     }
     .msg .msg-sender {
-      font-size: 0.72rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      margin-bottom: 0.3rem;
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 0.4rem; padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
       color: var(--text-faint);
     }
-    .msg.user .msg-sender { color: rgba(255,255,255,0.6); }
+    .msg.assistant .msg-sender { color: var(--gold); border-bottom-color: var(--gold-border); }
+    .msg.user .msg-sender { color: rgba(255,255,255,0.6); border-bottom-color: rgba(255,255,255,0.1); }
     .typing-indicator {
       align-self: flex-start;
-      padding: 0.8rem 1rem;
+      padding: 0.75rem 1.1rem;
       background: var(--bg-panel-alt);
       border: 1px solid var(--border);
+      border-left: 3px solid var(--gold-border);
       border-radius: 12px;
       display: none;
     }
-    .typing-indicator.visible { display: flex; gap: 4px; align-items: center; }
+    .typing-indicator.visible { display: flex; gap: 5px; align-items: center; }
     .typing-dot {
-      width: 7px; height: 7px;
+      width: 6px; height: 6px;
       border-radius: 50%;
-      background: var(--text-faint);
+      background: var(--gold);
       animation: typingPulse 1.4s infinite;
     }
     .typing-dot:nth-child(2) { animation-delay: 0.2s; }
     .typing-dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes typingPulse {
-      0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
-      30% { opacity: 1; transform: scale(1); }
+      0%, 60%, 100% { opacity: 0.25; transform: scale(0.8); }
+      30% { opacity: 1; transform: scale(1.1); }
     }
 
     /* Conversation starters */
@@ -496,164 +762,67 @@
     }
     .chat-starter-btn {
       width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: rgba(251,191,36,0.03);
+      border: 1px solid rgba(251,191,36,0.12);
+      border-left: 2px solid rgba(251,191,36,0.25);
+      border-radius: 8px;
       color: var(--text-dim);
       font-size: 0.82rem;
-      padding: 0.6rem 1rem;
+      padding: 0.65rem 1rem;
       cursor: pointer;
       text-align: left;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
       line-height: 1.35;
     }
     .chat-starter-btn:hover {
-      border-color: var(--accent);
+      border-color: var(--gold);
+      border-left-color: var(--gold);
       color: var(--text);
-      background: rgba(0,188,212,0.06);
+      background: rgba(251,191,36,0.06);
     }
 
     /* Chat input */
     .chat-input-bar {
       display: none;
-      padding: 1rem 1.5rem;
-      background: var(--bg-panel);
+      padding: 0.85rem 1.5rem;
+      background: linear-gradient(0deg, var(--bg-panel) 60%, var(--bg-panel-alt));
       border-top: 1px solid var(--border);
       gap: 0.75rem; align-items: flex-end;
       flex-shrink: 0;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
     }
     .chat-input-bar.active { display: flex; }
     #chat-input {
       flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: var(--bg-dark);
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 8px;
       padding: 0.7rem 1rem;
       color: var(--text);
-      font-size: 0.9rem;
-      font-family: var(--font);
+      font-size: 0.88rem;
+      font-family: var(--font-mono), var(--font);
       resize: none;
       max-height: 120px;
       min-height: 42px;
       line-height: 1.5;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    #chat-input:focus { outline: none; border-color: var(--accent); }
-    #chat-input::placeholder { color: var(--text-faint); }
+    #chat-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56,189,248,0.1), inset 0 0 12px rgba(56,189,248,0.03); }
+    #chat-input::placeholder { color: var(--text-faint); font-style: italic; }
     #send-btn {
       width: 42px; height: 42px;
-      border: none; border-radius: 10px;
+      border: none; border-radius: 8px;
       background: linear-gradient(135deg, var(--accent), #0ea5e9);
       color: #fff;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      transition: transform 0.1s;
+      transition: transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(56,189,248,0.2);
     }
-    #send-btn:hover { transform: scale(1.05); }
-    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    #send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(56,189,248,0.35); }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
     #send-btn svg { width: 18px; height: 18px; }
-
-    /* ── Dossier (portrait panel, below nameplate) ─────────── */
-    .chat-dossier {
-      border-top: 1px solid var(--border);
-      background: var(--bg-panel);
-      flex-shrink: 0;
-      max-height: 280px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: max-height 0.3s ease;
-    }
-    .chat-dossier.collapsed {
-      max-height: 36px;
-    }
-    .chat-dossier-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-panel-alt); border: none;
-      border-bottom: 1px solid var(--border);
-      color: var(--manila-tab-inactive-text);
-      background: linear-gradient(180deg, var(--manila-tab) 0%, var(--manila-border) 100%);
-      font-size: 0.72rem; font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      transition: color 0.15s;
-      flex-shrink: 0;
-    }
-    .chat-dossier-toggle:hover { color: var(--manila-tab-text); }
-    .chat-dossier-toggle .dossier-chevron {
-      width: 14px; height: 14px;
-      transition: transform 0.2s;
-      flex-shrink: 0;
-      color: var(--manila-tab-text);
-    }
-    .chat-dossier.collapsed .dossier-chevron {
-      transform: rotate(-90deg);
-    }
-    .dossier-badge {
-      margin-left: auto;
-      font-size: 0.55rem; font-weight: 700;
-      min-width: 16px; height: 16px;
-      display: none;
-      align-items: center; justify-content: center;
-      border-radius: 8px;
-      background: var(--danger);
-      color: #fff;
-      padding: 0 4px;
-    }
-    .dossier-badge.visible { display: flex; }
-    .chat-dossier-body {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 0.5rem 0.75rem 0.75rem;
-    }
-    .dossier-bio {
-      font-size: 0.78rem;
-      color: var(--text-dim);
-      line-height: 1.55;
-      margin-bottom: 0.75rem;
-    }
-    .dossier-discoveries-heading {
-      font-size: 0.7rem; font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--accent);
-      margin-bottom: 0.3rem;
-      margin-top: 0.5rem;
-    }
-    .dossier-discovery-item {
-      font-size: 0.76rem;
-      color: var(--text-dim);
-      line-height: 1.4;
-      padding: 0.3rem 0 0.3rem 0.6rem;
-      border-left: 2px solid var(--accent);
-      margin-bottom: 0.3rem;
-      animation: fadeIn 0.3s ease;
-    }
-    .dossier-discovery-item.new-discovery {
-      border-left-color: var(--gold);
-    }
-    .dossier-no-discoveries {
-      font-size: 0.76rem;
-      color: var(--text-faint);
-      font-style: italic; line-height: 1.4;
-    }
-    .dossier-new-badge {
-      display: inline-block;
-      font-size: 0.6rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.04em;
-      color: var(--bg-dark);
-      background: var(--gold);
-      padding: 0.1rem 0.35rem;
-      border-radius: 3px;
-      margin-left: 0.4rem;
-    }
 
     /* ── Clue Items (reused in case board) ─────────────────── */
     .clue-item {
@@ -674,6 +843,19 @@
       font-size: 0.82rem;
       color: var(--text-dim);
       line-height: 1.5;
+    }
+    .clue-discoveries {
+      margin-top: 0.4rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .clue-discovery-item {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+      padding: 0.25rem 0 0.25rem 0.6rem;
+      border-left: 2px solid var(--accent);
+      margin-bottom: 0.25rem;
     }
     .empty-state {
       text-align: center;
@@ -1009,6 +1191,12 @@
       .npc-card { width: 140px; }
     }
     @media (max-width: 768px) {
+      .chat-topbar { min-height: 60px; }
+      .gauge-icon { width: 42px; height: 42px; }
+      .gauge-label { font-size: 0.55rem; }
+      .interrogation-gauges { gap: 0.75rem; }
+      .msg.user { font-family: var(--font); font-size: 0.88rem; letter-spacing: normal; }
+      #chat-input { font-family: var(--font); }
       .chat-layout {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
@@ -1026,16 +1214,6 @@
         flex: 1; min-width: 180px;
         display: flex; flex-direction: column; justify-content: center;
       }
-      .chat-dossier {
-        width: 100%;
-        max-height: 80px;
-        flex-direction: row;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .chat-dossier.collapsed { max-height: 36px; }
-      .chat-dossier-toggle { border-bottom: none; }
-      .chat-dossier-body { max-height: 44px; padding: 0.25rem 0.5rem; }
     }
     @media (max-width: 600px) {
       .npc-card { width: 120px; }
@@ -1060,10 +1238,11 @@
       <span class="label" data-i18n="intro.briefing_label">Case Briefing</span>
       <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.</p>
       <p data-i18n="intro.time_of_death" data-i18n-html><strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.</p>
-      <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis. Forensics recovered a burned notebook fragment and traces of antique machine oil near the body.</p>
+      <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
+      <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
       <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
       <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
-      <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> NPCs will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
+      <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
     </div>
     <button id="start-btn" data-i18n="intro.start">Begin Investigation</button>
   </div>
@@ -1103,15 +1282,27 @@
     </div>
     <div class="hub-panel" id="hub-caseboard">
       <div class="caseboard-layout">
-        <div class="caseboard-section">
-          <h3 class="caseboard-heading" data-i18n="evidence.tab">Evidence</h3>
-          <div id="cb-evidence-empty" class="empty-state" data-i18n="evidence.empty">No evidence collected yet. Interrogate suspects to uncover clues.</div>
-          <div id="cb-evidence-list"></div>
+        <div class="caseboard-section caseboard-briefing-section">
+          <button class="caseboard-briefing-toggle" id="cb-briefing-toggle" aria-expanded="false">
+            <h3 class="caseboard-heading" style="margin-bottom:0; padding-bottom:0; border-bottom:none;">
+              <span data-i18n="intro.briefing_label">Case Briefing</span>
+              <svg class="cb-briefing-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </h3>
+          </button>
+          <div class="caseboard-briefing-body" id="cb-briefing-body">
+            <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.</p>
+            <p data-i18n="intro.time_of_death" data-i18n-html><strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.</p>
+            <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
+            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
+            <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
+            <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
+            <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
+          </div>
         </div>
         <div class="caseboard-section">
-          <h3 class="caseboard-heading" data-i18n="evidence.timeline_tab">Timeline</h3>
-          <div id="cb-timeline-empty" class="empty-state" data-i18n="evidence.timeline_empty">Events will appear here as you piece together what happened.</div>
-          <div id="cb-timeline-list"></div>
+          <h3 class="caseboard-heading" data-i18n="evidence.tab">Evidence and Discoveries</h3>
+          <div id="cb-evidence-empty" class="empty-state" data-i18n="evidence.empty">No evidence collected yet. Interrogate suspects to uncover clues.</div>
+          <div id="cb-evidence-list"></div>
         </div>
       </div>
     </div>
@@ -1131,8 +1322,18 @@
       <span class="chat-topbar-name" id="chat-topbar-name"></span>
       <span class="chat-topbar-role" id="chat-topbar-role"></span>
     </div>
+    <div class="interrogation-gauges" id="interrogation-gauges">
+      <div class="gauge gauge-pressure calm" id="gauge-pressure">
+        <img class="gauge-icon" id="gauge-pressure-icon" src="icons/pressure-calm.png" alt="Pressure" />
+        <span class="gauge-label" id="gauge-pressure-label" data-i18n="interrogation.calm">Calm</span>
+      </div>
+      <div class="gauge gauge-rapport neutral" id="gauge-rapport">
+        <img class="gauge-icon" id="gauge-rapport-icon" src="icons/rapport-neutral.png" alt="Rapport" />
+        <span class="gauge-label" id="gauge-rapport-label" data-i18n="interrogation.neutral">Neutral</span>
+      </div>
+    </div>
     <div class="chat-topbar-right">
-      <button id="audio-toggle" title="Toggle NPC voice">
+      <button id="audio-toggle" title="Toggle voice">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
@@ -1150,26 +1351,22 @@
     <div class="chat-portrait-panel" id="chat-portrait-panel">
       <div class="portrait-frame">
         <img id="chat-portrait-img" src="" alt="" />
+        <button class="portrait-info-btn" id="portrait-info-btn" aria-label="NPC Bio">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </button>
+        <div class="portrait-bio-tooltip" id="portrait-bio-tooltip"></div>
       </div>
       <div class="portrait-nameplate">
         <div class="portrait-name" id="portrait-name"></div>
         <div class="portrait-role" id="portrait-role"></div>
-        <div class="portrait-status" id="portrait-status" data-i18n="chat.status_available">Available for questioning</div>
+        <div class="portrait-status" id="portrait-status"></div>
       </div>
 
-      <div class="chat-dossier" id="chat-dossier">
-        <button class="chat-dossier-toggle" id="dossier-toggle">
-          <svg class="dossier-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-          <span data-i18n="chat.dossier_heading">Dossier</span>
-          <span class="dossier-badge" id="dossier-badge"></span>
-        </button>
-        <div class="chat-dossier-body" id="chat-dossier-body">
-          <div class="dossier-bio" id="active-dossier-bio"></div>
-          <div id="active-dossier-discoveries"></div>
-        </div>
-      </div>
     </div>
 
     <div class="chat-right-col">
@@ -1234,6 +1431,19 @@
     <div class="modal-actions">
       <button id="cancel-accuse" data-i18n="accuse.cancel">Cancel</button>
       <button id="confirm-accuse" disabled data-i18n="accuse.confirm">Confirm Accusation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Case Ready Modal (Endgame Trigger) ════════ -->
+<div id="case-ready-modal">
+  <div class="modal-card case-ready-card">
+    <h2 data-i18n="endgame.title">All Critical Evidence Gathered</h2>
+    <p data-i18n="endgame.description">You have gathered all the key evidence needed to build a case. Review your evidence, make an accusation, or continue investigating for additional details.</p>
+    <div class="case-ready-actions">
+      <button id="case-ready-review" data-i18n="endgame.review">Review Evidence</button>
+      <button id="case-ready-accuse" data-i18n="endgame.accuse">Make Accusation</button>
+      <button id="case-ready-continue" data-i18n="endgame.continue">Keep Investigating</button>
     </div>
   </div>
 </div>
@@ -1304,15 +1514,75 @@
     return t("role." + npcId);
   }
 
+  /** Update the interrogation icon gauges for the active NPC. */
+  function updateInterrogationUI(npcId) {
+    const gaugesContainer = document.getElementById("interrogation-gauges");
+    const gaugeP = document.getElementById("gauge-pressure");
+    const gaugeR = document.getElementById("gauge-rapport");
+    const iconP  = document.getElementById("gauge-pressure-icon");
+    const iconR  = document.getElementById("gauge-rapport-icon");
+    const labelP = document.getElementById("gauge-pressure-label");
+    const labelR = document.getElementById("gauge-rapport-label");
+    if (!gaugeP || !gaugeR) return;
+
+    // Hide gauges for Detective Lila — she's always cooperative
+    if (npcId === "lila-chen") {
+      if (gaugesContainer) gaugesContainer.style.display = "none";
+      return;
+    }
+    if (gaugesContainer) gaugesContainer.style.display = "";
+
+    const state = npcInterrogation[npcId] || { pressure_band: "calm", rapport_band: "neutral" };
+
+    // Update wrapper classes for label coloring
+    gaugeP.className = "gauge gauge-pressure " + state.pressure_band;
+    gaugeR.className = "gauge gauge-rapport " + state.rapport_band;
+
+    // Swap icon images with pulse animation on change
+    const newPSrc = "icons/pressure-" + state.pressure_band + ".png";
+    const newRSrc = "icons/rapport-" + state.rapport_band + ".png";
+    if (!iconP.src.endsWith(newPSrc)) {
+      iconP.src = newPSrc;
+      iconP.classList.add("pulse");
+      setTimeout(() => iconP.classList.remove("pulse"), 600);
+    }
+    if (!iconR.src.endsWith(newRSrc)) {
+      iconR.src = newRSrc;
+      iconR.classList.add("pulse");
+      setTimeout(() => iconR.classList.remove("pulse"), 600);
+    }
+
+    // Update text labels
+    labelP.textContent = t("interrogation." + state.pressure_band);
+    labelR.textContent = t("interrogation." + state.rapport_band);
+  }
+
+  /** Check if all canonical evidence is collected and trigger endgame. */
+  function checkEndgameTrigger() {
+    if (caseReadyPromptShown) return;
+    const collectedIds = evidence.map(e => e.id);
+    if (!CANONICAL_EVIDENCE.every(id => collectedIds.includes(id))) return;
+    caseReadyPromptShown = true;
+    saveState();
+    document.getElementById("case-ready-modal").classList.add("visible");
+  }
+
   /* ── State ──────────────────────────────────────────────── */
   let npcs = [];
   let activeNpcId = null;
   let conversations = {};
   let evidence = [];
-  let timeline = [];
   let discoveries = {};
+  let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, rapport_band }
+  let caseReadyPromptShown = false;
   let sending = false;
   let accusationTarget = null;
+
+  /* ── Canonical evidence for endgame trigger ────────── */
+  const CANONICAL_EVIDENCE = [
+    "oil-trace", "burned-notebook", "keycard-logs", "key-trail",
+    "oil-cufflinks", "financial-misconduct", "encrypted-schedule", "surveillance",
+  ];
 
   /* ── Voice State ─────────────────────────────────── */
   let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
@@ -1360,17 +1630,10 @@
   const audioToggle       = $("#audio-toggle");
 
   // Chat dossier
-  const chatDossier       = $("#chat-dossier");
-  const dossierToggle     = $("#dossier-toggle");
-  const dossierBadge      = $("#dossier-badge");
-  const activeDossierBio  = $("#active-dossier-bio");
-  const activeDossierDisc = $("#active-dossier-discoveries");
 
   // Case Board (hub)
   const cbEvidenceList    = $("#cb-evidence-list");
   const cbEvidenceEmpty   = $("#cb-evidence-empty");
-  const cbTimelineList    = $("#cb-timeline-list");
-  const cbTimelineEmpty   = $("#cb-timeline-empty");
 
   // Modals
   const accusationModal   = $("#accusation-modal");
@@ -1387,7 +1650,8 @@
   function saveState() {
     try {
       localStorage.setItem("echoes_state_v2", JSON.stringify({
-        conversations, evidence, timeline, activeNpcId, discoveries,
+        conversations, evidence, activeNpcId, discoveries,
+        npcInterrogation, caseReadyPromptShown,
       }));
     } catch {}
   }
@@ -1399,9 +1663,10 @@
       const s = JSON.parse(raw);
       if (s.conversations) conversations = s.conversations;
       if (s.evidence) evidence = s.evidence;
-      if (s.timeline) timeline = s.timeline;
       if (s.activeNpcId) activeNpcId = s.activeNpcId;
       if (s.discoveries) discoveries = s.discoveries;
+      if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
+      if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
     } catch {}
   }
 
@@ -1409,8 +1674,9 @@
     if (voiceMode) exitVoiceMode();
     conversations = {};
     evidence = [];
-    timeline = [];
     discoveries = {};
+    npcInterrogation = {};
+    caseReadyPromptShown = false;
     activeNpcId = null;
     localStorage.removeItem("echoes_state_v2");
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
@@ -1430,7 +1696,6 @@
     hubScreen.classList.add("active");
     renderNpcGrid();
     renderEvidence();
-    renderTimeline();
   }
 
   function showChat() {
@@ -1439,8 +1704,32 @@
   }
 
   /* ── Initialize ─────────────────────────────────────────── */
+  const STARTING_EVIDENCE = [
+    { id: "oil-trace",       textKey: "evidence.crime_scene" },
+    { id: "burned-notebook",  textKey: "evidence.crime_scene" },
+    { id: "keycard-logs",     textKey: "evidence.security_systems" },
+  ];
+
+  function seedStartingEvidence() {
+    let added = false;
+    for (const se of STARTING_EVIDENCE) {
+      if (evidence.find(e => e.id === se.id)) continue;
+      const meta = EVIDENCE_CATALOG[se.id];
+      if (!meta) continue;
+      evidence.unshift({
+        id: se.id,
+        label: t("evidence." + se.id + "_label") || meta.label,
+        text: t(se.textKey),
+        source: "crime-scene",
+      });
+      added = true;
+    }
+    if (added) saveState();
+  }
+
   async function init() {
     loadState();
+    seedStartingEvidence();
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
       const data = await res.json();
@@ -1461,7 +1750,6 @@
 
     renderNpcGrid();
     renderEvidence();
-    renderTimeline();
 
     // If there was an active NPC from saved state, go directly to chat
     if (activeNpcId) {
@@ -1538,13 +1826,13 @@
     // Update nameplate and topbar
     portraitName.textContent = displayName;
     portraitRole.textContent = npcRole(npcId);
-    portraitStatus.textContent = t("chat.status_available");
+    portraitStatus.textContent = "";
     chatTopbarName.textContent = displayName;
     chatTopbarRole.textContent = npcRole(npcId);
 
-    // Render conversation and dossier
+    // Render conversation and interrogation pills
     renderMessages();
-    renderActiveDossier();
+    updateInterrogationUI(npcId);
 
     // Preload all expressions for smooth transitions
     for (const ex of VALID_EXPRESSIONS) {
@@ -1604,7 +1892,7 @@
     const div = document.createElement("div");
     div.className = `msg ${role}`;
     const senderLabel = role === "user" ? t("chat.sender_you") :
-      (npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "NPC");
+      (npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "Suspect");
 
     const displayContent = role === "assistant" ? stripSystemTags(content) : content;
     let html = `<div class="msg-sender">${senderLabel}</div>${escapeHtml(displayContent)}`;
@@ -1683,12 +1971,23 @@
           message: text,
           history: historyForApi,
           language: window.currentLang || "en",
+          pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
+          rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
+          player_evidence_ids: evidence.map(e => e.id),
         }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Server error" }));
-        throw new Error(err.detail || `HTTP ${res.status}`);
+        let detail;
+        try {
+          const errBody = await res.json();
+          detail = errBody.detail || `HTTP ${res.status}`;
+        } catch (_) {
+          const text = await res.text().catch(() => "");
+          detail = text ? `HTTP ${res.status}: ${text.slice(0, 200)}` : `HTTP ${res.status} (no response body)`;
+        }
+        console.error(`[chat] Server error: ${res.status}`, detail);
+        throw new Error(detail);
       }
 
       const data = await res.json();
@@ -1713,17 +2012,35 @@
         setHeaderExpression(activeNpcId, data.expression);
       }
 
+      // Update interrogation state
+      if (data.pressure !== undefined) {
+        npcInterrogation[activeNpcId] = {
+          pressure: data.pressure,
+          rapport: data.rapport,
+          pressure_band: data.pressure_band || "calm",
+          rapport_band: data.rapport_band || "cold",
+        };
+        updateInterrogationUI(activeNpcId);
+      }
+      checkEndgameTrigger();
+
     } catch (err) {
       typingIndicator.classList.remove("visible");
+      // Distinguish network errors from server errors
+      const isNetwork = err instanceof TypeError && err.message.includes("fetch");
+      const displayMsg = isNetwork
+        ? "Cannot reach server — is it running on port 8000?"
+        : err.message;
+      console.error("[chat] Request failed:", err);
       const errDiv = document.createElement("div");
       errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
-      errDiv.textContent = t("chat.error", { message: err.message });
+      errDiv.textContent = t("chat.error", { message: displayMsg });
       chatMessages.appendChild(errDiv);
       scrollToBottom();
       conversations[activeNpcId].pop();
     }
 
-    portraitStatus.textContent = t("chat.status_available");
+    portraitStatus.textContent = "";
     sending = false;
     sendBtn.disabled = !chatInput.value.trim();
     saveState();
@@ -1788,7 +2105,7 @@
   ];
 
   function detectDiscoveries(newEvidenceId) {
-    let dossierUpdated = false;
+    const newTexts = [];
 
     for (const mapping of DISCOVERY_MAP) {
       if (mapping.evidenceId !== newEvidenceId) continue;
@@ -1802,42 +2119,38 @@
         timestamp: Date.now(),
         isNew: true,
       });
-      dossierUpdated = true;
+      newTexts.push(t(mapping.textKey));
     }
 
-    if (dossierUpdated) {
-      renderActiveDossier();
-      flashDossierUpdate();
+    if (newTexts.length > 0) {
+      for (const txt of newTexts) showDiscoveryInChat(txt);
+      renderEvidence();
+      flashCaseBoardTab();
     }
   }
 
-  function flashDossierUpdate() {
-    // Flash dossier toggle and auto-expand
-    if (dossierToggle) {
-      dossierToggle.style.color = "var(--gold)";
-      setTimeout(() => { dossierToggle.style.color = ""; }, 3000);
-    }
-    if (chatDossier.classList.contains("collapsed")) {
-      chatDossier.classList.remove("collapsed");
-    }
-    // Also flash the Case Board tab on the hub
+  function showDiscoveryInChat(discoveryText) {
+    const card = document.createElement("div");
+    card.className = "chat-discovery-card";
+    card.innerHTML = `
+      <div class="discovery-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </div>
+      <div class="discovery-card-label">${escapeHtml(t("chat.discovery_label"))}</div>
+      <div class="discovery-card-text">${escapeHtml(discoveryText)}</div>
+    `;
+    chatMessages.appendChild(card);
+    scrollToBottom();
+  }
+
+  function flashCaseBoardTab() {
     const caseTab = document.querySelector('.manila-tab[data-hub-tab="caseboard"]');
     if (caseTab) {
       caseTab.style.color = "var(--gold)";
       setTimeout(() => { caseTab.style.color = ""; }, 3000);
-    }
-  }
-
-  function clearNewDiscoveryFlags() {
-    let changed = false;
-    for (const npcId of Object.keys(discoveries)) {
-      for (const d of discoveries[npcId]) {
-        if (d.isNew) { d.isNew = false; changed = true; }
-      }
-    }
-    if (changed) {
-      renderActiveDossier();
-      saveState();
     }
   }
 
@@ -1865,70 +2178,68 @@
   }
 
   /* ── Render Evidence (Case Board) ────────────────────────── */
+  const EVIDENCE_GROUPS = {
+    physical:    ["oil-trace", "oil-cufflinks", "lockpick-marks"],
+    documentary: ["burned-notebook", "encrypted-schedule", "nda-ip"],
+    testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale"],
+    access:      ["keycard-logs", "key-trail", "power-outage", "stage-timing"],
+    motive:      ["financial-misconduct", "blackmail", "data-sales", "surveillance"],
+  };
+
+  /** Find collected discoveries linked to an evidence ID. */
+  function getDiscoveriesForEvidence(evidenceId) {
+    const results = [];
+    for (const mapping of DISCOVERY_MAP) {
+      if (mapping.evidenceId !== evidenceId) continue;
+      const npcDiscs = discoveries[mapping.npcId] || [];
+      const found = npcDiscs.find(d => d.id === mapping.discoveryId);
+      if (found) results.push({ ...found, npcId: mapping.npcId });
+    }
+    return results;
+  }
+
+  /** Render a single evidence item with its linked discoveries. */
+  function renderEvidenceItem(e) {
+    const div = document.createElement("div");
+    div.className = "clue-item";
+    let html = `<div class="clue-label">${escapeHtml(e.label)}</div>
+      <div class="clue-text">${escapeHtml(e.text)}</div>`;
+
+    const linkedDisc = getDiscoveriesForEvidence(e.id);
+    if (linkedDisc.length > 0) {
+      html += `<div class="clue-discoveries">`;
+      for (const d of linkedDisc) {
+        html += `<div class="clue-discovery-item">${escapeHtml(t(d.text))}</div>`;
+      }
+      html += `</div>`;
+    }
+    div.innerHTML = html;
+    return div;
+  }
+
   function renderEvidence() {
     cbEvidenceList.innerHTML = "";
     cbEvidenceEmpty.style.display = evidence.length ? "none" : "block";
-    for (const e of evidence) {
-      const div = document.createElement("div");
-      div.className = "clue-item";
-      div.innerHTML = `<div class="clue-label">${escapeHtml(e.label)}</div>
-        <div class="clue-text">${escapeHtml(e.text)}</div>`;
-      cbEvidenceList.appendChild(div);
-    }
-  }
 
-  /* ── Render Active NPC Dossier (Chat Screen) ─────────────── */
-  function renderActiveDossier() {
-    if (!activeNpcId) return;
-    const npcDiscoveries = discoveries[activeNpcId] || [];
-
-    // Bio
-    const bioKey = `dossier.${activeNpcId}.bio`;
-    const bioText = t(bioKey);
-    activeDossierBio.textContent = bioText !== bioKey ? bioText : "";
-
-    // Discoveries
-    activeDossierDisc.innerHTML = "";
-    const heading = document.createElement("div");
-    heading.className = "dossier-discoveries-heading";
-    heading.textContent = t("dossier.discoveries_heading");
-    activeDossierDisc.appendChild(heading);
-
-    if (npcDiscoveries.length > 0) {
-      for (const d of npcDiscoveries) {
-        const item = document.createElement("div");
-        item.className = "dossier-discovery-item" + (d.isNew ? " new-discovery" : "");
-        item.innerHTML = escapeHtml(t(d.text)) +
-          (d.isNew ? ` <span class="dossier-new-badge">${escapeHtml(t("dossier.new_badge"))}</span>` : "");
-        activeDossierDisc.appendChild(item);
+    if (caseReadyPromptShown && evidence.length > 0) {
+      // Grouped view with section headers
+      for (const [groupKey, ids] of Object.entries(EVIDENCE_GROUPS)) {
+        const groupEvidence = evidence.filter(e => ids.includes(e.id));
+        if (groupEvidence.length === 0) continue;
+        const header = document.createElement("div");
+        header.className = "evidence-group-header";
+        header.textContent = t("evidence.group_" + groupKey);
+        cbEvidenceList.appendChild(header);
+        for (const e of groupEvidence) cbEvidenceList.appendChild(renderEvidenceItem(e));
       }
+      // Accusation CTA
+      const cta = document.createElement("button");
+      cta.className = "evidence-accuse-cta";
+      cta.textContent = t("endgame.accuse_cta");
+      cta.addEventListener("click", openAccusationModal);
+      cbEvidenceList.appendChild(cta);
     } else {
-      const empty = document.createElement("div");
-      empty.className = "dossier-no-discoveries";
-      empty.textContent = t("dossier.no_discoveries");
-      activeDossierDisc.appendChild(empty);
-    }
-
-    // Badge count
-    const newCount = npcDiscoveries.filter(d => d.isNew).length;
-    if (newCount > 0) {
-      dossierBadge.textContent = newCount;
-      dossierBadge.classList.add("visible");
-    } else {
-      dossierBadge.classList.remove("visible");
-    }
-  }
-
-  /* ── Render Timeline (Case Board) ────────────────────────── */
-  function renderTimeline() {
-    cbTimelineList.innerHTML = "";
-    cbTimelineEmpty.style.display = timeline.length ? "none" : "block";
-    for (const ev of timeline) {
-      const div = document.createElement("div");
-      div.className = "clue-item";
-      div.innerHTML = `<div class="clue-label">${escapeHtml(ev.time)}</div>
-        <div class="clue-text">${escapeHtml(ev.event)}</div>`;
-      cbTimelineList.appendChild(div);
+      for (const e of evidence) cbEvidenceList.appendChild(renderEvidenceItem(e));
     }
   }
 
@@ -1976,12 +2287,12 @@
   settingsRestartYes.addEventListener("click", () => {
     closeSettings();
     clearState();
+    seedStartingEvidence();
     chatScreen.classList.remove("active");
     hubScreen.classList.remove("active");
     introScreen.classList.remove("hidden");
     chatMessages.innerHTML = "";
     renderEvidence();
-    renderTimeline();
     renderNpcGrid();
   });
 
@@ -2047,6 +2358,15 @@
     hubScreen.classList.add("active");
   });
 
+  // Case board briefing toggle
+  $("#cb-briefing-toggle").addEventListener("click", () => {
+    const toggle = $("#cb-briefing-toggle");
+    const body = $("#cb-briefing-body");
+    const expanded = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!expanded));
+    body.classList.toggle("open");
+  });
+
   backToHubBtn.addEventListener("click", () => {
     if (voiceMode) exitVoiceMode();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
@@ -2064,13 +2384,36 @@
     });
   });
 
-  // Dossier toggle
-  dossierToggle.addEventListener("click", () => {
-    chatDossier.classList.toggle("collapsed");
-    if (!chatDossier.classList.contains("collapsed")) {
-      clearNewDiscoveryFlags();
+  /* ── Portrait Info Button (bio tooltip) ──────────────── */
+  const portraitInfoBtn = $("#portrait-info-btn");
+  const bioTooltipEl = $("#portrait-bio-tooltip");
+  const portraitFrameEl = document.querySelector(".portrait-frame");
+
+  function showBioTooltip() {
+    if (!activeNpcId) return;
+    const bioKey = `dossier.${activeNpcId}.bio`;
+    const bioText = t(bioKey);
+    bioTooltipEl.textContent = bioText !== bioKey ? bioText : "";
+    bioTooltipEl.classList.add("visible");
+  }
+  function hideBioTooltip() {
+    bioTooltipEl.classList.remove("visible");
+  }
+
+  // Desktop: hover to show
+  portraitInfoBtn.addEventListener("mouseenter", showBioTooltip);
+  portraitFrameEl.addEventListener("mouseleave", hideBioTooltip);
+  // Mobile: tap to toggle
+  portraitInfoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (bioTooltipEl.classList.contains("visible")) {
+      hideBioTooltip();
+    } else {
+      showBioTooltip();
     }
   });
+  // Tap tooltip to dismiss
+  bioTooltipEl.addEventListener("click", hideBioTooltip);
 
   chatInput.addEventListener("input", () => {
     autoResize();
@@ -2103,6 +2446,30 @@
   // Close modal on backdrop click
   accusationModal.addEventListener("click", (e) => {
     if (e.target === accusationModal) closeAccusationModal();
+  });
+
+  /* ── Case-Ready Modal (endgame trigger) ──────────────────── */
+  const caseReadyModal = $("#case-ready-modal");
+  $("#case-ready-review").addEventListener("click", () => {
+    caseReadyModal.classList.remove("visible");
+    showHub();
+    // Switch to caseboard tab
+    document.querySelectorAll(".manila-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    const cbTab = document.querySelector('.manila-tab[data-hub-tab="caseboard"]');
+    if (cbTab) cbTab.classList.add("active");
+    const cbPanel = document.getElementById("hub-caseboard");
+    if (cbPanel) cbPanel.classList.add("active");
+  });
+  $("#case-ready-accuse").addEventListener("click", () => {
+    caseReadyModal.classList.remove("visible");
+    openAccusationModal();
+  });
+  $("#case-ready-continue").addEventListener("click", () => {
+    caseReadyModal.classList.remove("visible");
+  });
+  caseReadyModal.addEventListener("click", (e) => {
+    if (e.target === caseReadyModal) caseReadyModal.classList.remove("visible");
   });
 
   /* ── Voice: Audio Toggle ────────────────────────────────── */
@@ -2158,7 +2525,7 @@
     audio.onended = () => {
       currentAudio = null;
       if (replayBtn) replayBtn.classList.remove("playing");
-      if (activeNpcId) portraitStatus.textContent = t("chat.status_available");
+      if (activeNpcId) portraitStatus.textContent = "";
       if (voiceMode && !sending) {
         setTimeout(() => { if (voiceMode) startRecording(); }, 400);
       }
@@ -2166,7 +2533,7 @@
     audio.onerror = () => {
       currentAudio = null;
       if (replayBtn) replayBtn.classList.remove("playing");
-      if (activeNpcId) portraitStatus.textContent = t("chat.status_available");
+      if (activeNpcId) portraitStatus.textContent = "";
       if (voiceMode && !sending) {
         setTimeout(() => { if (voiceMode) startRecording(); }, 400);
       }
@@ -2284,7 +2651,7 @@
     if (isRecording) stopRecording();
     micBtn.classList.remove("voice-mode", "recording", "processing", "waiting");
     micBtn.title = t("voice.mic_title");
-    if (activeNpcId && !sending) portraitStatus.textContent = t("chat.status_available");
+    if (activeNpcId && !sending) portraitStatus.textContent = "";
   }
 
   micBtn.addEventListener("click", () => {
@@ -2365,15 +2732,13 @@
   function switchLanguage(lang) {
     applyLanguage(lang);
     renderNpcGrid();
-    renderActiveDossier();
     renderEvidence();
-    renderTimeline();
     if (activeNpcId) {
       renderMessages();
       // Update programmatically-set NPC role text in chat screen
       portraitRole.textContent = npcRole(activeNpcId);
       chatTopbarRole.textContent = npcRole(activeNpcId);
-      portraitStatus.textContent = sending ? t("chat.status_responding") : t("chat.status_available");
+      portraitStatus.textContent = sending ? t("chat.status_responding") : "";
     }
   }
 

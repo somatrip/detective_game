@@ -53,6 +53,14 @@ class Settings(BaseSettings):
         default="claude-sonnet-4-20250514",
         description="Model name to use for Anthropic completions.",
     )
+    openai_classifier_model: str = Field(
+        default="gpt-4o-mini",
+        description="Cheaper OpenAI model for turn classification and evidence detection.",
+    )
+    anthropic_classifier_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Cheaper Anthropic model for turn classification and evidence detection.",
+    )
 
 
 @lru_cache
