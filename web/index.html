@@ -4,24 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Echoes in the Atrium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Special+Elite&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
   <style>
     /* ── Reset & Variables ─────────────────────────────────── */
     :root {
-      --bg-dark: #0c1018;
-      --bg-panel: #141b27;
-      --bg-panel-alt: #1a2333;
-      --bg-input: #1e293b;
-      --border: rgba(148,163,184,0.18);
-      --border-active: #38bdf8;
-      --text: #e2e8f0;
-      --text-dim: #94a3b8;
-      --text-faint: #64748b;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56,189,248,0.25);
+      /* ── Noir theme palette (source of truth) ── */
+      --noir-warm: #1a1510;
+      --noir-panel: #1c1712;
+      --noir-panel-alt: #231e17;
+      --noir-input: #2a2319;
+      --noir-text: #e8dcc8;
+      --noir-text-dim: #b8a88e;
+      --noir-text-faint: #7a6b55;
+      --noir-amber: #d4a050;
+      --noir-amber-glow: rgba(212,160,80,0.15);
+      --noir-amber-border: rgba(212,160,80,0.35);
+      --noir-smoke: rgba(26,21,16,0.85);
+      --font-noir: "Playfair Display", "Georgia", serif;
+      --font-typewriter: "Special Elite", "Courier New", monospace;
+      --font-body-serif: "Source Serif 4", "Georgia", serif;
+      /* ── Legacy aliases → noir remap ──────── */
+      --bg-dark: var(--noir-warm);
+      --bg-panel: var(--noir-panel);
+      --bg-panel-alt: var(--noir-panel-alt);
+      --bg-input: var(--noir-input);
+      --border: rgba(212,160,80,0.15);
+      --border-active: var(--noir-amber);
+      --text: var(--noir-text);
+      --text-dim: var(--noir-text-dim);
+      --text-faint: var(--noir-text-faint);
+      --accent: var(--noir-amber);
+      --accent-glow: var(--noir-amber-glow);
       --danger: #f87171;
-      --success: #34d399;
-      --gold: #fbbf24;
-      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --success: #a8b88e;
+      --gold: var(--noir-amber);
+      --font: var(--font-body-serif);
       --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
       /* Manila folder palette */
       --manila-bg: #f5e6c8;
@@ -33,8 +52,8 @@
       --manila-fold-highlight: #faf0db;
       --screen-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       --noir-shadow: rgba(0,0,0,0.4);
-      --gold-dim: rgba(251,191,36,0.12);
-      --gold-border: rgba(251,191,36,0.3);
+      --gold-dim: rgba(212,160,80,0.12);
+      --gold-border: rgba(212,160,80,0.3);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
@@ -49,8 +68,8 @@
     #intro-screen {
       position: fixed; inset: 0; z-index: 100;
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(160deg, rgba(12,16,24,0.97), rgba(20,27,39,0.95)),
-        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23ffffff06' fill='none'/%3E%3C/svg%3E");
+      background: linear-gradient(160deg, rgba(26,21,16,0.97), rgba(28,23,18,0.95)),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23d4a05008' fill='none'/%3E%3C/svg%3E");
     }
     #intro-screen.hidden { display: none; }
     .intro-card {
@@ -63,10 +82,11 @@
       text-align: center;
     }
     .intro-card h1 {
+      font-family: var(--font-noir);
       font-size: 2rem; font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
       margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .intro-card .subtitle {
@@ -89,6 +109,7 @@
     .briefing strong { color: var(--text); }
     .briefing .label {
       display: inline-block;
+      font-family: var(--font-noir);
       font-size: 0.75rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.08em;
       color: var(--accent);
@@ -96,12 +117,13 @@
     }
     .briefing p { margin-bottom: 0.75rem; }
     #start-btn {
-      background: linear-gradient(120deg, var(--accent), #0ea5e9);
+      font-family: var(--font-noir);
+      background: linear-gradient(120deg, var(--noir-amber), #b8862e);
       border: none; border-radius: 10px;
       padding: 0.85rem 2.5rem;
       font-size: 1rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.08em;
-      color: #fff; cursor: pointer;
+      color: #1a1510; cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s;
     }
     #start-btn:hover {
@@ -129,9 +151,10 @@
       flex-shrink: 0;
     }
     .hub-title {
+      font-family: var(--font-noir);
       font-size: 1.1rem; font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
-      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .hub-topbar-right {
@@ -214,14 +237,14 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.4);
       border-color: var(--accent);
     }
-    .npc-card.has-talked { border-color: rgba(52,211,153,0.4); }
+    .npc-card.has-talked { border-color: rgba(168,184,142,0.5); }
     .npc-card.has-talked::after {
       content: "";
       position: absolute; top: 10px; right: 10px;
       width: 10px; height: 10px;
       border-radius: 50%;
       background: var(--success);
-      box-shadow: 0 0 6px rgba(52,211,153,0.5);
+      box-shadow: 0 0 6px rgba(168,184,142,0.4);
     }
     .npc-card-portrait {
       width: 100%;
@@ -242,6 +265,7 @@
       text-align: center;
     }
     .npc-card-name {
+      font-family: var(--font-noir);
       font-size: 0.88rem; font-weight: 700;
       margin-bottom: 0.15rem;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -249,9 +273,11 @@
     .npc-card-role {
       font-size: 0.72rem;
       color: var(--text-faint);
+      font-style: italic;
     }
 
     #hub-accuse-btn {
+      font-family: var(--font-typewriter);
       padding: 0.4rem 1rem;
       border: 1px solid rgba(248,113,113,0.4);
       border-radius: 6px;
@@ -283,6 +309,7 @@
       padding: 1.25rem;
     }
     .caseboard-heading {
+      font-family: var(--font-noir);
       font-size: 0.78rem; font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -346,8 +373,8 @@
       align-items: center;
       gap: 1rem;
       padding: 0.5rem 1.5rem;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--noir-panel), var(--noir-panel-alt));
+      border-bottom: 1px solid rgba(212,160,80,0.12);
       flex-shrink: 0;
       min-height: 72px;
     }
@@ -385,10 +412,15 @@
       font-size: 0.95rem; font-weight: 600;
       display: block;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-family: var(--font-noir);
+      color: var(--noir-text);
+      letter-spacing: 0.06em;
     }
     .chat-topbar-role {
       font-size: 0.72rem;
-      color: var(--text-faint);
+      color: var(--noir-text-faint);
+      font-family: var(--font-body-serif);
+      font-style: italic;
     }
     .chat-topbar-right {
       display: flex; align-items: center; gap: 0.5rem;
@@ -399,7 +431,7 @@
     .chat-layout {
       flex: 1;
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 380px 1fr;
       min-height: 0;
       overflow: hidden;
     }
@@ -429,15 +461,26 @@
       transition: opacity 0.3s ease;
     }
     .portrait-nameplate {
-      padding: 0.75rem 1rem;
+      padding: 1.25rem 0.75rem 0.75rem;
       text-align: center;
       background: var(--bg-panel);
       border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
+    .portrait-nameplate-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .portrait-nameplate-info {
+      flex: 1;
+      min-width: 0;
+      text-align: left;
+    }
     .portrait-name {
-      font-size: 1.05rem; font-weight: 700;
-      margin-bottom: 0.1rem;
+      font-family: var(--font-noir);
+      font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 0.15rem;
     }
     .portrait-role {
       font-size: 0.75rem;
@@ -445,6 +488,7 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin-bottom: 0.25rem;
+      font-style: italic;
     }
     .portrait-status {
       font-size: 0.72rem;
@@ -459,8 +503,8 @@
       top: 0.5rem; right: 0.5rem;
       width: 28px; height: 28px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.25);
-      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(212,160,80,0.25);
+      background: rgba(26,21,16,0.6);
       color: var(--text-dim);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -470,14 +514,14 @@
       -webkit-backdrop-filter: blur(4px);
     }
     .portrait-info-btn:hover {
-      background: rgba(0,0,0,0.75);
+      background: rgba(26,21,16,0.8);
       color: var(--text);
     }
     .portrait-bio-tooltip {
       display: none;
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(12,16,24,0.92);
+      background: rgba(26,21,16,0.92);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       color: var(--text-dim);
@@ -493,30 +537,43 @@
     /* ── Chat Discovery Card ───────────────────────────── */
     .chat-discovery-card {
       margin: 0.5rem 1rem;
-      padding: 0.6rem 0.8rem;
-      background: rgba(251,191,36,0.08);
-      border: 1px solid rgba(251,191,36,0.25);
-      border-left: 3px solid var(--gold);
-      border-radius: 8px;
+      padding: 0.7rem 0.9rem 0.7rem 1rem;
+      background: linear-gradient(135deg, rgba(212,160,80,0.08), rgba(212,160,80,0.03));
+      border: 1px solid rgba(212,160,80,0.18);
+      border-left: 3px solid var(--noir-amber);
+      border-radius: 2px 8px 8px 2px;
       animation: discoveryReveal 0.5s ease;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(212,160,80,0.04);
+    }
+    .chat-discovery-card::after {
+      content: "\2022 \2022 \2022";
+      position: absolute;
+      bottom: 0.3rem;
+      right: 0.6rem;
+      font-size: 0.5rem;
+      color: rgba(212,160,80,0.2);
+      letter-spacing: 0.2em;
     }
     .discovery-card-icon {
       float: left;
       margin-right: 0.5rem;
       margin-top: 0.1rem;
-      color: var(--gold);
+      color: var(--noir-amber);
     }
     .discovery-card-label {
       font-size: 0.65rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--gold); margin-bottom: 0.15rem;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--noir-amber); margin-bottom: 0.15rem;
+      font-family: var(--font-noir);
     }
     .discovery-card-text {
-      font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+      font-size: 0.8rem; color: var(--noir-text-dim); line-height: 1.5;
+      font-family: var(--font-body-serif);
     }
     @keyframes discoveryReveal {
       0%   { opacity: 0; transform: translateY(8px); border-left-color: transparent; }
-      50%  { border-left-color: var(--gold); }
+      50%  { border-left-color: var(--noir-amber); }
       100% { opacity: 1; transform: none; }
     }
 
@@ -524,61 +581,41 @@
     .interrogation-gauges {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
-      margin-left: auto;
-      margin-right: 0.5rem;
+      justify-content: center;
+      gap: 1.5rem;
     }
     .gauge {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.1rem;
       position: relative;
+      flex-shrink: 0;
     }
     .gauge-icon {
-      width: 56px;
-      height: 56px;
+      width: 96px;
+      height: 96px;
       object-fit: contain;
-      filter: drop-shadow(0 0 6px rgba(0,0,0,0.6));
-      transition: all 0.4s ease;
+      filter: none;
+      transition: filter 0.4s ease;
     }
-    .gauge-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      text-align: center;
-      white-space: nowrap;
-      transition: color 0.3s;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    }
-    /* Pressure label colors by band */
-    .gauge-pressure.calm .gauge-label     { color: var(--success); }
-    .gauge-pressure.tense .gauge-label    { color: var(--gold); }
-    .gauge-pressure.shaken .gauge-label   { color: #fb923c; }
-    .gauge-pressure.cornered .gauge-label { color: var(--danger); }
-    /* Rapport label colors by band */
-    .gauge-rapport.cold .gauge-label      { color: var(--text-faint); }
-    .gauge-rapport.neutral .gauge-label   { color: var(--text-dim); }
-    .gauge-rapport.open .gauge-label      { color: var(--accent); }
-    .gauge-rapport.trusting .gauge-label  { color: var(--success); }
-    /* Band-colored icon glow */
-    .gauge-pressure.calm .gauge-icon     { filter: drop-shadow(0 0 8px rgba(52,211,153,0.4)) drop-shadow(0 0 16px rgba(52,211,153,0.15)); }
-    .gauge-pressure.tense .gauge-icon    { filter: drop-shadow(0 0 8px rgba(251,191,36,0.5)) drop-shadow(0 0 16px rgba(251,191,36,0.2)); }
-    .gauge-pressure.shaken .gauge-icon   { filter: drop-shadow(0 0 10px rgba(251,146,60,0.5)) drop-shadow(0 0 20px rgba(251,146,60,0.2)); }
-    .gauge-pressure.cornered .gauge-icon { filter: drop-shadow(0 0 12px rgba(248,113,113,0.6)) drop-shadow(0 0 24px rgba(248,113,113,0.25)); }
-    .gauge-rapport.cold .gauge-icon      { filter: drop-shadow(0 0 6px rgba(100,116,139,0.3)) drop-shadow(0 0 12px rgba(100,116,139,0.1)); }
-    .gauge-rapport.neutral .gauge-icon   { filter: drop-shadow(0 0 8px rgba(148,163,184,0.35)) drop-shadow(0 0 14px rgba(148,163,184,0.15)); }
-    .gauge-rapport.open .gauge-icon      { filter: drop-shadow(0 0 10px rgba(56,189,248,0.5)) drop-shadow(0 0 18px rgba(56,189,248,0.2)); }
-    .gauge-rapport.trusting .gauge-icon  { filter: drop-shadow(0 0 12px rgba(52,211,153,0.55)) drop-shadow(0 0 22px rgba(52,211,153,0.25)); }
+    /* Pressure glow: none at calm → increasingly intense red */
+    .gauge-pressure.calm .gauge-icon     { filter: none; }
+    .gauge-pressure.tense .gauge-icon    { filter: drop-shadow(0 0 6px rgba(220,60,60,0.3)) drop-shadow(0 0 12px rgba(220,60,60,0.1)); }
+    .gauge-pressure.shaken .gauge-icon   { filter: drop-shadow(0 0 10px rgba(220,40,40,0.5)) drop-shadow(0 0 22px rgba(220,40,40,0.2)); }
+    .gauge-pressure.cornered .gauge-icon { filter: drop-shadow(0 0 14px rgba(230,30,30,0.7)) drop-shadow(0 0 30px rgba(230,30,30,0.3)); }
+    /* Rapport glow: none at cold → increasingly golden */
+    .gauge-rapport.cold .gauge-icon      { filter: none; }
+    .gauge-rapport.neutral .gauge-icon   { filter: drop-shadow(0 0 6px rgba(251,191,36,0.25)) drop-shadow(0 0 12px rgba(251,191,36,0.1)); }
+    .gauge-rapport.open .gauge-icon      { filter: drop-shadow(0 0 10px rgba(251,191,36,0.5)) drop-shadow(0 0 22px rgba(251,191,36,0.2)); }
+    .gauge-rapport.trusting .gauge-icon  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.7)) drop-shadow(0 0 30px rgba(251,191,36,0.3)); }
     /* Pulse animation on state change */
     .gauge-icon.pulse {
       animation: gauge-pulse 0.6s ease;
     }
     @keyframes gauge-pulse {
-      0%   { transform: scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.3)); }
-      50%  { transform: scale(1.15); filter: drop-shadow(0 0 20px rgba(251,191,36,0.8)); }
-      100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.3)); }
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
     }
 
     /* ── Endgame Modal ───────────────────────────────────── */
@@ -600,6 +637,7 @@
       text-align: center;
     }
     .case-ready-card h2 {
+      font-family: var(--font-noir);
       color: var(--gold);
       margin-bottom: 0.75rem;
     }
@@ -635,13 +673,14 @@
 
     /* Evidence group headers */
     .evidence-group-header {
+      font-family: var(--font-noir);
       font-size: 0.72rem;
       font-weight: 700;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 0.75rem 0 0.25rem;
-      border-bottom: 1px solid rgba(251,191,36,0.2);
+      border-bottom: 1px solid rgba(212,160,80,0.2);
       margin-bottom: 0.4rem;
     }
     .evidence-accuse-cta {
@@ -668,6 +707,7 @@
       flex-direction: column;
       min-height: 0;
       overflow: hidden;
+      background: var(--noir-warm);
     }
 
     /* ── Chat Messages ─────────────────────────────────────── */
@@ -687,8 +727,11 @@
       flex-direction: column;
       gap: 1.1rem;
       background:
-        linear-gradient(180deg, rgba(12,16,24,0.7) 0%, transparent 80px, transparent calc(100% - 80px), rgba(12,16,24,0.7) 100%),
-        url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff03' fill='none'/%3E%3C/svg%3E");
+        linear-gradient(180deg, var(--noir-warm) 0%, transparent 120px, transparent calc(100% - 120px), var(--noir-warm) 100%),
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(212,160,80,0.06) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 60L60 0M-5 5L5 -5M55 65L65 55' stroke='%23ffffff' stroke-opacity='0.02' stroke-width='0.5' fill='none'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='1' y='1' fill='%23ffffff' fill-opacity='0.015'/%3E%3C/svg%3E"),
+        var(--noir-warm);
     }
     .msg {
       max-width: 75%;
@@ -701,45 +744,95 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .msg.user {
       align-self: flex-end;
-      background: linear-gradient(135deg, rgba(30,64,175,0.85), rgba(29,78,216,0.9));
-      border: 1px solid rgba(59,130,246,0.2);
-      border-bottom-right-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      font-family: var(--font-mono), var(--font);
-      font-size: 0.85rem;
-      letter-spacing: -0.01em;
+      max-width: 72%;
+      background: linear-gradient(135deg, rgba(42,35,25,0.9), rgba(50,40,28,0.85));
+      border: 1px solid rgba(212,160,80,0.18);
+      border-right: 3px solid rgba(212,160,80,0.25);
+      border-radius: 10px 2px 2px 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      font-family: var(--font-typewriter);
+      color: var(--noir-text-dim);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+      position: relative;
+      padding: 0.8rem 1rem 0.8rem 1.1rem;
+    }
+    .msg.user::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0;
+      width: 12px; height: 12px;
+      background: linear-gradient(225deg, var(--noir-warm) 50%, rgba(212,160,80,0.15) 50%);
+      border-radius: 0 2px 0 0;
+      pointer-events: none;
     }
     .msg.assistant {
       align-self: flex-start;
-      background: linear-gradient(135deg, var(--bg-panel-alt), rgba(20,27,39,0.95));
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--gold-border);
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 2px 8px var(--noir-shadow), inset 0 1px 0 rgba(255,255,255,0.03);
+      max-width: 78%;
+      background: linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9));
+      border: 1px solid rgba(212,160,80,0.12);
+      border-left: 3px solid var(--noir-amber-border);
+      border-radius: 2px 10px 10px 2px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 20px rgba(212,160,80,0.03);
+      font-family: var(--font-body-serif);
+      color: var(--noir-text);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      position: relative;
+      padding: 1rem 1.1rem 0.9rem 1.3rem;
+    }
+    .msg.assistant::before {
+      content: "\201C";
+      position: absolute;
+      top: -2px; left: 8px;
+      font-family: var(--font-noir);
+      font-size: 2.5rem;
+      color: rgba(212,160,80,0.15);
+      line-height: 1;
+      pointer-events: none;
     }
     .msg .msg-sender {
-      font-size: 0.68rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.1em;
-      margin-bottom: 0.4rem; padding-bottom: 0.3rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text-faint);
+      font-family: var(--font-noir);
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      margin-bottom: 0.5rem; padding-bottom: 0.35rem;
+      border-bottom: 1px solid rgba(212,160,80,0.15);
+      color: var(--noir-text-faint);
+      display: flex; align-items: center; gap: 0.4rem;
     }
-    .msg.assistant .msg-sender { color: var(--gold); border-bottom-color: var(--gold-border); }
-    .msg.user .msg-sender { color: rgba(255,255,255,0.6); border-bottom-color: rgba(255,255,255,0.1); }
+    .msg.assistant .msg-sender {
+      color: var(--noir-amber);
+      border-bottom-color: var(--noir-amber-border);
+    }
+    .msg.assistant .msg-sender::before {
+      content: "\2014";
+      color: rgba(212,160,80,0.4);
+      font-weight: 400;
+    }
+    .msg.user .msg-sender {
+      color: rgba(232,220,200,0.5);
+      border-bottom-color: rgba(232,220,200,0.1);
+    }
+    .msg.user .msg-sender::before {
+      content: "\270E";
+      font-size: 0.8rem;
+      color: rgba(232,220,200,0.3);
+    }
     .typing-indicator {
       align-self: flex-start;
       padding: 0.75rem 1.1rem;
-      background: var(--bg-panel-alt);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--gold-border);
-      border-radius: 12px;
+      background: rgba(44,36,25,0.8);
+      border: 1px solid rgba(212,160,80,0.12);
+      border-left: 3px solid var(--noir-amber-border);
+      border-radius: 2px 10px 10px 2px;
       display: none;
     }
     .typing-indicator.visible { display: flex; gap: 5px; align-items: center; }
     .typing-dot {
-      width: 6px; height: 6px;
+      width: 5px; height: 5px;
       border-radius: 50%;
-      background: var(--gold);
+      background: var(--noir-amber);
       animation: typingPulse 1.4s infinite;
     }
     .typing-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -762,66 +855,68 @@
     }
     .chat-starter-btn {
       width: 100%;
-      background: rgba(251,191,36,0.03);
-      border: 1px solid rgba(251,191,36,0.12);
-      border-left: 2px solid rgba(251,191,36,0.25);
-      border-radius: 8px;
-      color: var(--text-dim);
+      background: rgba(212,160,80,0.04);
+      border: 1px solid rgba(212,160,80,0.12);
+      border-left: 2px solid rgba(212,160,80,0.25);
+      border-radius: 2px 8px 8px 2px;
+      color: var(--noir-text-dim);
       font-size: 0.82rem;
       padding: 0.65rem 1rem;
       cursor: pointer;
       text-align: left;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
       line-height: 1.35;
+      font-family: var(--font-body-serif);
+      font-style: italic;
     }
     .chat-starter-btn:hover {
-      border-color: var(--gold);
-      border-left-color: var(--gold);
-      color: var(--text);
-      background: rgba(251,191,36,0.06);
+      border-color: var(--noir-amber);
+      border-left-color: var(--noir-amber);
+      color: var(--noir-text);
+      background: rgba(212,160,80,0.08);
     }
 
     /* Chat input */
     .chat-input-bar {
       display: none;
       padding: 0.85rem 1.5rem;
-      background: linear-gradient(0deg, var(--bg-panel) 60%, var(--bg-panel-alt));
-      border-top: 1px solid var(--border);
+      background: linear-gradient(0deg, var(--noir-panel) 60%, var(--noir-panel-alt));
+      border-top: 1px solid rgba(212,160,80,0.15);
       gap: 0.75rem; align-items: flex-end;
       flex-shrink: 0;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
     }
     .chat-input-bar.active { display: flex; }
     #chat-input {
       flex: 1;
-      background: var(--bg-dark);
-      border: 1px solid rgba(148,163,184,0.12);
-      border-radius: 8px;
-      padding: 0.7rem 1rem;
-      color: var(--text);
+      background: var(--noir-warm);
+      border: 1px solid rgba(212,160,80,0.12);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      color: var(--noir-text);
       font-size: 0.88rem;
-      font-family: var(--font-mono), var(--font);
+      font-family: var(--font-typewriter);
       resize: none;
       max-height: 120px;
       min-height: 42px;
-      line-height: 1.5;
+      line-height: 1.6;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-    #chat-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56,189,248,0.1), inset 0 0 12px rgba(56,189,248,0.03); }
-    #chat-input::placeholder { color: var(--text-faint); font-style: italic; }
+    #chat-input:focus { outline: none; border-color: var(--noir-amber); box-shadow: 0 0 0 2px rgba(212,160,80,0.1), inset 0 0 12px rgba(212,160,80,0.03); }
+    #chat-input::placeholder { color: var(--noir-text-faint); font-style: italic; font-family: var(--font-body-serif); }
     #send-btn {
       width: 42px; height: 42px;
       border: none; border-radius: 8px;
-      background: linear-gradient(135deg, var(--accent), #0ea5e9);
-      color: #fff;
+      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
+      color: #1a1510;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       transition: transform 0.1s, box-shadow 0.15s;
-      box-shadow: 0 2px 8px rgba(56,189,248,0.2);
+      box-shadow: 0 2px 8px rgba(212,160,80,0.2);
     }
-    #send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(56,189,248,0.35); }
-    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+    #send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(212,160,80,0.35); }
+    #send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
     #send-btn svg { width: 18px; height: 18px; }
 
     /* ── Clue Items (reused in case board) ─────────────────── */
@@ -834,6 +929,7 @@
       animation: fadeIn 0.3s ease;
     }
     .clue-item .clue-label {
+      font-family: var(--font-noir);
       font-size: 0.75rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.06em;
       color: var(--gold);
@@ -865,6 +961,190 @@
       font-style: italic;
     }
 
+    /* ── Keycard Logs Terminal Modal ──────────────────────── */
+    .clue-view-logs-btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      margin-top: 0.5rem;
+      padding: 0.35rem 0.7rem;
+      background: transparent;
+      border: 1px solid rgba(212,160,80,0.3);
+      border-radius: 4px;
+      color: var(--noir-amber, #d4a050);
+      font-family: var(--font-typewriter, "Courier New", monospace);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .clue-view-logs-btn:hover {
+      background: rgba(212,160,80,0.1);
+      border-color: rgba(212,160,80,0.6);
+      color: #e8c06a;
+    }
+
+    #keycard-modal {
+      position: fixed; inset: 0; z-index: 210;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #keycard-modal.visible { display: flex; }
+
+    .keycard-terminal {
+      width: min(900px, 94vw);
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      background: #0a0e08;
+      border: 1px solid rgba(80,200,80,0.2);
+      border-radius: 6px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.7), inset 0 0 80px rgba(40,120,40,0.03);
+      overflow: hidden;
+      position: relative;
+    }
+    /* CRT scanline overlay */
+    .keycard-terminal::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .keycard-terminal-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(180deg, #141a10, #0e1309);
+      border-bottom: 1px solid rgba(80,200,80,0.15);
+      flex-shrink: 0;
+    }
+    .keycard-terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: rgba(120,220,100,0.8);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .keycard-terminal-title::after {
+      content: "█";
+      margin-left: 0.4rem;
+      animation: termBlink 1s step-end infinite;
+      color: rgba(120,220,100,0.5);
+    }
+    @keyframes termBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .keycard-terminal-close {
+      background: none; border: 1px solid rgba(120,220,100,0.2);
+      color: rgba(120,220,100,0.6);
+      font-size: 1rem; width: 28px; height: 28px;
+      border-radius: 4px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .keycard-terminal-close:hover {
+      color: rgba(120,220,100,0.9);
+      border-color: rgba(120,220,100,0.5);
+    }
+
+    .keycard-terminal-info {
+      padding: 0.4rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: rgba(120,220,100,0.4);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(80,200,80,0.08);
+      flex-shrink: 0;
+    }
+
+    .keycard-terminal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(80,200,80,0.2) transparent;
+    }
+    .keycard-terminal-body::-webkit-scrollbar { width: 6px; }
+    .keycard-terminal-body::-webkit-scrollbar-thumb { background: rgba(80,200,80,0.2); border-radius: 3px; }
+
+    .kc-row {
+      display: grid;
+      grid-template-columns: 70px 110px 90px 1fr 50px 64px;
+      gap: 0.3rem;
+      padding: 0.25rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      line-height: 1.6;
+      color: rgba(180,210,170,0.7);
+      border-bottom: 1px solid rgba(80,200,80,0.04);
+    }
+    .kc-row:nth-child(even) { background: rgba(80,200,80,0.02); }
+    .kc-row:hover { background: rgba(80,200,80,0.06); }
+
+    .kc-time { color: rgba(120,220,100,0.5); }
+    .kc-zone { color: rgba(100,200,120,0.8); font-weight: 600; }
+    .kc-card { color: rgba(180,210,170,0.45); }
+    .kc-holder { color: rgba(200,220,190,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kc-dir { text-transform: uppercase; font-size: 0.6rem; }
+    .kc-dir.entry { color: rgba(100,200,120,0.6); }
+    .kc-dir.exit { color: rgba(200,180,100,0.6); }
+    .kc-access { font-size: 0.6rem; text-transform: uppercase; color: rgba(100,200,120,0.4); }
+
+    .kc-system {
+      display: block;
+      padding: 0.5rem 1rem;
+      margin: 0.3rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      line-height: 1.5;
+      border-radius: 3px;
+      border-left: 3px solid;
+    }
+    .kc-system.offline {
+      background: rgba(220,60,40,0.08);
+      border-left-color: rgba(220,60,40,0.6);
+      color: rgba(255,140,120,0.9);
+    }
+    .kc-system.restored {
+      background: rgba(80,200,80,0.06);
+      border-left-color: rgba(80,200,80,0.5);
+      color: rgba(120,220,100,0.8);
+    }
+    .kc-system-icon { margin-right: 0.4rem; }
+    .kc-system-time { opacity: 0.6; }
+
+    .kc-header {
+      display: grid;
+      grid-template-columns: 70px 110px 90px 1fr 50px 64px;
+      gap: 0.3rem;
+      padding: 0.35rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: rgba(120,220,100,0.35);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(80,200,80,0.12);
+    }
+
+    @media (max-width: 600px) {
+      .kc-row, .kc-header {
+        grid-template-columns: 58px 80px 1fr 42px;
+        font-size: 0.6rem;
+      }
+      .kc-card, .kc-access { display: none; }
+      .keycard-terminal { width: 98vw; max-height: 92vh; }
+    }
+
     /* ── Accusation Modal ──────────────────────────────────── */
     #accusation-modal {
       position: fixed; inset: 0; z-index: 200;
@@ -882,6 +1162,7 @@
       box-shadow: 0 32px 64px rgba(0,0,0,0.5);
     }
     .modal-card h2 {
+      font-family: var(--font-noir);
       font-size: 1.2rem; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.06em;
       margin-bottom: 0.5rem;
@@ -955,6 +1236,7 @@
       box-shadow: 0 32px 64px rgba(0,0,0,0.6);
     }
     .outcome-card h2 {
+      font-family: var(--font-noir);
       font-size: 1.8rem; font-weight: 700;
       margin-bottom: 0.5rem;
     }
@@ -967,19 +1249,20 @@
       margin-bottom: 2rem;
     }
     #restart-btn {
-      background: linear-gradient(120deg, var(--accent), #0ea5e9);
+      font-family: var(--font-noir);
+      background: linear-gradient(120deg, var(--noir-amber), #b8862e);
       border: none; border-radius: 10px;
       padding: 0.8rem 2rem;
       font-size: 0.95rem; font-weight: 600;
-      color: #fff; cursor: pointer;
+      color: #1a1510; cursor: pointer;
       text-transform: uppercase; letter-spacing: 0.06em;
     }
 
     /* ── Scrollbar Styling ─────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.35); }
+    ::-webkit-scrollbar-thumb { background: rgba(212,160,80,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212,160,80,0.3); }
 
     /* ── Language Toggle ──────────────────────────────────── */
     .lang-toggle {
@@ -998,8 +1281,8 @@
       transition: background 0.15s, color 0.15s;
     }
     .lang-btn.active {
-      background: var(--accent);
-      color: #fff;
+      background: var(--noir-amber);
+      color: #1a1510;
     }
     .lang-btn:not(.active):hover {
       background: var(--bg-panel-alt);
@@ -1010,16 +1293,16 @@
     /* ── Voice: Mic Button ──────────────────────────────── */
     #mic-btn {
       width: 42px; height: 42px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--bg-input);
-      color: var(--text-faint);
+      border: 1px solid rgba(212,160,80,0.15);
+      border-radius: 8px;
+      background: var(--noir-input);
+      color: var(--noir-text-faint);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    #mic-btn:hover { color: var(--text); border-color: var(--text-faint); }
+    #mic-btn:hover { color: var(--noir-text); border-color: var(--noir-text-faint); }
     #mic-btn.recording {
       background: rgba(248,113,113,0.15);
       border-color: var(--danger);
@@ -1032,9 +1315,9 @@
       cursor: wait;
     }
     #mic-btn.voice-mode {
-      background: rgba(56,189,248,0.12);
-      border-color: var(--accent);
-      color: var(--accent);
+      background: rgba(212,160,80,0.12);
+      border-color: var(--noir-amber);
+      color: var(--noir-amber);
     }
     #mic-btn.voice-mode.recording {
       background: rgba(248,113,113,0.15);
@@ -1042,9 +1325,9 @@
       color: var(--danger);
     }
     #mic-btn.voice-mode.waiting {
-      background: rgba(56,189,248,0.12);
-      border-color: var(--accent);
-      color: var(--accent);
+      background: rgba(212,160,80,0.12);
+      border-color: var(--noir-amber);
+      color: var(--noir-amber);
       opacity: 0.6;
       cursor: default;
     }
@@ -1107,6 +1390,7 @@
       border-bottom: 1px solid var(--border);
     }
     .settings-header h2 {
+      font-family: var(--font-noir);
       font-size: 1rem; font-weight: 600;
       color: var(--text); margin: 0;
     }
@@ -1171,18 +1455,19 @@
     /* ── Voice: Per-message replay button ──────────────── */
     .msg-audio-btn {
       display: inline-flex; align-items: center; gap: 4px;
-      margin-top: 0.4rem;
-      padding: 0.2rem 0.5rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      margin-left: 0.5rem;
+      padding: 0.15rem 0.4rem;
+      border: 1px solid rgba(212,160,80,0.2);
+      border-radius: 4px;
       background: transparent;
-      color: var(--text-faint);
+      color: var(--noir-text-faint);
       font-size: 0.72rem;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
+      vertical-align: middle;
     }
-    .msg-audio-btn:hover { color: var(--accent); border-color: var(--accent); }
-    .msg-audio-btn.playing { color: var(--accent); border-color: var(--accent); }
+    .msg-audio-btn:hover { color: var(--noir-amber); border-color: var(--noir-amber); }
+    .msg-audio-btn.playing { color: var(--noir-amber); border-color: var(--noir-amber); }
     .msg-audio-btn svg { width: 12px; height: 12px; }
 
     /* ── Responsive ────────────────────────────────────────── */
@@ -1192,11 +1477,9 @@
     }
     @media (max-width: 768px) {
       .chat-topbar { min-height: 60px; }
-      .gauge-icon { width: 42px; height: 42px; }
-      .gauge-label { font-size: 0.55rem; }
-      .interrogation-gauges { gap: 0.75rem; }
-      .msg.user { font-family: var(--font); font-size: 0.88rem; letter-spacing: normal; }
-      #chat-input { font-family: var(--font); }
+      .gauge-icon { width: 64px; height: 64px; }
+      .portrait-nameplate-row { gap: 0.5rem; }
+      #chat-input { font-family: var(--font-typewriter); }
       .chat-layout {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
@@ -1322,16 +1605,6 @@
       <span class="chat-topbar-name" id="chat-topbar-name"></span>
       <span class="chat-topbar-role" id="chat-topbar-role"></span>
     </div>
-    <div class="interrogation-gauges" id="interrogation-gauges">
-      <div class="gauge gauge-pressure calm" id="gauge-pressure">
-        <img class="gauge-icon" id="gauge-pressure-icon" src="icons/pressure-calm.png" alt="Pressure" />
-        <span class="gauge-label" id="gauge-pressure-label" data-i18n="interrogation.calm">Calm</span>
-      </div>
-      <div class="gauge gauge-rapport neutral" id="gauge-rapport">
-        <img class="gauge-icon" id="gauge-rapport-icon" src="icons/rapport-neutral.png" alt="Rapport" />
-        <span class="gauge-label" id="gauge-rapport-label" data-i18n="interrogation.neutral">Neutral</span>
-      </div>
-    </div>
     <div class="chat-topbar-right">
       <button id="audio-toggle" title="Toggle voice">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1362,9 +1635,19 @@
         <div class="portrait-bio-tooltip" id="portrait-bio-tooltip"></div>
       </div>
       <div class="portrait-nameplate">
-        <div class="portrait-name" id="portrait-name"></div>
-        <div class="portrait-role" id="portrait-role"></div>
-        <div class="portrait-status" id="portrait-status"></div>
+        <div class="portrait-nameplate-row" id="interrogation-gauges">
+          <div class="portrait-nameplate-info">
+            <div class="portrait-name" id="portrait-name"></div>
+            <div class="portrait-role" id="portrait-role"></div>
+          </div>
+          <div class="gauge gauge-pressure calm" id="gauge-pressure">
+            <img class="gauge-icon" id="gauge-pressure-icon" src="icons/pressure-calm.png" alt="Pressure" />
+          </div>
+          <div class="gauge gauge-rapport neutral" id="gauge-rapport">
+            <img class="gauge-icon" id="gauge-rapport-icon" src="icons/rapport-neutral.png" alt="Rapport" />
+          </div>
+        </div>
+        <div class="portrait-status" id="portrait-status" style="display:none"></div>
       </div>
 
     </div>
@@ -1457,7 +1740,19 @@
   </div>
 </div>
 
-<script src="i18n.js?v=2"></script>
+<!-- ════════ Keycard Logs Terminal Modal ════════ -->
+<div id="keycard-modal">
+  <div class="keycard-terminal">
+    <div class="keycard-terminal-bar">
+      <span class="keycard-terminal-title" data-i18n="keycard.title">■ LYRIC ATRIUM HOTEL — KEYCARD ACCESS CONTROL</span>
+      <button class="keycard-terminal-close" id="keycard-modal-close">✕</button>
+    </div>
+    <div class="keycard-terminal-info" data-i18n="keycard.subtitle">EVENT LOG — 2024-11-15 — GALA NIGHT — ALL ZONES</div>
+    <div class="keycard-terminal-body" id="keycard-terminal-body"></div>
+  </div>
+</div>
+
+<script src="i18n.js?v=4"></script>
 <script>
 /* ================================================================
    ECHOES IN THE ATRIUM — Game Frontend
@@ -1521,20 +1816,20 @@
     const gaugeR = document.getElementById("gauge-rapport");
     const iconP  = document.getElementById("gauge-pressure-icon");
     const iconR  = document.getElementById("gauge-rapport-icon");
-    const labelP = document.getElementById("gauge-pressure-label");
-    const labelR = document.getElementById("gauge-rapport-label");
     if (!gaugeP || !gaugeR) return;
 
     // Hide gauges for Detective Lila — she's always cooperative
     if (npcId === "lila-chen") {
-      if (gaugesContainer) gaugesContainer.style.display = "none";
+      gaugeP.style.display = "none";
+      gaugeR.style.display = "none";
       return;
     }
-    if (gaugesContainer) gaugesContainer.style.display = "";
+    gaugeP.style.display = "";
+    gaugeR.style.display = "";
 
     const state = npcInterrogation[npcId] || { pressure_band: "calm", rapport_band: "neutral" };
 
-    // Update wrapper classes for label coloring
+    // Update wrapper classes for glow styling
     gaugeP.className = "gauge gauge-pressure " + state.pressure_band;
     gaugeR.className = "gauge gauge-rapport " + state.rapport_band;
 
@@ -1551,10 +1846,6 @@
       iconR.classList.add("pulse");
       setTimeout(() => iconR.classList.remove("pulse"), 600);
     }
-
-    // Update text labels
-    labelP.textContent = t("interrogation." + state.pressure_band);
-    labelR.textContent = t("interrogation." + state.rapport_band);
   }
 
   /** Check if all canonical evidence is collected and trigger endgame. */
@@ -1713,13 +2004,19 @@
   function seedStartingEvidence() {
     let added = false;
     for (const se of STARTING_EVIDENCE) {
-      if (evidence.find(e => e.id === se.id)) continue;
+      const existing = evidence.find(e => e.id === se.id);
+      if (existing) {
+        // Migration: ensure textKey is set on older saved evidence
+        if (!existing.textKey) existing.textKey = se.textKey;
+        continue;
+      }
       const meta = EVIDENCE_CATALOG[se.id];
       if (!meta) continue;
       evidence.unshift({
         id: se.id,
         label: t("evidence." + se.id + "_label") || meta.label,
         text: t(se.textKey),
+        textKey: se.textKey,
         source: "crime-scene",
       });
       added = true;
@@ -1895,12 +2192,11 @@
       (npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "Suspect");
 
     const displayContent = role === "assistant" ? stripSystemTags(content) : content;
-    let html = `<div class="msg-sender">${senderLabel}</div>${escapeHtml(displayContent)}`;
+    let senderHtml = senderLabel;
 
     if (role === "assistant" && activeNpcId && messageIndex !== undefined) {
       const cacheKey = `${activeNpcId}:${messageIndex}`;
-      html += `
-        <button class="msg-audio-btn" data-cache-key="${cacheKey}"
+      senderHtml += `<button class="msg-audio-btn" data-cache-key="${cacheKey}"
                 data-npc-id="${activeNpcId}" data-msg-index="${messageIndex}"
                 title="${t('voice.replay_title')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1910,6 +2206,8 @@
           </svg>
         </button>`;
     }
+
+    let html = `<div class="msg-sender">${senderHtml}</div>${escapeHtml(displayContent)}`;
 
     div.innerHTML = html;
 
@@ -2104,11 +2402,12 @@
     { evidenceId: "stage-timing",       npcId: "marcus-vale",    discoveryId: "marcus-celeste-break",  textKey: "discovery.marcus-celeste-break" },
   ];
 
-  function detectDiscoveries(newEvidenceId) {
+  function detectDiscoveries(newEvidenceId, npcId) {
     const newTexts = [];
 
     for (const mapping of DISCOVERY_MAP) {
       if (mapping.evidenceId !== newEvidenceId) continue;
+      if (mapping.npcId !== npcId) continue;
       if (!discoveries[mapping.npcId]) discoveries[mapping.npcId] = [];
       if (discoveries[mapping.npcId].find(d => d.id === mapping.discoveryId)) continue;
 
@@ -2159,17 +2458,21 @@
     let found = false;
 
     for (const id of evidenceIds) {
-      if (evidence.find(e => e.id === id)) continue;
       const meta = EVIDENCE_CATALOG[id];
       if (!meta) continue;
-      evidence.push({
-        id: id,
-        label: t("evidence." + id + "_label") || meta.label,
-        text: t("evidence.mentioned_by", { name: npcName }),
-        source: npcId,
-      });
-      found = true;
-      detectDiscoveries(id);
+
+      if (!evidence.find(e => e.id === id)) {
+        evidence.push({
+          id: id,
+          label: t("evidence." + id + "_label") || meta.label,
+          text: t("evidence.mentioned_by", { name: npcName }),
+          textKey: "evidence.mentioned_by",
+          source: npcId,
+        });
+        found = true;
+      }
+
+      detectDiscoveries(id, npcId);
     }
 
     if (found) {
@@ -2202,8 +2505,19 @@
   function renderEvidenceItem(e) {
     const div = document.createElement("div");
     div.className = "clue-item";
-    let html = `<div class="clue-label">${escapeHtml(e.label)}</div>
-      <div class="clue-text">${escapeHtml(e.text)}</div>`;
+    // Re-translate at render time for current language
+    const label = t("evidence." + e.id + "_label") || e.label;
+    let text = e.text;
+    if (e.textKey) {
+      if (e.textKey === "evidence.mentioned_by") {
+        const npcName = npcs.find(n => n.npc_id === e.source)?.display_name?.split(" — ")[0] || e.source;
+        text = t(e.textKey, { name: npcName }) || text;
+      } else {
+        text = t(e.textKey) || text;
+      }
+    }
+    let html = `<div class="clue-label">${escapeHtml(label)}</div>
+      <div class="clue-text">${escapeHtml(text)}</div>`;
 
     const linkedDisc = getDiscoveriesForEvidence(e.id);
     if (linkedDisc.length > 0) {
@@ -2212,6 +2526,9 @@
         html += `<div class="clue-discovery-item">${escapeHtml(t(d.text))}</div>`;
       }
       html += `</div>`;
+    }
+    if (e.id === "keycard-logs") {
+      html += `<button class="clue-view-logs-btn" onclick="window.__openKeycardModal()">${t("keycard.view_logs")}</button>`;
     }
     div.innerHTML = html;
     return div;
@@ -2470,6 +2787,79 @@
   });
   caseReadyModal.addEventListener("click", (e) => {
     if (e.target === caseReadyModal) caseReadyModal.classList.remove("visible");
+  });
+
+  /* ── Keycard Logs Terminal Modal ────────────────────────── */
+  let keycardLogsCache = null;
+  const keycardModal = document.getElementById("keycard-modal");
+  const keycardBody  = document.getElementById("keycard-terminal-body");
+
+  function fmtTime(ts) {
+    return ts.substring(11, 19);
+  }
+
+  function padEnd(s, len) {
+    return s.length >= len ? s : s + " ".repeat(len - s.length);
+  }
+
+  function renderKeycardLogs(logs) {
+    let html = `<div class="kc-header">
+      <span>${t("keycard.col_time")}</span><span>${t("keycard.col_zone")}</span><span>${t("keycard.col_card")}</span><span>${t("keycard.col_holder")}</span><span>${t("keycard.col_dir")}</span><span>${t("keycard.col_status")}</span>
+    </div>`;
+    for (const l of logs) {
+      if (l.card_id === "SYSTEM") {
+        const isOff = l.access === "system_offline";
+        const icon = isOff ? "⚠" : "✓";
+        const cls = isOff ? "offline" : "restored";
+        const sysText = isOff ? t("keycard.system_offline") : t("keycard.system_restored");
+        html += `<div class="kc-system ${cls}">
+          <span class="kc-system-icon">${icon}</span>
+          <span class="kc-system-time">${fmtTime(l.timestamp)}</span>  ${sysText}
+        </div>`;
+      } else {
+        const dirCls = l.direction === "entry" ? "entry" : "exit";
+        const dirLabel = l.direction === "entry" ? t("keycard.entry") : t("keycard.exit");
+        const statusLabel = t("keycard.granted");
+        const zoneLabel = t("keycard.zone." + l.zone) || l.zone;
+        html += `<div class="kc-row">
+          <span class="kc-time">${fmtTime(l.timestamp)}</span>
+          <span class="kc-zone">${zoneLabel}</span>
+          <span class="kc-card">${l.card_id}</span>
+          <span class="kc-holder">${l.card_holder}</span>
+          <span class="kc-dir ${dirCls}">${dirLabel}</span>
+          <span class="kc-access">${statusLabel}</span>
+        </div>`;
+      }
+    }
+    keycardBody.innerHTML = html;
+  }
+
+  window.__openKeycardModal = async function() {
+    keycardModal.classList.add("visible");
+    // Re-translate terminal header for current language
+    document.querySelector(".keycard-terminal-title").textContent = t("keycard.title");
+    document.querySelector(".keycard-terminal-info").textContent = t("keycard.subtitle");
+    if (keycardLogsCache) {
+      renderKeycardLogs(keycardLogsCache);
+      return;
+    }
+    keycardBody.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(120,220,100,0.4);font-family:var(--font-mono);font-size:0.75rem;">' + t("keycard.loading") + '</div>';
+    try {
+      const resp = await fetch("data/keycard_logs.json");
+      keycardLogsCache = await resp.json();
+      renderKeycardLogs(keycardLogsCache);
+    } catch (err) {
+      keycardBody.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(220,60,40,0.8);font-family:var(--font-mono);font-size:0.75rem;">' + t("keycard.error") + '</div>';
+    }
+  };
+
+  function closeKeycardModal() {
+    keycardModal.classList.remove("visible");
+  }
+
+  document.getElementById("keycard-modal-close").addEventListener("click", closeKeycardModal);
+  keycardModal.addEventListener("click", (e) => {
+    if (e.target === keycardModal) closeKeycardModal();
   });
 
   /* ── Voice: Audio Toggle ────────────────────────────────── */
