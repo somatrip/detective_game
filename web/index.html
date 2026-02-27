@@ -368,13 +368,13 @@
     }
     #hub-accuse-btn {
       font-family: var(--font-typewriter);
-      padding: 0.4rem 1rem;
-      border: 1px solid rgba(248,113,113,0.4);
+      padding: 0.75rem 2rem;
+      border: 1.5px solid rgba(248,113,113,0.4);
       border-radius: 6px;
       background: rgba(248,113,113,0.1);
       color: var(--danger);
-      font-size: 0.72rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.05em;
+      font-size: 0.85rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s;
     }
@@ -3613,7 +3613,32 @@
   function skipTutorial() {
     cleanupClickToAdvance();
     tutorialOverlay.classList.remove("active");
-    markTutorialDone();
+
+    if (tutorialPhase === "hub") {
+      // Don't mark tutorial as fully done — chat steps should still fire.
+      // If user skipped before reaching the suspects tab, set up a one-time
+      // listener so the remaining hub steps (Lila + suspects) appear when
+      // they eventually click the tab.
+      const suspectsTab = document.querySelector('.manila-tab[data-hub-tab="suspects"]');
+      const suspPanel   = document.getElementById("hub-suspects");
+      const alreadyOnSuspects = suspPanel && suspPanel.classList.contains("active");
+
+      if (!alreadyOnSuspects && suspectsTab) {
+        // Resume from the Lila step (index 3) when user clicks suspects tab
+        const resumeFromLila = () => {
+          tutorialPhase = "hub";
+          tutorialSteps = HUB_STEPS;
+          tutorialCurrentStep = 3; // Lila partner step
+          showTutorialStep(3);
+        };
+        suspectsTab.addEventListener("click", () => {
+          setTimeout(resumeFromLila, 350);
+        }, { once: true });
+      }
+      // Keep chatTutorialPending alive so chat tutorial still fires
+    } else {
+      markTutorialDone();
+    }
     tutorialPhase = null;
   }
 
@@ -3631,6 +3656,7 @@
   document.getElementById("settings-tutorial-btn").addEventListener("click", () => {
     closeSettings();
     localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+    chatTutorialPending = true; // ensure chat-phase tutorial fires after hub replay
     // Navigate to hub/caseboard first
     if (chatScreen.classList.contains("active")) {
       leaveChat();
