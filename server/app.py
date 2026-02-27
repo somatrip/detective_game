@@ -192,13 +192,17 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     ]
 
     if request.language == "sr":
+        gender_sr = "ženskog" if npc_profile.gender == "female" else "muškog"
         system_messages.append({
             "role": "system",
             "content": (
-                "IMPORTANT: The player has chosen Serbian as their language. "
-                "You MUST respond entirely in Serbian (Latin script). "
-                "Stay in character and maintain the same personality, secrets, "
-                "and conversational rules, but speak Serbian."
+                f"IMPORTANT: The player has chosen Serbian as their language. "
+                f"You MUST respond entirely in Serbian (Latin script). "
+                f"Your character is {npc_profile.gender} — use correct {gender_sr} roda "
+                f"grammatical forms (verb conjugations, adjective agreements, past tense). "
+                f"For example, a female character says 'bila sam' not 'bio sam'. "
+                f"Stay in character and maintain the same personality, secrets, "
+                f"and conversational rules, but speak Serbian with proper gender grammar."
             ),
         })
 

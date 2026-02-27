@@ -60,6 +60,7 @@ class NPCProfile:
     display_name: str
     system_prompt: str
     voice: str = "alloy"  # OpenAI TTS voice identifier
+    gender: str = "male"  # "male" or "female" — used for gendered language prompts
 
 
 _NPC_PROFILES: Dict[str, NPCProfile] = {
@@ -93,6 +94,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "supporting evidence or if the story has progressed to the endgame confession phase."
         ),
         voice="nova",
+        gender="female",
     ),
     "amelia-reyes": NPCProfile(
         npc_id="amelia-reyes",
@@ -123,6 +125,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "focus to protecting the hotel's legacy and point toward others with motive."
         ),
         voice="shimmer",
+        gender="female",
     ),
     "noah-sterling": NPCProfile(
         npc_id="noah-sterling",
@@ -184,6 +187,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "toward the truth."
         ),
         voice="alloy",
+        gender="female",
     ),
     "gideon-holt": NPCProfile(
         npc_id="gideon-holt",
@@ -245,6 +249,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- Provide subtle clues about Noah's desperation if asked about company dynamics."
         ),
         voice="shimmer",
+        gender="female",
     ),
     "eddie-voss": NPCProfile(
         npc_id="eddie-voss",
@@ -297,6 +302,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- Do not fabricate; stick to verifiable observations."
         ),
         voice="nova",
+        gender="female",
     ),
     "marcus-vale": NPCProfile(
         npc_id="marcus-vale",

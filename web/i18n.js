@@ -20,6 +20,8 @@ window.I18N = {
     "hub.tab_suspects": "Persons of Interest",
     "hub.tab_caseboard": "Case Board",
     "chat.back_to_hub": "Case Files",
+    "chat.nav_suspects": "Persons of Interest",
+    "chat.nav_caseboard": "Case Board",
     "chat.dossier_heading": "Dossier",
     "sidebar.header": "Persons of Interest",
     "sidebar.accuse": "Make an Accusation",
@@ -213,6 +215,12 @@ window.I18N = {
     "settings.restart_confirm": "Are you sure? All progress will be lost.",
     "settings.restart_yes": "Yes, restart",
     "settings.restart_cancel": "Cancel",
+    "settings.language": "Language",
+
+    // Title card
+    "titlecard.open": "Open Case File",
+    "titlecard.case_number": "Case #1247-B",
+    "titlecard.division": "Det. Division — Homicide",
 
     // Keycard terminal
     "keycard.title": "\u25a0 LYRIC ATRIUM HOTEL \u2014 KEYCARD ACCESS CONTROL",
@@ -249,6 +257,19 @@ window.I18N = {
     "keycard.zone.SVC-ELEV": "Service Elevator",
     "keycard.zone.UTIL-CORR": "Utility Corridor",
     "keycard.zone.CONF-2": "Conference Room 2",
+
+    // Tutorial coach marks
+    "tutorial.step_caseboard": "This is your Case Board — review evidence and the case briefing here.",
+    "tutorial.step_briefing": "Expand the Case Briefing to review the crime details and initial evidence.",
+    "tutorial.step_suspects": "Switch here to see all persons of interest you can interrogate.",
+    "tutorial.step_npc_card": "Click a suspect to begin interrogating them.",
+    "tutorial.step_gauges": "These show the suspect's emotional state — Pressure and Trust.",
+    "tutorial.step_info": "Tap here to read the suspect's background dossier.",
+    "tutorial.step_input": "Type your questions here, or tap the mic for voice chat.",
+    "tutorial.next": "Next",
+    "tutorial.skip": "Skip",
+    "tutorial.got_it": "Got it",
+    "tutorial.replay": "Replay Tutorial",
   },
 
   sr: {
@@ -269,6 +290,8 @@ window.I18N = {
     "hub.tab_suspects": "Osumnji\u010deni",
     "hub.tab_caseboard": "Tabla Slu\u010daja",
     "chat.back_to_hub": "Dosijei",
+    "chat.nav_suspects": "Osumnjičeni",
+    "chat.nav_caseboard": "Tabla Slučaja",
     "chat.dossier_heading": "Dosije",
     "sidebar.header": "Osumnji\u010deni",
     "sidebar.accuse": "Podnesi Optu\u017enicu",
@@ -462,6 +485,12 @@ window.I18N = {
     "settings.restart_confirm": "Da li ste sigurni? Sav napredak \u0107e biti izgubljen.",
     "settings.restart_yes": "Da, ponovi",
     "settings.restart_cancel": "Otka\u017ei",
+    "settings.language": "Jezik",
+
+    // Title card
+    "titlecard.open": "Otvori dosije",
+    "titlecard.case_number": "Predmet #1247-B",
+    "titlecard.division": "Odeljenje — Ubistva",
 
     // Keycard terminal
     "keycard.title": "\u25a0 HOTEL LYRIC ATRIUM \u2014 KONTROLA PRISTUPNIH KARTICA",
@@ -498,6 +527,19 @@ window.I18N = {
     "keycard.zone.SVC-ELEV": "Servisni Lift",
     "keycard.zone.UTIL-CORR": "Tehni\u010dki Hodnik",
     "keycard.zone.CONF-2": "Sala za Sastanke 2",
+
+    // Tutorial coach marks
+    "tutorial.step_caseboard": "Ovo je vaša Tabla Slučaja — pregledajte dokaze i brifing ovde.",
+    "tutorial.step_briefing": "Proširite Brifing o Slučaju da pregledate detalje zločina i početne dokaze.",
+    "tutorial.step_suspects": "Prebacite se ovde da vidite sve osumnjičene koje možete ispitati.",
+    "tutorial.step_npc_card": "Kliknite na osumnjičenog da započnete ispitivanje.",
+    "tutorial.step_gauges": "Ovi pokazuju emocionalno stanje osumnjičenog — Pritisak i Poverenje.",
+    "tutorial.step_info": "Dodirnite ovde da pročitate dosije osumnjičenog.",
+    "tutorial.step_input": "Unesite pitanja ovde, ili dodirnite mikrofon za glasovni čet.",
+    "tutorial.next": "Dalje",
+    "tutorial.skip": "Preskoči",
+    "tutorial.got_it": "Razumem",
+    "tutorial.replay": "Ponovi Vodič",
   },
 };
 

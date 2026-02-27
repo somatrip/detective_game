@@ -64,6 +64,96 @@
       overflow: hidden;
     }
 
+    /* ── Title Card ────────────────────────────────────────── */
+    #title-card {
+      position: fixed; inset: 0; z-index: 150;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, rgba(26,21,16,0.97), rgba(28,23,18,0.95)),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23d4a05008' fill='none'/%3E%3C/svg%3E");
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    #title-card.hidden { display: none; }
+    #title-card.dismissed { opacity: 0; transform: scale(0.96); pointer-events: none; }
+    .title-card-inner {
+      position: relative;
+      max-width: 520px; width: 90vw;
+      background: var(--manila-bg);
+      border: 2px solid var(--manila-border);
+      border-radius: 4px;
+      padding: 3.5rem 3rem 2.5rem;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 var(--manila-fold-highlight);
+      text-align: center;
+      transform: rotate(-0.5deg);
+      /* Aged paper texture via gradient overlay */
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(196,169,106,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse at 80% 20%, rgba(139,115,63,0.1) 0%, transparent 60%),
+        linear-gradient(180deg, var(--manila-fold-highlight) 0%, var(--manila-bg) 8%, var(--manila-tab) 100%);
+    }
+    .title-card-classified {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      font-family: var(--font-typewriter);
+      font-size: 4.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(200, 50, 50, 0.08);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .title-card-stamp {
+      font-family: var(--font-typewriter);
+      font-size: 2.2rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #2a1f12;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.05);
+    }
+    .title-card-subtitle {
+      font-family: var(--font-body-serif);
+      font-size: 1rem;
+      font-style: italic;
+      color: #6b5b3e;
+      margin-bottom: 1.5rem;
+      position: relative; z-index: 1;
+    }
+    .title-card-meta {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      font-family: var(--font-typewriter);
+      font-size: 0.72rem;
+      color: #8b7340;
+      margin-bottom: 2rem;
+      position: relative; z-index: 1;
+    }
+    .title-card-open-btn {
+      font-family: var(--font-typewriter);
+      background: #2a1f12;
+      color: var(--manila-bg);
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 2rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      position: relative; z-index: 1;
+    }
+    .title-card-open-btn:hover {
+      background: #3d2e1a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
     /* ── Intro Screen ──────────────────────────────────────── */
     #intro-screen {
       position: fixed; inset: 0; z-index: 100;
@@ -141,26 +231,6 @@
     }
     #hub-screen.active { display: flex; }
 
-    .hub-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 2rem;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .hub-title {
-      font-family: var(--font-noir);
-      font-size: 1.1rem; font-weight: 700;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .hub-topbar-right {
-      display: flex; align-items: center; gap: 0.75rem;
-    }
-
     /* ── Manila Folder Tabs ────────────────────────────────── */
     .manila-tabs {
       display: flex;
@@ -198,6 +268,21 @@
     .manila-tab .manila-tab-label { pointer-events: none; }
     .manila-tab .tab-flash {
       color: var(--gold);
+    }
+    .manila-tabs-spacer { flex: 1; }
+    .manila-tab-icon {
+      min-width: auto;
+      width: auto;
+      padding: 0.7rem 1rem;
+      display: flex; align-items: center; justify-content: center;
+      clip-path: none;
+      border-radius: 8px 8px 0 0;
+    }
+    .manila-tab-icon svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none;
     }
 
     .hub-content {
@@ -276,6 +361,11 @@
       font-style: italic;
     }
 
+    .accuse-section {
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 0 1rem;
+    }
     #hub-accuse-btn {
       font-family: var(--font-typewriter);
       padding: 0.4rem 1rem;
@@ -368,62 +458,7 @@
     }
     #chat-screen.active { display: flex; }
 
-    .chat-topbar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.5rem 1.5rem;
-      background: linear-gradient(180deg, var(--noir-panel), var(--noir-panel-alt));
-      border-bottom: 1px solid rgba(212,160,80,0.12);
-      flex-shrink: 0;
-      min-height: 72px;
-    }
-
-    /* Manila folder back button */
-    .manila-back-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 0.9rem 0.45rem 0.7rem;
-      background: var(--manila-tab-active);
-      color: var(--manila-tab-text);
-      border: 1px solid var(--manila-border);
-      border-radius: 6px;
-      font-size: 0.75rem; font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      flex-shrink: 0;
-    }
-    .manila-back-btn:hover {
-      background: var(--manila-fold-highlight);
-      transform: translateX(-2px);
-    }
-    .manila-folder-icon {
-      width: 18px; height: 18px;
-      flex-shrink: 0;
-    }
-
-    .chat-topbar-npc {
-      flex: 1; min-width: 0;
-    }
-    .chat-topbar-name {
-      font-size: 0.95rem; font-weight: 600;
-      display: block;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      font-family: var(--font-noir);
-      color: var(--noir-text);
-      letter-spacing: 0.06em;
-    }
-    .chat-topbar-role {
-      font-size: 0.72rem;
-      color: var(--noir-text-faint);
-      font-family: var(--font-body-serif);
-      font-style: italic;
-    }
-    .chat-topbar-right {
-      display: flex; align-items: center; gap: 0.5rem;
+    .chat-manila-tabs {
       flex-shrink: 0;
     }
 
@@ -434,6 +469,7 @@
       grid-template-columns: 380px 1fr;
       min-height: 0;
       overflow: hidden;
+      border-top: 3px solid var(--manila-border);
     }
 
     /* Portrait panel */
@@ -918,6 +954,23 @@
     #send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(212,160,80,0.35); }
     #send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
     #send-btn svg { width: 18px; height: 18px; }
+    #cancel-btn {
+      display: none;
+      width: 42px; height: 42px;
+      border: none; border-radius: 8px;
+      background: linear-gradient(135deg, var(--danger), #c05050);
+      color: #fff;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(248,113,113,0.25);
+    }
+    #cancel-btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(248,113,113,0.4); }
+    #cancel-btn svg { width: 16px; height: 16px; }
+    #cancel-btn.visible { display: flex; }
+    .chat-input-bar.cancellable #send-btn { display: none; }
+    .chat-input-bar.cancellable #cancel-btn { display: flex; }
 
     /* ── Clue Items (reused in case board) ─────────────────── */
     .clue-item {
@@ -1338,37 +1391,10 @@
     }
 
     /* ── Voice: Audio Toggle ────────────────────────────── */
-    #audio-toggle {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-input);
-      color: var(--text-faint);
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    #audio-toggle:hover { color: var(--text); }
     #audio-toggle.active {
       color: var(--accent);
-      border-color: var(--accent);
+      background: var(--manila-tab-active);
     }
-    #audio-toggle svg { width: 16px; height: 16px; }
-
-    /* ── Settings Button ───────────────────────────────── */
-    .settings-icon-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-input);
-      color: var(--text-faint);
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .settings-icon-btn:hover { color: var(--text); border-color: var(--text-dim); }
-    .settings-icon-btn svg { width: 16px; height: 16px; }
-
     /* ── Settings Modal ────────────────────────────────── */
     #settings-modal {
       position: fixed; inset: 0; z-index: 250;
@@ -1404,6 +1430,12 @@
     .settings-close-btn:hover { color: var(--text); }
     .settings-body { padding: 1rem 1.25rem; }
     .settings-row { margin-bottom: 0.75rem; }
+    .settings-lang-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .settings-label {
+      font-size: 0.85rem; font-weight: 600; color: var(--text-dim);
+    }
     .settings-row:last-child { margin-bottom: 0; }
     .settings-danger-btn {
       width: 100%; padding: 0.65rem;
@@ -1470,13 +1502,95 @@
     .msg-audio-btn.playing { color: var(--noir-amber); border-color: var(--noir-amber); }
     .msg-audio-btn svg { width: 12px; height: 12px; }
 
+    /* ── Tutorial Coach Marks ────────────────────────────── */
+    .tutorial-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .tutorial-overlay.active { opacity: 1; pointer-events: auto; }
+    .tutorial-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(10, 8, 5, 0.82);
+      transition: clip-path 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tutorial-tooltip {
+      position: absolute;
+      max-width: 340px;
+      background: var(--noir-panel);
+      border: 1.5px solid var(--noir-amber);
+      border-radius: 10px;
+      padding: 1.1rem 1.3rem 0.9rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,160,80,0.1);
+      font-family: var(--font-body-serif);
+      color: var(--noir-text);
+      z-index: 10001;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .tutorial-tooltip::before {
+      content: "";
+      position: absolute;
+      width: 12px; height: 12px;
+      background: var(--noir-panel);
+      border: 1.5px solid var(--noir-amber);
+      transform: rotate(45deg);
+    }
+    .tutorial-tooltip.arrow-top::before    { top: -7px; left: 24px; border-right: none; border-bottom: none; }
+    .tutorial-tooltip.arrow-bottom::before { bottom: -7px; left: 24px; border-left: none; border-top: none; }
+    .tutorial-tooltip.arrow-left::before   { left: -7px; top: 20px; border-top: none; border-right: none; }
+    .tutorial-tooltip.arrow-right::before  { right: -7px; top: 20px; border-bottom: none; border-left: none; }
+    .tutorial-text {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 0.9rem;
+    }
+    .tutorial-step-indicator {
+      font-size: 0.72rem;
+      color: var(--noir-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-noir);
+    }
+    .tutorial-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+    }
+    .tutorial-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: var(--font-noir);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      border: none;
+    }
+    .tutorial-btn-skip {
+      background: transparent;
+      color: var(--noir-text-faint);
+      border: 1px solid rgba(212,160,80,0.2);
+    }
+    .tutorial-btn-skip:hover { color: var(--noir-text-dim); border-color: rgba(212,160,80,0.4); }
+    .tutorial-btn-next {
+      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
+      color: #1a1510;
+    }
+    .tutorial-btn-next:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,160,80,0.3); }
+
     /* ── Responsive ────────────────────────────────────────── */
     @media (max-width: 900px) {
       .npc-row { flex-wrap: wrap; }
       .npc-card { width: 140px; }
     }
     @media (max-width: 768px) {
-      .chat-topbar { min-height: 60px; }
+      .manila-tabs { padding: 0 0.75rem; padding-top: 0.5rem; }
+      .manila-tab { min-width: auto; font-size: 0.65rem; padding: 0.55rem 0.7rem 0.45rem; }
+      .manila-tab-icon { padding: 0.55rem 0.7rem; }
       .gauge-icon { width: 64px; height: 64px; }
       .portrait-nameplate-row { gap: 0.5rem; }
       #chat-input { font-family: var(--font-typewriter); }
@@ -1500,23 +1614,32 @@
     }
     @media (max-width: 600px) {
       .npc-card { width: 120px; }
-      .manila-tab { min-width: 120px; font-size: 0.7rem; padding: 0.6rem 1rem 0.5rem; }
     }
   </style>
 </head>
 <body>
+
+<!-- ════════ Title Card ════════ -->
+<div id="title-card" class="hidden">
+  <div class="title-card-inner">
+    <div class="title-card-classified">CLASSIFIED</div>
+    <h1 class="title-card-stamp">Echoes in the Atrium</h1>
+    <p class="title-card-subtitle" data-i18n="intro.subtitle">A Murder Mystery Investigation</p>
+    <div class="title-card-meta">
+      <span data-i18n="titlecard.case_number">Case #1247-B</span>
+      <span>•</span>
+      <span data-i18n="titlecard.division">Det. Division — Homicide</span>
+    </div>
+    <button class="title-card-open-btn" id="title-card-btn" data-i18n="titlecard.open">Open Case File</button>
+  </div>
+</div>
 
 <!-- ════════ Intro Screen ════════ -->
 <div id="intro-screen">
   <div class="intro-card">
     <h1 data-i18n="intro.title">Echoes in the Atrium</h1>
     <p class="subtitle" data-i18n="intro.subtitle">A Murder Mystery Investigation</p>
-    <div class="intro-lang-row">
-      <div class="lang-toggle">
-        <button class="lang-btn active" data-lang="en">EN</button>
-        <button class="lang-btn" data-lang="sr">SR</button>
-      </div>
-    </div>
+    <div class="intro-lang-row"></div>
     <div class="briefing">
       <span class="label" data-i18n="intro.briefing_label">Case Briefing</span>
       <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.</p>
@@ -1533,29 +1656,19 @@
 
 <!-- ════════ Hub Screen ════════ -->
 <div id="hub-screen">
-  <div class="hub-topbar">
-    <h1 class="hub-title" data-i18n="intro.title">Echoes in the Atrium</h1>
-    <div class="hub-topbar-right">
-      <button id="hub-accuse-btn" data-i18n="sidebar.accuse">Make an Accusation</button>
-      <div class="lang-toggle">
-        <button class="lang-btn active" data-lang="en">EN</button>
-        <button class="lang-btn" data-lang="sr">SR</button>
-      </div>
-      <button id="hub-settings-btn" class="settings-icon-btn" title="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
-
   <div class="manila-tabs">
     <button class="manila-tab active" data-hub-tab="suspects">
       <span class="manila-tab-label" data-i18n="hub.tab_suspects">Persons of Interest</span>
     </button>
     <button class="manila-tab" data-hub-tab="caseboard">
       <span class="manila-tab-label" data-i18n="hub.tab_caseboard">Case Board</span>
+    </button>
+    <div class="manila-tabs-spacer"></div>
+    <button class="manila-tab manila-tab-icon" id="hub-settings-tab" title="Settings">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
     </button>
   </div>
 
@@ -1594,30 +1707,27 @@
 
 <!-- ════════ Chat Screen ════════ -->
 <div id="chat-screen">
-  <div class="chat-topbar">
-    <button id="back-to-hub" class="manila-back-btn" title="Back to case files">
-      <svg class="manila-folder-icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/>
-      </svg>
-      <span data-i18n="chat.back_to_hub">Case Files</span>
+  <div class="manila-tabs chat-manila-tabs">
+    <button class="manila-tab" id="nav-to-suspects">
+      <span class="manila-tab-label" data-i18n="chat.nav_suspects">Persons of Interest</span>
     </button>
-    <div class="chat-topbar-npc">
-      <span class="chat-topbar-name" id="chat-topbar-name"></span>
-      <span class="chat-topbar-role" id="chat-topbar-role"></span>
-    </div>
-    <div class="chat-topbar-right">
-      <button id="audio-toggle" title="Toggle voice">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      </button>
-      <div class="lang-toggle">
-        <button class="lang-btn active" data-lang="en">EN</button>
-        <button class="lang-btn" data-lang="sr">SR</button>
-      </div>
-    </div>
+    <button class="manila-tab" id="nav-to-caseboard">
+      <span class="manila-tab-label" data-i18n="chat.nav_caseboard">Case Board</span>
+    </button>
+    <div class="manila-tabs-spacer"></div>
+    <button class="manila-tab manila-tab-icon" id="audio-toggle" title="Toggle voice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    </button>
+    <button class="manila-tab manila-tab-icon" id="chat-settings-tab" title="Settings">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
   </div>
 
   <div class="chat-layout">
@@ -1678,7 +1788,25 @@
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
         </button>
+        <button id="cancel-btn" title="Cancel response">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+          </svg>
+        </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Tutorial Overlay ════════ -->
+<div class="tutorial-overlay" id="tutorial-overlay">
+  <div class="tutorial-backdrop" id="tutorial-backdrop"></div>
+  <div class="tutorial-tooltip" id="tutorial-tooltip">
+    <div class="tutorial-step-indicator" id="tutorial-step-indicator"></div>
+    <div class="tutorial-text" id="tutorial-text"></div>
+    <div class="tutorial-actions">
+      <button class="tutorial-btn tutorial-btn-skip" id="tutorial-skip"></button>
+      <button class="tutorial-btn tutorial-btn-next" id="tutorial-next"></button>
     </div>
   </div>
 </div>
@@ -1691,6 +1819,16 @@
       <button id="settings-close" class="settings-close-btn">&times;</button>
     </div>
     <div class="settings-body">
+      <div class="settings-row settings-lang-row">
+        <label class="settings-label" data-i18n="settings.language">Language</label>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="sr">SR</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <button id="settings-tutorial-btn" class="settings-cancel-btn" data-i18n="tutorial.replay" style="width:100%;">Replay Tutorial</button>
+      </div>
       <div id="settings-restart-row" class="settings-row">
         <button id="settings-restart-btn" class="settings-danger-btn" data-i18n="settings.restart">Restart Investigation</button>
       </div>
@@ -1752,7 +1890,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=4"></script>
+<script src="i18n.js?v=7"></script>
 <script>
 /* ================================================================
    ECHOES IN THE ATRIUM — Game Frontend
@@ -1885,6 +2023,8 @@
   let currentAudio = null;
   let npcVoices = {};
   let voiceMode = false;
+  let chatAbortController = null;
+  let ttsAbortController = null;
   let silenceTimer = null;
   let audioContext = null;
   let analyserNode = null;
@@ -1894,29 +2034,31 @@
   const $ = (s) => document.querySelector(s);
 
   // Screens
+  const titleCard         = $("#title-card");
+  const titleCardBtn      = $("#title-card-btn");
   const introScreen       = $("#intro-screen");
   const hubScreen         = $("#hub-screen");
   const chatScreen        = $("#chat-screen");
   const startBtn          = $("#start-btn");
+  const TITLE_STORAGE_KEY = "echoes_title_seen";
 
   // Hub elements
   const npcGridEl         = $("#npc-grid");
-  const hubAccuseBtn      = $("#hub-accuse-btn");
-  const hubSettingsBtn    = $("#hub-settings-btn");
+  const hubSettingsTab    = $("#hub-settings-tab");
 
   // Chat elements
-  const backToHubBtn      = $("#back-to-hub");
+  const navToSuspects     = $("#nav-to-suspects");
+  const navToCaseboard    = $("#nav-to-caseboard");
   const chatPortraitImg   = $("#chat-portrait-img");
   const portraitName      = $("#portrait-name");
   const portraitRole      = $("#portrait-role");
   const portraitStatus    = $("#portrait-status");
-  const chatTopbarName    = $("#chat-topbar-name");
-  const chatTopbarRole    = $("#chat-topbar-role");
   const chatMessages      = $("#chat-messages");
   const typingIndicator   = $("#typing-indicator");
   const chatInputBar      = $("#chat-input-bar");
   const chatInput         = $("#chat-input");
   const sendBtn           = $("#send-btn");
+  const cancelBtn         = $("#cancel-btn");
   const micBtn            = $("#mic-btn");
   const audioToggle       = $("#audio-toggle");
 
@@ -1942,7 +2084,7 @@
     try {
       localStorage.setItem("echoes_state_v2", JSON.stringify({
         conversations, evidence, activeNpcId, discoveries,
-        npcInterrogation, caseReadyPromptShown,
+        npcInterrogation, caseReadyPromptShown, briefingOpen,
       }));
     } catch {}
   }
@@ -1958,6 +2100,7 @@
       if (s.discoveries) discoveries = s.discoveries;
       if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
       if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
+      if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
     } catch {}
   }
 
@@ -2024,6 +2167,8 @@
     if (added) saveState();
   }
 
+  let briefingOpen = true; // default: open on first visit
+
   async function init() {
     loadState();
     seedStartingEvidence();
@@ -2048,10 +2193,39 @@
     renderNpcGrid();
     renderEvidence();
 
-    // If there was an active NPC from saved state, go directly to chat
+    // Restore briefing open/closed state
+    const briefingToggle = $("#cb-briefing-toggle");
+    const briefingBody = $("#cb-briefing-body");
+    briefingToggle.setAttribute("aria-expanded", String(briefingOpen));
+    if (briefingOpen) briefingBody.classList.add("open");
+    else briefingBody.classList.remove("open");
+
+    // Skip old intro — always hidden
+    introScreen.classList.add("hidden");
+
+    const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
+    const hasConversations = Object.keys(conversations).length > 0;
+
     if (activeNpcId) {
+      // Returning player with active chat — go directly there
+      titleCard.classList.add("hidden");
       selectNpc(activeNpcId);
+    } else if (!titleSeen && !hasConversations) {
+      // First-time player — show title card, hub stays hidden until dismissed
+      titleCard.classList.remove("hidden");
+    } else {
+      // Returning player — skip title card, show hub
+      titleCard.classList.add("hidden");
+      showHubOnCaseboard();
     }
+  }
+
+  function showHubOnCaseboard() {
+    hubScreen.classList.add("active");
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
+    document.getElementById("hub-caseboard").classList.add("active");
   }
 
   /* ── Render NPC Grid (5 + 4 staggered rows) ────────────── */
@@ -2105,6 +2279,13 @@
     if (row2.children.length > 0) {
       npcGridEl.appendChild(row2);
     }
+
+    // Accusation button below the NPC grid
+    const accuseSection = document.createElement("div");
+    accuseSection.className = "accuse-section";
+    accuseSection.innerHTML = `<button id="hub-accuse-btn" data-i18n="sidebar.accuse">${t("sidebar.accuse")}</button>`;
+    npcGridEl.appendChild(accuseSection);
+    $("#hub-accuse-btn").addEventListener("click", openAccusationModal);
   }
 
   /* ── Select NPC ─────────────────────────────────────────── */
@@ -2124,8 +2305,7 @@
     portraitName.textContent = displayName;
     portraitRole.textContent = npcRole(npcId);
     portraitStatus.textContent = "";
-    chatTopbarName.textContent = displayName;
-    chatTopbarRole.textContent = npcRole(npcId);
+    // NPC name/role shown in portrait panel only (topbar has nav buttons)
 
     // Render conversation and interrogation pills
     renderMessages();
@@ -2141,6 +2321,12 @@
     showChat();
     chatInput.focus();
     saveState();
+
+    // Trigger chat-phase tutorial if pending
+    if (typeof chatTutorialPending !== "undefined" && chatTutorialPending) {
+      chatTutorialPending = false;
+      setTimeout(() => startTutorial("chat"), 600);
+    }
   }
 
   /* ── Render Messages ────────────────────────────────────── */
@@ -2237,6 +2423,8 @@
 
     sending = true;
     sendBtn.disabled = true;
+    showCancelBtn();
+    chatAbortController = new AbortController();
     if (!overrideText) { chatInput.value = ""; autoResize(); }
 
     if (!conversations[activeNpcId]) conversations[activeNpcId] = [];
@@ -2273,6 +2461,7 @@
           rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
           player_evidence_ids: evidence.map(e => e.id),
         }),
+        signal: chatAbortController?.signal,
       });
 
       if (!res.ok) {
@@ -2324,23 +2513,31 @@
 
     } catch (err) {
       typingIndicator.classList.remove("visible");
-      // Distinguish network errors from server errors
-      const isNetwork = err instanceof TypeError && err.message.includes("fetch");
-      const displayMsg = isNetwork
-        ? "Cannot reach server — is it running on port 8000?"
-        : err.message;
-      console.error("[chat] Request failed:", err);
-      const errDiv = document.createElement("div");
-      errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
-      errDiv.textContent = t("chat.error", { message: displayMsg });
-      chatMessages.appendChild(errDiv);
-      scrollToBottom();
-      conversations[activeNpcId].pop();
+      // Silently ignore user-initiated cancellation
+      if (err.name === "AbortError") {
+        // Remove the pending user message from conversation
+        conversations[activeNpcId].pop();
+      } else {
+        // Distinguish network errors from server errors
+        const isNetwork = err instanceof TypeError && err.message.includes("fetch");
+        const displayMsg = isNetwork
+          ? "Cannot reach server — is it running on port 8000?"
+          : err.message;
+        console.error("[chat] Request failed:", err);
+        const errDiv = document.createElement("div");
+        errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
+        errDiv.textContent = t("chat.error", { message: displayMsg });
+        chatMessages.appendChild(errDiv);
+        scrollToBottom();
+        conversations[activeNpcId].pop();
+      }
     }
 
+    chatAbortController = null;
     portraitStatus.textContent = "";
     sending = false;
     sendBtn.disabled = !chatInput.value.trim();
+    hideCancelBtn();
     saveState();
   }
 
@@ -2585,7 +2782,7 @@
     settingsModal.classList.remove("visible");
   }
 
-  hubSettingsBtn.addEventListener("click", openSettings);
+  hubSettingsTab.addEventListener("click", openSettings);
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsModal.addEventListener("click", (e) => {
     if (e.target === settingsModal) closeSettings();
@@ -2604,13 +2801,22 @@
   settingsRestartYes.addEventListener("click", () => {
     closeSettings();
     clearState();
+    briefingOpen = true;
     seedStartingEvidence();
     chatScreen.classList.remove("active");
-    hubScreen.classList.remove("active");
-    introScreen.classList.remove("hidden");
     chatMessages.innerHTML = "";
     renderEvidence();
     renderNpcGrid();
+    // Go to hub on Case Board tab with briefing expanded
+    hubScreen.classList.add("active");
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
+    document.getElementById("hub-caseboard").classList.add("active");
+    const briefingToggle = $("#cb-briefing-toggle");
+    const briefingBody = $("#cb-briefing-body");
+    briefingToggle.setAttribute("aria-expanded", "true");
+    briefingBody.classList.add("open");
   });
 
   /* ── Accusation System ──────────────────────────────────── */
@@ -2670,36 +2876,83 @@
   }
 
   /* ── Event Listeners ────────────────────────────────────── */
-  startBtn.addEventListener("click", () => {
-    introScreen.classList.add("hidden");
-    hubScreen.classList.add("active");
-  });
+  // Intro screen removed — game starts on Case Board directly
 
-  // Case board briefing toggle
+  // Case board briefing toggle (persists state)
   $("#cb-briefing-toggle").addEventListener("click", () => {
     const toggle = $("#cb-briefing-toggle");
     const body = $("#cb-briefing-body");
     const expanded = toggle.getAttribute("aria-expanded") === "true";
     toggle.setAttribute("aria-expanded", String(!expanded));
     body.classList.toggle("open");
+    briefingOpen = !expanded;
+    saveState();
   });
 
-  backToHubBtn.addEventListener("click", () => {
-    if (voiceMode) exitVoiceMode();
+  /* ── Cancel button: show/hide + abort logic ──────────── */
+  function showCancelBtn() {
+    chatInputBar.classList.add("cancellable");
+  }
+  function hideCancelBtn() {
+    chatInputBar.classList.remove("cancellable");
+  }
+  function cancelResponse() {
+    // Abort in-flight chat request
+    if (chatAbortController) { chatAbortController.abort(); chatAbortController = null; }
+    // Abort in-flight TTS request
+    if (ttsAbortController) { ttsAbortController.abort(); ttsAbortController = null; }
+    // Stop any playing audio
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    // Reset UI state
+    typingIndicator.classList.remove("visible");
+    portraitStatus.textContent = "";
+    sending = false;
+    sendBtn.disabled = !chatInput.value.trim();
+    hideCancelBtn();
+    // Exit voice-mode waiting state (don't auto-restart recording)
+    if (voiceMode) {
+      micBtn.classList.remove("waiting");
+      exitVoiceMode();
+    }
+  }
+  cancelBtn.addEventListener("click", cancelResponse);
+
+  function leaveChat() {
+    cancelResponse();
+    if (voiceMode) exitVoiceMode();
+  }
+  navToSuspects.addEventListener("click", () => {
+    leaveChat();
     showHub();
+    // Activate suspects tab
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('.manila-tab[data-hub-tab="suspects"]').classList.add("active");
+    document.getElementById("hub-suspects").classList.add("active");
+  });
+  navToCaseboard.addEventListener("click", () => {
+    leaveChat();
+    showHub();
+    // Activate caseboard tab
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
+    document.getElementById("hub-caseboard").classList.add("active");
   });
 
-  // Hub manila folder tabs
-  document.querySelectorAll(".manila-tab").forEach(tab => {
+  // Hub manila folder tabs (only tabs with data-hub-tab attribute)
+  document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(tab => {
     tab.addEventListener("click", () => {
-      document.querySelectorAll(".manila-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
       tab.classList.add("active");
       const panelId = `hub-${tab.dataset.hubTab}`;
       document.getElementById(panelId).classList.add("active");
     });
   });
+
+  // Chat settings tab
+  $("#chat-settings-tab").addEventListener("click", openSettings);
 
   /* ── Portrait Info Button (bio tooltip) ──────────────── */
   const portraitInfoBtn = $("#portrait-info-btn");
@@ -2746,16 +2999,15 @@
 
   sendBtn.addEventListener("click", () => sendMessage());
 
-  hubAccuseBtn.addEventListener("click", openAccusationModal);
   cancelAccuse.addEventListener("click", closeAccusationModal);
   confirmAccuse.addEventListener("click", resolveAccusation);
 
   restartBtn.addEventListener("click", () => {
     clearState();
+    briefingOpen = true;
     outcomeScreen.classList.remove("visible");
     chatScreen.classList.remove("active");
     hubScreen.classList.remove("active");
-    introScreen.classList.remove("hidden");
     chatMessages.innerHTML = "";
     init();
   });
@@ -2771,7 +3023,7 @@
     caseReadyModal.classList.remove("visible");
     showHub();
     // Switch to caseboard tab
-    document.querySelectorAll(".manila-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
     const cbTab = document.querySelector('.manila-tab[data-hub-tab="caseboard"]');
     if (cbTab) cbTab.classList.add("active");
@@ -2886,19 +3138,25 @@
     }
 
     const voice = npcVoices[npcId] || "alloy";
+    ttsAbortController = new AbortController();
+    showCancelBtn();
     try {
       const res = await fetch(`${API_BASE}/api/speak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, voice }),
+        signal: ttsAbortController.signal,
       });
       if (!res.ok) throw new Error(`TTS failed: HTTP ${res.status}`);
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       audioCache.set(cacheKey, blobUrl);
+      ttsAbortController = null;
       playAudioBlob(blobUrl, cacheKey);
     } catch (err) {
-      console.error("TTS error:", err);
+      ttsAbortController = null;
+      if (err.name !== "AbortError") console.error("TTS error:", err);
+      if (!sending && !currentAudio) hideCancelBtn();
     }
   }
 
@@ -2907,6 +3165,7 @@
 
     const audio = new Audio(blobUrl);
     currentAudio = audio;
+    showCancelBtn();
 
     const replayBtn = document.querySelector(`.msg-audio-btn[data-cache-key="${cacheKey}"]`);
     if (replayBtn) replayBtn.classList.add("playing");
@@ -2916,6 +3175,7 @@
       currentAudio = null;
       if (replayBtn) replayBtn.classList.remove("playing");
       if (activeNpcId) portraitStatus.textContent = "";
+      if (!sending) hideCancelBtn();
       if (voiceMode && !sending) {
         setTimeout(() => { if (voiceMode) startRecording(); }, 400);
       }
@@ -2924,6 +3184,7 @@
       currentAudio = null;
       if (replayBtn) replayBtn.classList.remove("playing");
       if (activeNpcId) portraitStatus.textContent = "";
+      if (!sending) hideCancelBtn();
       if (voiceMode && !sending) {
         setTimeout(() => { if (voiceMode) startRecording(); }, 400);
       }
@@ -3127,7 +3388,7 @@
       renderMessages();
       // Update programmatically-set NPC role text in chat screen
       portraitRole.textContent = npcRole(activeNpcId);
-      chatTopbarRole.textContent = npcRole(activeNpcId);
+      // topbar has nav buttons now, no role text to update
       portraitStatus.textContent = sending ? t("chat.status_responding") : "";
     }
   }
@@ -3136,10 +3397,223 @@
     btn.addEventListener("click", () => switchLanguage(btn.dataset.lang));
   });
 
+  /* ── Tutorial Coach Marks System ─────────────────────────── */
+  const TUTORIAL_STORAGE_KEY = "echoes_tutorial_done";
+  const tutorialOverlay  = $("#tutorial-overlay");
+  const tutorialBackdrop = $("#tutorial-backdrop");
+  const tutorialTooltip  = $("#tutorial-tooltip");
+  const tutorialText     = $("#tutorial-text");
+  const tutorialStepInd  = $("#tutorial-step-indicator");
+  const tutorialSkipBtn  = $("#tutorial-skip");
+  const tutorialNextBtn  = $("#tutorial-next");
+
+  // Hub-phase steps (shown on first load)
+  const HUB_STEPS = [
+    { selector: '.manila-tab[data-hub-tab="caseboard"]', text: "tutorial.step_caseboard", arrow: "top" },
+    { selector: '#cb-briefing-toggle', text: "tutorial.step_briefing", arrow: "top" },
+    { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top" },
+    { selector: '.npc-card', text: "tutorial.step_npc_card", arrow: "top", beforeShow() {
+      // Switch to suspects tab so the NPC cards are visible
+      document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector('.manila-tab[data-hub-tab="suspects"]').classList.add("active");
+      document.getElementById("hub-suspects").classList.add("active");
+    }},
+  ];
+
+  // Chat-phase steps (shown after entering chat for the first time)
+  const CHAT_STEPS = [
+    { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
+    { selector: '#portrait-info-btn', text: "tutorial.step_info", arrow: "left" },
+    { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
+  ];
+
+  let tutorialSteps = [];
+  let tutorialCurrentStep = 0;
+  let tutorialPhase = null; // "hub" or "chat"
+  let tutorialResizeRAF = null;
+
+  function isTutorialDone() {
+    return localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
+  }
+  function markTutorialDone() {
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+  }
+
+  function startTutorial(phase) {
+    tutorialPhase = phase;
+    tutorialSteps = phase === "hub" ? HUB_STEPS : CHAT_STEPS;
+    tutorialCurrentStep = 0;
+    showTutorialStep(0);
+  }
+
+  function showTutorialStep(idx) {
+    if (idx < 0 || idx >= tutorialSteps.length) { endTutorial(); return; }
+    tutorialCurrentStep = idx;
+    const step = tutorialSteps[idx];
+
+    // Run pre-show action (e.g. switch tabs) before looking for the target
+    if (step.beforeShow) step.beforeShow();
+
+    const target = document.querySelector(step.selector);
+    if (!target) { showTutorialStep(idx + 1); return; }
+
+    // Ensure target is visible (scroll into view)
+    target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    requestAnimationFrame(() => {
+      const rect = target.getBoundingClientRect();
+      // If we have an alt selector (for grouping gauges), expand the rect
+      let spotRect = { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom };
+      if (step.selectorAlt) {
+        const alt = document.querySelector(step.selectorAlt);
+        if (alt) {
+          const altRect = alt.getBoundingClientRect();
+          spotRect.top = Math.min(spotRect.top, altRect.top);
+          spotRect.left = Math.min(spotRect.left, altRect.left);
+          spotRect.right = Math.max(spotRect.right, altRect.right);
+          spotRect.bottom = Math.max(spotRect.bottom, altRect.bottom);
+        }
+      }
+
+      const pad = 8;
+      const sx = spotRect.left - pad;
+      const sy = spotRect.top - pad;
+      const sw = (spotRect.right - spotRect.left) + pad * 2;
+      const sh = (spotRect.bottom - spotRect.top) + pad * 2;
+
+      // Create a clip-path that cuts out the spotlight area (inverted rect)
+      tutorialBackdrop.style.clipPath =
+        `polygon(0% 0%, 0% 100%, ${sx}px 100%, ${sx}px ${sy}px, ${sx + sw}px ${sy}px, ${sx + sw}px ${sy + sh}px, ${sx}px ${sy + sh}px, ${sx}px 100%, 100% 100%, 100% 0%)`;
+
+      // Position tooltip
+      const totalSteps = (tutorialPhase === "hub" ? HUB_STEPS : CHAT_STEPS).length;
+      const globalIdx = tutorialPhase === "chat" ? HUB_STEPS.length + idx : idx;
+      const globalTotal = HUB_STEPS.length + CHAT_STEPS.length;
+      tutorialStepInd.textContent = `${globalIdx + 1} / ${globalTotal}`;
+      tutorialText.textContent = t(step.text);
+
+      const isLast = (tutorialPhase === "chat" && idx === CHAT_STEPS.length - 1);
+      tutorialSkipBtn.textContent = t("tutorial.skip");
+      tutorialNextBtn.textContent = isLast ? t("tutorial.got_it") : t("tutorial.next");
+      tutorialSkipBtn.style.display = isLast ? "none" : "";
+
+      // Arrow direction + tooltip position
+      tutorialTooltip.className = "tutorial-tooltip arrow-" + step.arrow;
+      const ttW = 340;
+      let ttLeft, ttTop;
+
+      if (step.arrow === "top") {
+        // Tooltip below target
+        ttLeft = Math.max(12, Math.min(sx, window.innerWidth - ttW - 12));
+        ttTop = sy + sh + 16;
+      } else if (step.arrow === "bottom") {
+        // Tooltip above target
+        ttLeft = Math.max(12, Math.min(sx, window.innerWidth - ttW - 12));
+        ttTop = sy - 160;
+        if (ttTop < 12) ttTop = sy + sh + 16; // flip if no room above
+      } else if (step.arrow === "left") {
+        // Tooltip to the right of target
+        ttLeft = sx + sw + 16;
+        ttTop = sy;
+        if (ttLeft + ttW > window.innerWidth - 12) {
+          ttLeft = sx - ttW - 16;
+          tutorialTooltip.className = "tutorial-tooltip arrow-right";
+        }
+      } else {
+        // arrow-right: tooltip to the left of target
+        ttLeft = sx - ttW - 16;
+        ttTop = sy;
+      }
+
+      tutorialTooltip.style.left = ttLeft + "px";
+      tutorialTooltip.style.top = Math.max(12, ttTop) + "px";
+
+      tutorialOverlay.classList.add("active");
+    });
+  }
+
+  function nextTutorialStep() {
+    if (tutorialCurrentStep + 1 < tutorialSteps.length) {
+      showTutorialStep(tutorialCurrentStep + 1);
+    } else {
+      endTutorial();
+    }
+  }
+
+  function endTutorial() {
+    tutorialOverlay.classList.remove("active");
+    if (tutorialPhase === "hub") {
+      // Don't mark as done yet — chat steps remain
+    } else {
+      markTutorialDone();
+    }
+    tutorialPhase = null;
+  }
+
+  function skipTutorial() {
+    tutorialOverlay.classList.remove("active");
+    markTutorialDone();
+    tutorialPhase = null;
+  }
+
+  // Reposition on resize
+  window.addEventListener("resize", () => {
+    if (!tutorialOverlay.classList.contains("active")) return;
+    if (tutorialResizeRAF) cancelAnimationFrame(tutorialResizeRAF);
+    tutorialResizeRAF = requestAnimationFrame(() => showTutorialStep(tutorialCurrentStep));
+  });
+
+  tutorialNextBtn.addEventListener("click", nextTutorialStep);
+  tutorialSkipBtn.addEventListener("click", skipTutorial);
+
+  // Settings replay button
+  document.getElementById("settings-tutorial-btn").addEventListener("click", () => {
+    closeSettings();
+    localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+    // Navigate to hub/caseboard first
+    if (chatScreen.classList.contains("active")) {
+      leaveChat();
+      showHub();
+    }
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
+    document.getElementById("hub-caseboard").classList.add("active");
+    setTimeout(() => startTutorial("hub"), 400);
+  });
+
+  // Flag for chat-phase tutorial (set during boot, consumed in selectNpc)
+  let chatTutorialPending = false;
+
   /* ── Boot ───────────────────────────────────────────────── */
   initLanguage();
   updateAudioToggle();
-  init();
+  // Title card dismiss handler
+  titleCardBtn.addEventListener("click", () => {
+    titleCard.classList.add("dismissed");
+    localStorage.setItem(TITLE_STORAGE_KEY, "1");
+    setTimeout(() => {
+      titleCard.classList.add("hidden");
+      showHubOnCaseboard();
+      // Start tutorial for first-time player
+      if (!isTutorialDone()) {
+        chatTutorialPending = true;
+        setTimeout(() => startTutorial("hub"), 500);
+      }
+    }, 500);
+  });
+
+  init().then(() => {
+    // Start tutorial on first visit (no existing conversations = new player)
+    // Only if title card was already seen (returning player who hasn't done tutorial)
+    const hasConversations = Object.keys(conversations).length > 0;
+    const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
+    if (titleSeen && !isTutorialDone() && !hasConversations) {
+      chatTutorialPending = true; // will fire when NPC selected
+      setTimeout(() => startTutorial("hub"), 600);
+    }
+  });
 })();
 </script>
 </body>
