@@ -21,6 +21,7 @@ from .llm.factory import create_llm_client
 from .llm.base import ChatMessage, LLMClient
 from .npc_registry import WORLD_CONTEXT_PROMPT, get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
+from .auth_routes import router as auth_router, state_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,6 +57,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Supabase auth & state routers ─────────────────────────────────────────
+app.include_router(auth_router)
+app.include_router(state_router)
 
 
 async def get_llm_client() -> LLMClient:

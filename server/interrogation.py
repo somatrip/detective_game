@@ -218,17 +218,61 @@ def process_turn(
 # ---------------------------------------------------------------------------
 
 _BAND_GUIDANCE: Dict[str, str] = {
-    "calm": "You feel relaxed and in control. Answer with confidence.",
-    "tense": "You are becoming uncomfortable. Show subtle defensiveness or hesitation.",
-    "shaken": "You are rattled and struggling to stay composed. Stammer, pause, or contradict yourself slightly.",
-    "cornered": "You feel trapped and desperate. You may lash out, make slips, or begin conceding points.",
+    "calm": "You're relaxed. Answer easily, maybe even a little dismissive — this doesn't faze you.",
+    "tense": "You're getting uncomfortable. Keep it together but let cracks show — shorter answers, a deflection here and there.",
+    "shaken": "You're rattled. Trip over words, lose your train of thought, maybe say something you didn't mean to.",
+    "cornered": "You're desperate. Snap at the detective, blurt things out, start giving ground you wouldn't normally give.",
 }
 
 _RAPPORT_GUIDANCE: Dict[str, str] = {
-    "cold": "You distrust the detective. Be guarded, evasive, and reluctant to share.",
-    "neutral": "You are cautiously cooperative. Answer questions but don't volunteer extra.",
-    "open": "You feel somewhat comfortable with this detective. Be more forthcoming with details.",
-    "trusting": "You trust this detective significantly. You may share information you would normally withhold.",
+    "cold": "You don't trust this detective at all. Give as little as possible. One-word answers are fine.",
+    "neutral": "You're cooperating, barely. Answer what's asked but don't offer anything extra.",
+    "open": "You're warming up to this detective. You'll share more freely — still careful, but willing to talk.",
+    "trusting": "You trust this detective. You'll say things you'd normally keep to yourself.",
+}
+
+# ---------------------------------------------------------------------------
+# Rapport-driven helpfulness — controls how proactively NPCs share non-self-
+# incriminating information at higher rapport levels.
+# ---------------------------------------------------------------------------
+
+_HIGH_RAPPORT_HELPFULNESS: Dict[str, str] = {
+    "open": (
+        "RAPPORT-DRIVEN HELPFULNESS (OPEN level):\n"
+        "You genuinely want to help the detective make progress. When answering "
+        "questions, volunteer relevant details you have observed — things like "
+        "who you saw in the hallways, odd behavior you noticed from other people, "
+        "timeline details, or background context about relationships and tensions "
+        "at the gala. Share your honest impressions and theories about other "
+        "suspects when it feels natural.\n"
+        "HOWEVER: Never volunteer information that would incriminate YOU, expose "
+        "YOUR secrets, or put you at legal or personal risk. You are helpful "
+        "about others, not confessional about yourself. Your own hidden truths "
+        "still require evidence or direct confrontation to surface.\n"
+        "Keep your helpfulness natural and conversational — you are someone who "
+        "has warmed up to the detective, not someone dumping an encyclopedia. "
+        "Weave useful observations into your answers rather than listing them."
+    ),
+    "trusting": (
+        "RAPPORT-DRIVEN HELPFULNESS (TRUSTING level):\n"
+        "You trust this detective and actively want to help solve the case. Go "
+        "beyond just answering questions — proactively bring up things that have "
+        "been weighing on your mind: suspicious moments you witnessed, rumors "
+        "you heard, connections between people that struck you as odd, or details "
+        "you previously held back because you were not sure they mattered. Offer "
+        "your own theories about what might have happened and who had motive.\n"
+        "You might say things like 'I was not going to mention this, but...' or "
+        "'There is something that has been bothering me...' to signal you are "
+        "sharing things you would not tell just anyone.\n"
+        "CRITICAL LIMIT: Even at this trust level, you still protect yourself. "
+        "Never volunteer your own secrets, hidden actions, or anything that could "
+        "incriminate you or cause you direct personal harm. Those admissions "
+        "still require the detective to confront you with evidence or catch you "
+        "in a contradiction. Self-preservation is instinctive, even with someone "
+        "you trust.\n"
+        "Your helpfulness should feel like a genuine ally who wants justice — not "
+        "a mechanical info source. Let your personality shape how you help."
+    ),
 }
 
 
@@ -271,6 +315,12 @@ def build_interrogation_context(
             "show visible discomfort and avoid outright denial. Deflecting "
             "or partial admission is appropriate."
         )
+
+    # Append rapport-driven helpfulness guidance at high rapport levels
+    helpfulness = _HIGH_RAPPORT_HELPFULNESS.get(r_band.value)
+    if helpfulness:
+        lines.append("")
+        lines.append(helpfulness)
 
     return "\n".join(lines)
 

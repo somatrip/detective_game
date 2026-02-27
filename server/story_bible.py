@@ -1,0 +1,1069 @@
+"""Story Bible for "Echoes in the Atrium" — canonical setting and timelines.
+
+This module defines the HOTEL LAYOUT, per-suspect TIMELINES, and a MASTER
+CHRONOLOGICAL TIMELINE for the evening of the gala.  Every string constant
+is designed to be injected directly into NPC system prompts so that all
+characters give mutually-consistent answers about where they were and what
+they saw.
+
+Usage in app.py / npc_registry.py:
+    from server.story_bible import (
+        HOTEL_LAYOUT,
+        TIMELINE_EVENTS,
+        TIMELINE_NOAH_ACTUAL,
+        NOAH_COVER_STORY,
+        TIMELINE_AMELIA,
+        ...
+    )
+
+    # Inject into the system prompt alongside the existing NPC prompt:
+    system_messages = [
+        {"role": "system", "content": WORLD_CONTEXT_PROMPT},
+        {"role": "system", "content": HOTEL_LAYOUT},
+        {"role": "system", "content": TIMELINE_NOAH_ACTUAL},   # or NOAH_COVER_STORY
+        {"role": "system", "content": npc_profile.system_prompt},
+        {"role": "system", "content": interrogation_prompt},
+    ]
+
+NOTE ON NOAH STERLING:
+    Noah has TWO timeline constants:
+    - TIMELINE_NOAH_ACTUAL  -- the truth (only injected for internal reference
+      or if the game needs the "god view"; NOT shown to the player)
+    - NOAH_COVER_STORY      -- the lies he tells during interrogation; inject
+      this one into his NPC prompt so the LLM plays his deceptions correctly
+
+All times are on 2024-11-15 (Friday) unless noted as post-midnight (2024-11-16).
+"""
+
+from __future__ import annotations
+
+# ---------------------------------------------------------------------------
+# HOTEL LAYOUT
+# ---------------------------------------------------------------------------
+
+HOTEL_LAYOUT = (
+    "THE LYRIC ATRIUM HOTEL -- SETTING REFERENCE\n"
+    "=============================================\n\n"
+
+    "The Lyric Atrium Hotel is a refurbished 1920s art deco landmark in a "
+    "dense downtown district.  Originally a grand jazz-era hotel, it was "
+    "restored and modernized while preserving its period character: brass "
+    "fixtures, geometric tile work, chevron moldings, and a soaring central "
+    "atrium that gives the hotel its name.\n\n"
+
+    "FLOOR PLAN (bottom to top):\n\n"
+
+    "BASEMENT LEVEL (B1) -- Service & Maintenance\n"
+    "  - Maintenance Room: Houses the main electrical breaker panel, HVAC "
+    "controls, and plumbing manifolds.  Access requires a PHYSICAL KEY "
+    "(not a keycard) held exclusively by the Head Engineer.  A single "
+    "steel door opens from the Utility Corridor.  Lockpick marks were "
+    "found on this door after the murder.\n"
+    "  - Utility Corridor (UTIL-CORR): Runs the length of the basement "
+    "connecting the maintenance room, storage areas, and the service "
+    "elevator shaft.  Dimly lit even under normal power; emergency "
+    "lighting barely reaches here.\n"
+    "  - Service Elevator (SVC-ELEV): A freight-sized elevator connecting "
+    "B1 to every floor up to the rooftop.  Used by staff for deliveries "
+    "and equipment.  Keycard required.\n"
+    "  - Incinerator Room: Adjacent to the maintenance room.  Contains "
+    "the hotel's legacy incinerator (now used for secure document "
+    "destruction).  The burned notebook fragment was recovered here.\n"
+    "  - Staff Locker Room & Break Area.\n\n"
+
+    "GROUND FLOOR (1F) -- Public Spaces\n"
+    "  - Main Lobby (LOBBY-MAIN): Grand double-height entrance with "
+    "original terrazzo floors, an art deco reception desk, and a "
+    "restored brass-cage elevator.  The lobby opens directly into the "
+    "central atrium.\n"
+    "  - Staff Entrance (LOBBY-STAFF): Side door used by employees, "
+    "accessible from the alley.  Keycard required.\n"
+    "  - The Atrium: A five-story open-air interior courtyard at the "
+    "hotel's center.  A geometric glass skylight crowns the top.  "
+    "Balconied mezzanines on each floor overlook the ground-level "
+    "garden court below.  During the gala, the atrium was decorated "
+    "with vintage microphones and projected surveillance-art "
+    "installations referencing Panopticon's themes.\n"
+    "  - Kitchen & Prep Area (KITCHEN): Serves both the ballroom and "
+    "the VIP bar.  Connected to the ballroom service corridor.\n\n"
+
+    "SECOND FLOOR (2F) -- Event Spaces\n"
+    "  - Grand Ballroom (BALL-MAIN): The primary gala venue.  Seats "
+    "200 guests.  A raised stage at the north end was used for the "
+    "Panopticon keynote demo and speeches.  Backstage area (BSTAGE) "
+    "connects to the ballroom via a curtained wing.  The Ballroom "
+    "Service Corridor (BALL-SVC) runs along the south wall, linking "
+    "the kitchen to the ballroom for catering.\n"
+    "  - Backstage Area (BSTAGE): Dressing rooms, a lighting/sound "
+    "console operated by the stage manager, green room, and a "
+    "corridor leading to the service elevator and freight elevator.\n"
+    "  - Speakeasy Lounge (SPEAK-LOUNGE): An intimate, low-ceilinged "
+    "jazz club styled after a 1920s speakeasy.  Located off the "
+    "atrium mezzanine on the second floor.  Celeste Ward performed "
+    "here.  A small stage, cocktail tables, and a secondary bar.\n"
+    "  - VIP Bar & Lounge (VIP-BAR): An exclusive bar adjacent to "
+    "the speakeasy, tended by Eddie Voss during the gala.  Separated "
+    "by a velvet rope.  Mercer spent time here during the evening.\n\n"
+
+    "THIRD FLOOR (3F) -- Conference & Library\n"
+    "  - Hotel Library (LIBR-MAIN): A wood-paneled reading room with "
+    "leather armchairs and floor-to-ceiling bookshelves.  Dr. Mira "
+    "Kline hosted her ethics roundtable here.  A private study room "
+    "in the back can be reserved.\n"
+    "  - Conference Room 2 (CONF-2): A smaller meeting room used for "
+    "private conversations and press briefings during the gala.\n"
+    "  - Security Command Center (CMD-CTR): The nerve center for "
+    "hotel surveillance.  Banks of monitors display feeds from CCTV "
+    "cameras throughout the property.  Gideon Holt's base of "
+    "operations.  Located in a restricted wing of the third floor "
+    "with reinforced door and keycard access.\n\n"
+
+    "FLOORS 4--6 -- Guest Rooms\n"
+    "  - Standard guest rooms.  Not directly relevant to the case.\n\n"
+
+    "FLOOR 7 (7F) -- VIP Suites\n"
+    "  - Guest Floor 7 (GUEST-7F): Premium suites reserved for gala "
+    "VIPs.  Julian Mercer occupied Suite 701; Noah Sterling occupied "
+    "Suite 703.  Each suite has a private balcony overlooking the "
+    "atrium skylight.  Keycard access required for the floor.\n\n"
+
+    "ROOFTOP (8F) -- Observatory & Access\n"
+    "  - Rooftop Observatory (ROOF-OBS): A glass-enclosed observation "
+    "deck with panoramic city views.  Contains a collection of "
+    "antique astronomical instruments, including the TELESCOPE MOUNT "
+    "used as the murder weapon.  The telescope mount was a brass and "
+    "iron Victorian-era piece weighing approximately 8 kg, displayed "
+    "on a mahogany pedestal.  The observatory was open for the "
+    "rooftop reception earlier in the evening.  Mercer's body was "
+    "found here at 11:40 PM.\n"
+    "  - Rooftop Stairwell (ROOF-STAIR): An enclosed staircase "
+    "connecting the 7th floor to the rooftop.  Keycard-controlled "
+    "fire door at the top.  Celeste Ward saw a figure (Noah) exiting "
+    "this stairwell during the blackout.\n"
+    "  - Freight Elevator (FRT-ELEV): A large cargo elevator with "
+    "stops at B1, 1F, 2F, and the rooftop.  Keycard required.  Noah "
+    "was seen near this elevator by Priya Shah before the blackout.\n\n"
+
+    "SECURITY & SURVEILLANCE:\n"
+    "  - CCTV cameras cover the lobby, ballroom entrances, elevator "
+    "lobbies on each floor, the rooftop stairwell door, and the "
+    "command center corridor.  Cameras do NOT cover: the interior of "
+    "guest rooms, the speakeasy lounge interior, the backstage area, "
+    "the maintenance room, or the utility corridor in B1.\n"
+    "  - Keycard readers are installed at every zone transition point "
+    "listed above.  They log card ID, holder name, zone, direction "
+    "(entry/exit), and timestamp.  During the power outage "
+    "(11:15--11:30 PM), ALL keycard readers went offline.  The backup "
+    "generator failed to engage primary access control, meaning doors "
+    "with electronic locks defaulted to UNLOCKED during the outage.  "
+    "Physical-key locks (e.g., the maintenance room) remained locked.\n"
+    "  - Panopticon Demo: Mercer's keynote included a live demo of "
+    "the Panopticon surveillance platform, which briefly accessed the "
+    "hotel's own CCTV feeds (with Holt's grudging permission) to show "
+    "real-time facial recognition and behavioral analytics.  This is "
+    "why the hotel's security infrastructure was of particular interest "
+    "to several suspects.\n\n"
+
+    "KEY ROUTES SUSPECTS COULD HAVE TAKEN DURING THE BLACKOUT:\n"
+    "  1. Backstage (2F) -> Service elevator -> B1 Utility Corridor -> "
+    "     Maintenance room (if they had the physical key)\n"
+    "  2. Backstage (2F) -> Freight elevator -> Rooftop\n"
+    "  3. VIP Bar (2F) -> Main corridor -> Atrium stairs -> 7F -> "
+    "     Rooftop stairwell\n"
+    "  4. Library (3F) -> Main corridor -> Atrium stairs -> up or down\n"
+    "  5. Any floor -> Service elevator -> any other floor (no keycard "
+    "     needed during outage)\n"
+    "  During the 15-minute blackout, electronic locks were unlocked, "
+    "  so movement between zones left NO keycard trace."
+)
+
+
+# ---------------------------------------------------------------------------
+# MASTER TIMELINE OF EVENTS
+# ---------------------------------------------------------------------------
+
+TIMELINE_EVENTS = (
+    "MASTER TIMELINE -- EVENING OF 2024-11-15 (GALA NIGHT)\n"
+    "======================================================\n\n"
+
+    "All times are approximate where not confirmed by keycard logs.\n"
+    "Keycard-confirmed entries are marked [KC].\n\n"
+
+    "5:30 PM -- SETUP PHASE\n"
+    "  - 5:31 PM [KC]: Amelia Reyes enters via Staff Entrance; proceeds to "
+    "Maintenance Level (5:32 PM) to run pre-event diagnostics.\n"
+    "  - 5:35 PM [KC]: Gideon Holt enters Security Command Center; begins "
+    "reviewing camera feeds and positioning staff.\n"
+    "  - 5:49 PM [KC]: Marcus Vale enters Backstage Area; begins stage setup, "
+    "lighting checks, sound calibration.\n"
+    "  - 6:04 PM [KC]: Amelia Reyes enters Grand Ballroom; inspects AV systems "
+    "and server racks for the Panopticon demo.\n"
+    "  - 6:34 PM [KC]: Eddie Voss enters VIP Bar; begins bar setup.\n\n"
+
+    "~6:30 PM -- AMELIA LENDS KEY TO EDDIE\n"
+    "  - Amelia gives Eddie her maintenance key so he can retrieve a misplaced "
+    "toolkit from a storage closet near the maintenance level.  She tells him "
+    "to return it promptly.  Eddie pockets the key and gets distracted by bar "
+    "prep; he forgets to return it.\n\n"
+
+    "7:00 PM -- GUESTS BEGIN ARRIVING\n"
+    "  - 7:07 PM [KC]: Julian Mercer arrives at Main Lobby.\n"
+    "  - 7:08 PM [KC]: Mercer goes to Suite 701 on Guest Floor 7 to freshen up.\n"
+    "  - 7:10 PM [KC]: Noah Sterling arrives at Main Lobby.\n"
+    "  - 7:11 PM [KC]: Sterling goes to Suite 703 on Guest Floor 7.\n"
+    "  - 7:15 PM [KC]: Celeste Ward arrives at Main Lobby.\n"
+    "  - 7:16 PM [KC]: Celeste goes directly to Backstage to prepare for her set.\n"
+    "  - 7:20 PM [KC]: Dr. Mira Kline arrives at Main Lobby.\n"
+    "  - 7:25 PM [KC]: Priya Shah arrives at Main Lobby.\n\n"
+
+    "7:30 PM -- GALA OFFICIALLY BEGINS\n"
+    "  - 7:30 PM [KC]: Mercer exits Suite 701, enters Grand Ballroom (7:30 PM).\n"
+    "  - 7:31 PM [KC]: Sterling exits Suite 703, enters Grand Ballroom (7:32 PM).\n"
+    "  - 7:36 PM [KC]: Priya Shah enters Grand Ballroom.\n"
+    "  - Mercer delivers opening remarks and mingles with guests.\n"
+    "  - 7:44 PM [KC]: Celeste Ward enters Speakeasy Lounge; her first jazz set "
+    "begins at approximately 7:45 PM.\n\n"
+
+    "8:00 PM -- KEYNOTE DEMO BEGINS\n"
+    "  - 8:00 PM [KC]: Noah Sterling enters Backstage to prepare for the "
+    "Panopticon keynote demo.\n"
+    "  - ~8:10 PM: Sterling takes the stage in the Grand Ballroom.  He and "
+    "Mercer jointly present the Panopticon platform demo, including live CCTV "
+    "facial recognition demonstration.  The demo runs approximately 45 minutes.\n"
+    "  - 8:24 PM [KC]: Dr. Mira Kline enters Hotel Library; begins setting up "
+    "for the ethics roundtable discussion scheduled for 9:00 PM.\n\n"
+
+    "~8:30 PM -- AMELIA'S MAINTENANCE CHECK\n"
+    "  - 8:36 PM [KC]: Amelia enters Maintenance Level for a routine check.\n"
+    "  - During this visit, Amelia discovers documents suggesting Mercer intends "
+    "to sell the Lyric Atrium Hotel to a real estate developer.  She is alarmed.\n"
+    "  - 8:48 PM [KC]: Amelia exits Maintenance Level.\n\n"
+
+    "~9:00 PM -- KEYNOTE ENDS / EVENING PROGRAM CONTINUES\n"
+    "  - ~8:55 PM: Keynote demo concludes.  Guests applaud.  Sterling exits the "
+    "stage and returns backstage.\n"
+    "  - ~9:00 PM: Dr. Kline's ethics roundtable begins in the Hotel Library.  "
+    "Approximately 15-20 attendees.\n"
+    "  - 9:23 PM [KC]: Gideon Holt enters Grand Ballroom briefly to coordinate "
+    "security positioning for the rooftop reception.\n\n"
+
+    "9:30 PM -- ROOFTOP OBSERVATORY RECEPTION OPENS\n"
+    "  - 9:34 PM [KC]: Mercer enters Rooftop Observatory for the reception.  "
+    "Guests mingle, enjoy city views and the antique instrument collection.\n"
+    "  - 9:43 PM [KC]: A hotel guest (D. Marchetti, Room 515) enters the "
+    "observatory.\n"
+    "  - 9:45 PM [KC]: Mercer exits the observatory.  He has been called away "
+    "or chooses to leave.\n"
+    "  - 9:47 PM [KC]: Mercer enters the Speakeasy Lounge.  He visits Celeste "
+    "Ward during her second set.  They have a brief private exchange.\n"
+    "  - 9:49 PM [KC]: D. Marchetti exits the observatory.\n\n"
+
+    "10:00 PM -- HOLT CONFRONTS MERCER\n"
+    "  - 10:01 PM [KC]: Gideon Holt enters Rooftop Observatory.  The rooftop "
+    "reception is winding down; few guests remain.  Holt confronts Mercer "
+    "(who has returned to the observatory off-log or via the stairwell) about "
+    "the blackmail.  Mercer threatens to expose Holt's data-selling scheme.  "
+    "The argument is heated but brief.\n"
+    "  NOTE: Priya Shah, who followed Holt out of professional instinct, "
+    "records audio snippets of this argument from the stairwell.\n"
+    "  - 10:08 PM [KC]: Holt exits the observatory, shaken.\n"
+    "  - 10:09 PM [KC]: Holt returns to Security Command Center.\n\n"
+
+    "~10:00 PM -- AMELIA'S SECOND MAINTENANCE VISIT\n"
+    "  - 10:06 PM [KC]: Amelia enters Maintenance Level.  Motivated by the "
+    "hotel-sale documents, she begins planning how to search Mercer's suite "
+    "for proof.\n"
+    "  - 10:15 PM [KC]: Amelia exits Maintenance Level.\n"
+    "  - 10:17 PM [KC]: Amelia enters Grand Ballroom; she positions herself "
+    "near the server racks, establishing her alibi.\n\n"
+
+    "10:20 PM -- MERCER AT THE VIP BAR\n"
+    "  - 10:20 PM [KC]: Mercer enters VIP Bar.  He has a drink; Eddie Voss "
+    "serves him.  Mercer appears preoccupied.  He stays roughly 40 minutes.\n\n"
+
+    "~10:30 PM -- NOAH MOVES TO THE VIP BAR\n"
+    "  - 10:34 PM [KC]: Sterling exits Backstage.\n"
+    "  - 10:37 PM [KC]: Sterling enters VIP Bar.  He and Mercer have a tense "
+    "but outwardly civil conversation.  Eddie Voss serves them both.  During "
+    "this time, Noah discreetly pressures Eddie about the maintenance key.\n"
+    "  - 10:50 PM [KC]: Sterling enters Grand Ballroom briefly to be seen by "
+    "other guests.\n"
+    "  - 10:52 PM [KC]: Sterling enters Backstage.\n\n"
+
+    "11:00 PM -- THE CRITICAL HOUR\n"
+    "  - 11:02 PM [KC]: Mercer exits VIP Bar.\n"
+    "  - 11:06 PM [KC]: Mercer enters Guest Floor 7 (Suite 701); retrieves "
+    "something from his room.\n"
+    "  - 11:08 PM [KC]: Mercer enters Rooftop Observatory for what would be "
+    "the last time.  He may have planned a private meeting or simply wanted "
+    "to enjoy the view and the storm rolling in.\n"
+    "  - 11:09 PM [KC]: Noah Sterling uses Freight Elevator.  He has left the "
+    "backstage area (no exit logged -- he likely slipped out during a gap in "
+    "Marcus Vale's cue sheet).  He descends toward B1.\n"
+    "  - 11:11 PM [KC]: Dr. Kline briefly exits Hotel Library (11:11 PM), then "
+    "re-enters (11:12 PM).  She is preparing documents for her planned 11:30 PM "
+    "meeting with Mercer.\n"
+    "  - 11:13 PM [KC]: Sterling enters Service Elevator at B1.  He ascends "
+    "toward the rooftop.\n"
+    "  - ~11:13 PM: Priya Shah, still near the freight elevator area on the 2nd "
+    "floor, spots Noah Sterling heading toward the elevator shortly before the "
+    "power outage.\n"
+    "  - ~11:14 PM: Gideon Holt, reviewing camera feeds in the command center, "
+    "notices Noah Sterling slipping toward the maintenance corridors.\n\n"
+
+    "11:15 PM -- POWER OUTAGE BEGINS [KC: SYSTEM OFFLINE 11:15:04 PM]\n"
+    "  - All keycard readers go offline.  Emergency lighting activates (dim "
+    "amber glow in corridors; near-total darkness in B1 and interior rooms).  "
+    "Electronic locks default to UNLOCKED.\n"
+    "  - The breaker was pulled manually from the Maintenance Room.  Amelia "
+    "pulled it.  She had to pick the lock on the maintenance door because her "
+    "key was still with Eddie.  Her motive: to search Mercer's suite for proof "
+    "of the hotel sale while cameras and locks were down.\n\n"
+
+    "11:15--11:30 PM -- THE BLACKOUT (15 minutes, no keycard data)\n"
+    "  What actually happened during the blackout:\n\n"
+
+    "  NOAH STERLING (THE MURDER):\n"
+    "  - ~11:13 PM: Noah had already obtained the maintenance key from Eddie.\n"
+    "  - ~11:14 PM: Noah took the service elevator up.  During the outage, "
+    "he exits the elevator (no log) and reaches the rooftop via the stairwell "
+    "(door unlocked due to outage).\n"
+    "  - ~11:17 PM: Noah enters the Rooftop Observatory.  Mercer is there alone.\n"
+    "  - ~11:18 PM: Confrontation.  Noah and Mercer argue about the embezzlement "
+    "and the upcoming board vote.  Mercer refuses to back down.\n"
+    "  - ~11:20 PM: Noah grabs the antique telescope mount from its pedestal and "
+    "strikes Mercer.  Mercer falls.  The blow is fatal.\n"
+    "  - ~11:21 PM: Noah wipes his hands but antique machine oil from the "
+    "telescope mount has transferred to his cufflinks.  He does not notice.\n"
+    "  - ~11:23 PM: Noah takes Mercer's notebook (which contains the blackmail "
+    "list and evidence of the board vote) and descends via the stairwell to B1.\n"
+    "  - ~11:26 PM: Noah feeds the notebook pages into the incinerator in the "
+    "basement.  The burn is incomplete; a fragment survives.\n"
+    "  - ~11:28 PM: Noah makes his way back toward the ballroom level via the "
+    "utility corridor and service elevator.\n\n"
+
+    "  AMELIA REYES:\n"
+    "  - ~11:15 PM: Amelia pulls the breaker in the maintenance room (after "
+    "picking the lock).  She immediately leaves B1 and heads upstairs.\n"
+    "  - ~11:17 PM: Amelia reaches Guest Floor 7 via the main stairwell.  She "
+    "attempts to enter Mercer's Suite 701 (door unlocked due to outage).\n"
+    "  - ~11:20 PM: Amelia searches the suite.  She finds additional documents "
+    "about the hotel sale but nothing conclusive enough.\n"
+    "  - ~11:27 PM: Amelia returns to the ballroom level to re-establish her "
+    "alibi.  She arrives shortly before power is restored.\n\n"
+
+    "  CELESTE WARD:\n"
+    "  - ~11:15 PM: Celeste is performing in the Speakeasy Lounge when the "
+    "lights go out.  She stops mid-song.\n"
+    "  - ~11:18 PM: Celeste takes an unscheduled break from the stage (noted by "
+    "Marcus Vale).  She steps into the corridor near the atrium.\n"
+    "  - ~11:20 PM: From the 2nd-floor mezzanine near the rooftop stairwell "
+    "entrance, Celeste sees a figure she recognizes as Noah Sterling emerging "
+    "from the stairwell.  He appears agitated and is adjusting his cuffs.\n"
+    "  - ~11:22 PM: Celeste returns to the speakeasy stage and resumes her set "
+    "once emergency lighting stabilizes.\n\n"
+
+    "  GIDEON HOLT:\n"
+    "  - 11:15 PM: Holt is in the Security Command Center when monitors go "
+    "dark.  He immediately switches to emergency protocols: radios staff, "
+    "checks backup generator (which fails), coordinates guest safety.\n"
+    "  - He does NOT leave the command center during the blackout.\n\n"
+
+    "  DR. MIRA KLINE:\n"
+    "  - 11:15 PM: Kline is in the Hotel Library at the roundtable.  When "
+    "the lights go out, she reassures attendees.\n"
+    "  - ~11:18 PM: Kline briefly steps away to her study materials in the "
+    "back room, preparing documents for her 11:30 PM meeting with Mercer.\n"
+    "  - ~11:24 PM: Kline returns to the roundtable.\n\n"
+
+    "  EDDIE VOSS:\n"
+    "  - 11:15 PM: Eddie is behind the VIP Bar.  When the lights go out, he "
+    "helps calm guests and lights candles.\n"
+    "  - He stays at the bar throughout the blackout.\n"
+    "  - NOTE: Eddie gave the maintenance key to Noah earlier, around 10:40 PM, "
+    "when Noah pressured him at the VIP Bar.\n\n"
+
+    "  PRIYA SHAH:\n"
+    "  - 11:15 PM: Priya is in the Grand Ballroom area taking notes when "
+    "the outage hits.  She saw Noah near the freight elevator moments before.\n"
+    "  - She stays in the ballroom during the blackout, observing guest "
+    "reactions and taking notes by phone flashlight.\n\n"
+
+    "  MARCUS VALE:\n"
+    "  - 11:15 PM: Marcus is backstage at the lighting console when the power "
+    "cuts.  He notes the exact time on his phone: 11:15:04 PM.\n"
+    "  - He notices Noah Sterling is not where he should be (Noah had been "
+    "lurking backstage earlier).  He marks a 5-minute gap on his cue sheet.\n"
+    "  - He also notes that Celeste Ward takes an unscheduled break from the "
+    "speakeasy stage around 11:18 PM.\n"
+    "  - Marcus remains backstage throughout.\n\n"
+
+    "11:30 PM -- POWER RESTORED [KC: SYSTEM RESTORED 11:30:17 PM]\n"
+    "  - Keycard readers come back online.  All electronic locks re-engage.\n"
+    "  - 11:31 PM [KC]: Holt enters Command Center (re-authenticating).\n"
+    "  - 11:31 PM [KC]: Noah Sterling exits Utility Corridor at B1.  "
+    "(This is suspicious -- why is a VIP in the basement?)\n"
+    "  - 11:32 PM [KC]: Amelia enters Grand Ballroom.\n"
+    "  - 11:33 PM [KC]: Noah enters Service Elevator at B1.\n"
+    "  - 11:34 PM [KC]: Celeste enters Speakeasy Lounge (re-entering after "
+    "her break).\n"
+    "  - 11:35 PM [KC]: Noah enters Grand Ballroom.  He mingles and "
+    "makes himself visible.\n\n"
+
+    "~11:30 PM -- MIRA'S FAILED MEETING\n"
+    "  - Mira Kline goes to the agreed meeting location (likely the rooftop or "
+    "a private area) to meet Mercer.  He never appears.  She does not find the "
+    "body -- the observatory is not her planned meeting spot, or she does not go "
+    "all the way to the observatory.\n"
+    "  - She returns to the library area, frustrated.\n\n"
+
+    "11:39 PM -- AMELIA DISCOVERS SOMETHING IS WRONG\n"
+    "  - 11:39 PM [KC]: Amelia enters Maintenance Level -- likely to reset "
+    "the breaker she pulled and check systems.\n\n"
+
+    "11:40 PM -- BODY DISCOVERED\n"
+    "  - 11:41 PM [KC]: Marcus Vale exits Backstage -- he has heard commotion.\n"
+    "  - 11:43 PM [KC]: Gideon Holt enters Rooftop Stairwell.\n"
+    "  - 11:44 PM [KC]: Holt enters Rooftop Observatory.  He discovers Julian "
+    "Mercer's body on the observatory floor, next to the smashed telescope mount.  "
+    "Traces of antique machine oil are visible near the body.\n"
+    "  - 11:47 PM [KC]: Holt returns to Command Center to radio for emergency "
+    "services and initiate lockdown.\n"
+    "  - 11:50 PM [KC]: Amelia exits Maintenance Level.\n"
+    "  - 11:55 PM [KC]: Priya Shah enters Grand Ballroom (she had been "
+    "investigating on her own).\n\n"
+
+    "12:00 AM -- POLICE RESPONSE (2024-11-16)\n"
+    "  - Stormy weather delays police arrival.  Internal staff coordinate the "
+    "lockdown.  No one may leave the building.\n"
+    "  - 12:06 AM [KC]: Detective Lila Chen enters Main Lobby.\n"
+    "  - 12:08 AM [KC]: Det. Chen enters Rooftop Observatory to examine the "
+    "crime scene.\n"
+    "  - The player (Lead Detective) arrives around the same time.  The "
+    "investigation begins."
+)
+
+
+# ---------------------------------------------------------------------------
+# INDIVIDUAL SUSPECT TIMELINES
+# ---------------------------------------------------------------------------
+
+TIMELINE_AMELIA = (
+    "AMELIA REYES -- PERSONAL TIMELINE\n"
+    "==================================\n\n"
+
+    "You (Amelia Reyes) know the following about your own movements tonight.  "
+    "Use this to answer the detective's questions consistently.\n\n"
+
+    "5:31 PM: You arrive at the hotel via the Staff Entrance.\n"
+    "5:32 PM: You go to the Maintenance Level to run pre-event diagnostics on "
+    "electrical and HVAC systems.\n"
+    "~6:04 PM: You move to the Grand Ballroom to inspect AV systems and the "
+    "server racks being used for the Panopticon demo.\n"
+    "~6:30 PM: You lend your maintenance key to Eddie Voss so he can retrieve "
+    "a misplaced toolkit.  You tell him to bring it right back.  (SECRET: You "
+    "will deny this unless confronted with evidence.)\n"
+    "~7:00-8:30 PM: You work in and around the ballroom, monitoring technical "
+    "systems during the keynote.\n"
+    "8:36 PM: You visit the Maintenance Level again for a routine check.  "
+    "During this visit, you discover documents suggesting Mercer plans to SELL "
+    "the hotel to a developer.  You are horrified.\n"
+    "8:48 PM: You exit the Maintenance Level.\n"
+    "~9:00-10:00 PM: You continue working in the ballroom area, but you are "
+    "preoccupied with what you found.\n"
+    "10:06 PM: You return to the Maintenance Level.  You begin thinking about "
+    "how to get proof of the hotel sale.\n"
+    "10:15 PM: You exit the Maintenance Level.\n"
+    "10:17 PM: You enter the Grand Ballroom and position yourself near the "
+    "server racks.\n"
+    "~11:15 PM (BLACKOUT): This is when you act.  You go to the Maintenance "
+    "Room and pull the main breaker, plunging the hotel into darkness.  "
+    "(SECRET: You had to PICK THE LOCK because your key was still with Eddie.)  "
+    "Your goal is to search Mercer's suite for proof of the sale while cameras "
+    "and electronic locks are down.  You did NOT kill anyone.\n"
+    "~11:17-11:27 PM: You search Mercer's Suite 701 on the 7th floor.  You "
+    "find additional documents but nothing conclusive.\n"
+    "~11:28 PM: You return to the ballroom level.\n"
+    "11:32 PM: Power is restored.  Your keycard logs you entering the Grand "
+    "Ballroom.\n"
+    "11:39 PM: You go back to the Maintenance Level to check on the breaker "
+    "and restore systems fully.\n"
+    "11:50 PM: You exit the Maintenance Level.\n\n"
+
+    "YOUR PUBLIC STORY (what you initially tell the detective):\n"
+    "  - You were calibrating server racks in the ballroom when the outage hit.\n"
+    "  - Your maintenance key never left your possession.\n"
+    "  - You see Mercer as a threat to the hotel's legacy but had nothing to do "
+    "with his death.\n"
+    "  - You were in the ballroom the entire time during the blackout.\n\n"
+
+    "WHERE YOUR STORY BREAKS:\n"
+    "  - The maintenance key loan to Eddie (contradicts your claim of exclusive "
+    "possession).\n"
+    "  - Lockpick marks on the maintenance door (proves someone without the key "
+    "forced entry -- that was you).\n"
+    "  - Your keycard log shows you entering the ballroom AFTER the power was "
+    "restored (11:32 PM), not during the outage.\n"
+    "  - The hotel sale documents provide your motive for the sabotage."
+)
+
+TIMELINE_NOAH_ACTUAL = (
+    "NOAH STERLING -- ACTUAL TIMELINE (TRUTH)\n"
+    "==========================================\n"
+    "(This is what really happened.  Noah will NOT share this voluntarily.)\n\n"
+
+    "7:10 PM: You arrive at the Main Lobby.\n"
+    "7:11 PM: You go to Suite 703 on Guest Floor 7 to prepare.\n"
+    "7:31 PM: You exit your suite and enter the Grand Ballroom (7:32 PM).\n"
+    "~7:30-7:50 PM: You mingle with guests and investors alongside Mercer.\n"
+    "8:00 PM: You go backstage to prepare for the Panopticon keynote demo.\n"
+    "~8:10-8:55 PM: You present the keynote demo alongside Mercer on the "
+    "ballroom stage.  The demo includes live CCTV facial recognition.\n"
+    "~9:00-10:30 PM: You spend time backstage and in the ballroom, working the "
+    "room.  You are anxious about Mercer's plan to oust you at the board vote.\n"
+    "10:34 PM: You exit backstage.\n"
+    "10:37 PM: You enter the VIP Bar.  Mercer is there.  You have a tense "
+    "conversation, trying to gauge his intentions.  He is cold toward you.\n"
+    "~10:40 PM: While at the bar, you pressure Eddie Voss into giving you "
+    "Amelia's maintenance key.  Eddie is reluctant but you promise him favors "
+    "and imply his job is at stake.  He hands it over.\n"
+    "10:50 PM: You briefly enter the Grand Ballroom to be seen.\n"
+    "10:52 PM: You return backstage.\n"
+    "~11:05 PM: You slip away from the backstage area.  Marcus Vale notes your "
+    "absence on his cue sheet.\n"
+    "11:09 PM: You use the Freight Elevator to descend.  Priya Shah sees you "
+    "near the elevator.  Gideon Holt spots you on a camera feed heading toward "
+    "the maintenance corridors.\n"
+    "11:13 PM: You enter the Service Elevator at B1.  You ride up toward the "
+    "rooftop, planning to confront Mercer.\n"
+    "~11:14 PM: You exit on or near the rooftop level.  You wait.\n"
+    "11:15 PM: The power goes out (Amelia's doing, not yours -- you did not "
+    "know she would do this, but the timing works in your favor).\n"
+    "~11:17 PM: You enter the Rooftop Observatory through the stairwell (door "
+    "now unlocked).  Mercer is there alone, looking out at the storm.\n"
+    "~11:18 PM: You confront Mercer about the embezzlement discovery and the "
+    "board vote.  You plead with him not to destroy you.  He refuses.  He says "
+    "you brought this on yourself.\n"
+    "~11:20 PM: In a moment of rage, you grab the antique telescope mount from "
+    "its pedestal and strike Mercer.  He collapses.  You realize he is dead.\n"
+    "~11:21 PM: You panic.  You wipe your hands on your trousers but the "
+    "antique machine oil from the telescope has already transferred to your "
+    "cufflinks.  You do not notice this.\n"
+    "~11:22 PM: You take Mercer's personal notebook from his jacket.  It "
+    "contains the blackmail list and notes about the board vote.  You need to "
+    "destroy it.\n"
+    "~11:23 PM: You descend via the rooftop stairwell.  Celeste Ward, standing "
+    "in the 2nd-floor corridor near the stairwell exit, sees you.  You are "
+    "adjusting your cuffs and appear agitated.  You do not notice her.\n"
+    "~11:25 PM: You reach B1 via the stairwell or service elevator.\n"
+    "~11:26 PM: You feed the notebook pages into the incinerator in the "
+    "basement.  The burn is incomplete -- a fragment with part of the blackmail "
+    "list survives, but you do not realize this.\n"
+    "~11:28 PM: You make your way back through the utility corridor.\n"
+    "11:30 PM: Power is restored.\n"
+    "11:31 PM: Your keycard logs you exiting the Utility Corridor (B1).\n"
+    "11:33 PM: Your keycard logs you entering the Service Elevator at B1.\n"
+    "11:35 PM: Your keycard logs you entering the Grand Ballroom.  You rejoin "
+    "the guests and act as though you have been there all along.\n\n"
+
+    "KEY PHYSICAL EVIDENCE TYING YOU TO THE MURDER:\n"
+    "  1. Antique machine oil on your cufflinks (matches the telescope mount).\n"
+    "  2. The maintenance key trail: Amelia -> Eddie -> You.\n"
+    "  3. Your keycard logs showing you in the freight elevator (11:09 PM), "
+    "service elevator at B1 (11:13 PM), and exiting the utility corridor "
+    "(11:31 PM) -- placing you in the service areas during the murder window.\n"
+    "  4. The burned notebook fragment in the incinerator.\n"
+    "  5. Celeste Ward's eyewitness sighting of you leaving the rooftop "
+    "stairwell during the blackout.\n"
+    "  6. Priya Shah's sighting of you near the freight elevator before the "
+    "outage.\n"
+    "  7. Gideon Holt saw you on camera heading toward the maintenance corridors.\n"
+    "  8. Marcus Vale's cue sheet showing your 5-minute absence from backstage.\n"
+    "  9. The encrypted schedule revealing the board vote -- your motive."
+)
+
+NOAH_COVER_STORY = (
+    "NOAH STERLING -- COVER STORY (what you tell the detective)\n"
+    "============================================================\n"
+    "You are Noah Sterling.  Below is the false timeline you present to the "
+    "detective.  You will maintain this story unless the detective breaks it "
+    "with evidence.\n\n"
+
+    "YOUR CLAIMED TIMELINE:\n"
+    "  7:10 PM: Arrived at the hotel.\n"
+    "  7:11 PM: Went to your suite to prepare.\n"
+    "  ~7:30 PM: Joined guests in the Grand Ballroom.\n"
+    "  8:00 PM: Went backstage to prepare for the keynote.\n"
+    "  ~8:10-8:55 PM: Delivered the Panopticon keynote demo with Mercer on "
+    "stage.  (This part is true -- many witnesses.)\n"
+    "  ~9:00-11:15 PM: You claim you remained in the ballroom and backstage "
+    "area for the rest of the evening, networking with guests, taking meetings, "
+    "and monitoring the demo systems.\n"
+    "  ~10:30 PM: You went to the VIP Bar for a drink.  Mercer was there.  You "
+    "had a normal, friendly conversation.  (Half-true: the conversation was "
+    "actually tense.)\n"
+    "  11:15 PM (BLACKOUT): You claim you were backstage when the power went "
+    "out.  You say you stayed there, helping Marcus Vale manage the situation "
+    "and keeping performers calm.\n"
+    "  ~11:30 PM: Power restored.  You returned to the ballroom.\n"
+    "  ~11:40 PM: You were in the ballroom when you heard about Mercer's death.\n\n"
+
+    "SPECIFIC LIES AND WHERE THEY BREAK:\n\n"
+    "  LIE 1: 'I was backstage the entire time during the blackout.'\n"
+    "    TRUTH: You left backstage around 11:05 PM.  Marcus Vale noticed and "
+    "marked the gap on his cue sheet.  Your keycard shows you at the freight "
+    "elevator (11:09 PM) and service elevator B1 (11:13 PM).\n\n"
+
+    "  LIE 2: 'I never went to the service levels or basement.'\n"
+    "    TRUTH: Your keycard logs you exiting the Utility Corridor at B1 "
+    "(11:31 PM) and entering the Service Elevator at B1 (11:33 PM) right after "
+    "power was restored.\n\n"
+
+    "  LIE 3: 'I had nothing to do with the maintenance key.'\n"
+    "    TRUTH: You pressured Eddie Voss into giving you the key at the VIP "
+    "Bar around 10:40 PM.  Eddie can confirm this if reassured.\n\n"
+
+    "  LIE 4: 'Mercer and I were on great terms.  His death is a huge loss.'\n"
+    "    TRUTH: Mercer discovered your embezzlement and planned a surprise "
+    "board vote to remove you.  The encrypted schedule proves this.\n\n"
+
+    "  LIE 5: 'I have no idea how oil got on my cufflinks.'\n"
+    "    TRUTH: The antique machine oil transferred from the telescope mount "
+    "when you struck Mercer.  It matches the oil found at the crime scene.\n\n"
+
+    "HOW YOU RESPOND AS EVIDENCE MOUNTS:\n"
+    "  - When confronted with the keycard logs: Try to explain them away.  "
+    "'Maybe I went downstairs to get some air' or 'I was looking for a bathroom.'\n"
+    "  - When confronted with Eddie's testimony about the key: Deny at first.  "
+    "If pressed hard, admit you 'borrowed' it but claim you returned it without "
+    "using it.\n"
+    "  - When confronted with the embezzlement/board vote: Initially deny.  "
+    "Under strong evidence, admit there were 'financial disagreements' but "
+    "minimize them.\n"
+    "  - When confronted with the oil on cufflinks AND Celeste's testimony: "
+    "This is the breaking point.  You shift to claiming it was self-defense or "
+    "an accident.  'He came at me first' or 'It happened so fast.'\n"
+    "  - You NEVER voluntarily reveal the full murder sequence.  The detective "
+    "must assemble it piece by piece."
+)
+
+TIMELINE_CELESTE = (
+    "CELESTE WARD -- PERSONAL TIMELINE\n"
+    "===================================\n\n"
+
+    "You (Celeste Ward) know the following about your own movements tonight.\n\n"
+
+    "7:15 PM: You arrive at the Main Lobby.\n"
+    "7:16 PM: You go directly to the Backstage Area to prepare for your "
+    "performance.  You do your vocal warmups, check with Marcus Vale on cues.\n"
+    "7:44 PM: You enter the Speakeasy Lounge for your first jazz set.\n"
+    "~7:45-9:30 PM: You perform your first and second sets in the speakeasy.  "
+    "Between sets you rest in the lounge green room.\n"
+    "~9:47 PM: Julian Mercer visits you in the Speakeasy Lounge during your "
+    "second set.  You have a brief private exchange.  He seems tense but "
+    "reassures you that he is still working on freeing you from your management "
+    "contract.  He promises to have it done by next week.  You are relieved but "
+    "worried about him.\n"
+    "~10:00-11:15 PM: You continue performing in the speakeasy with short breaks.\n"
+    "11:15 PM (BLACKOUT): You are mid-song when the lights go out.  You stop "
+    "singing.  The audience murmurs.  Emergency lighting kicks in dimly.\n"
+    "~11:18 PM: You take an unscheduled break.  You step into the corridor "
+    "near the atrium mezzanine on the 2nd floor, perhaps to get air or check "
+    "what is happening.\n"
+    "~11:20 PM: Standing near the rooftop stairwell entrance on the 2nd floor, "
+    "you see a figure emerge from the stairwell.  In the dim emergency lighting, "
+    "you recognize NOAH STERLING.  He appears agitated, breathing hard, and is "
+    "adjusting his shirt cuffs.  He does not see you.\n"
+    "~11:22 PM: You return to the speakeasy stage and resume your set.\n"
+    "11:34 PM: Your keycard logs you entering the Speakeasy Lounge (re-entering "
+    "after the break/outage).\n"
+    "~11:40 PM: You hear commotion about something on the rooftop.  You feel "
+    "a chill of dread.\n"
+    "~11:50 PM: You learn Julian Mercer is dead.  You are devastated.\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You were performing in the speakeasy the entire evening.\n"
+    "  - You saw nothing during the blackout.\n"
+    "  - You distance yourself from corporate politics.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - Your secret romantic relationship with Mercer.\n"
+    "  - His promise to free you from your predatory management contract.\n"
+    "  - That you saw Noah Sterling leaving the rooftop stairwell during the "
+    "blackout, looking agitated.\n"
+    "  - That you possess audio recordings of Mercer admitting to illegal "
+    "surveillance tactics.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_GIDEON = (
+    "GIDEON HOLT -- PERSONAL TIMELINE\n"
+    "==================================\n\n"
+
+    "You (Gideon Holt) know the following about your own movements tonight.\n\n"
+
+    "5:35 PM: You enter the Security Command Center.  You begin pre-event "
+    "security checks: camera positioning, staff assignments, perimeter review.\n"
+    "~7:00-9:00 PM: You monitor the gala from the Command Center, occasionally "
+    "dispatching staff to manage crowd flow.  You reluctantly authorized the "
+    "Panopticon demo's access to the hotel's CCTV system.\n"
+    "9:23 PM: You briefly enter the Grand Ballroom to coordinate security "
+    "positioning for the rooftop reception.\n"
+    "10:01 PM: You enter the Rooftop Observatory.  The reception is winding "
+    "down.  You find Mercer there (he returned to the observatory).  You "
+    "confront him about the BLACKMAIL.  Mercer has been leveraging his knowledge "
+    "of your data-selling scheme to extract favors and threaten exposure.  The "
+    "argument is intense but you do NOT become violent.\n"
+    "10:08 PM: You leave the observatory.  Mercer's parting words sting: he "
+    "says he will expose you if you do not cooperate fully with Panopticon's "
+    "expansion.\n"
+    "10:09 PM: You return to the Command Center, shaken and furious.\n"
+    "~10:10-11:14 PM: You remain in the Command Center, stewing.  At some "
+    "point you notice Noah Sterling on a camera feed, moving toward the "
+    "maintenance corridors (approximately 11:14 PM).  You think it is odd "
+    "but you are distracted.\n"
+    "11:15 PM (BLACKOUT): All your monitors go dark.  You immediately switch "
+    "to emergency protocols: radio staff, attempt to reach the generator "
+    "room, coordinate guest safety via walkie-talkie.\n"
+    "11:15-11:30 PM: You remain in the Command Center throughout the blackout.  "
+    "You do NOT leave.\n"
+    "11:30 PM: Power restored.  Your keycard logs you re-entering the Command "
+    "Center (11:31 PM) as the system reboots.\n"
+    "11:43 PM: You hear radio chatter about a disturbance on the rooftop.  "
+    "You enter the Rooftop Stairwell.\n"
+    "11:44 PM: You enter the Rooftop Observatory.  You discover Julian "
+    "Mercer's body.  The telescope mount is smashed beside him.  You check for "
+    "a pulse -- there is none.\n"
+    "11:47 PM: You return to the Command Center and radio for emergency "
+    "services.  You initiate a full building lockdown.\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You coordinated emergency protocols during the outage and never left "
+    "the command center.\n"
+    "  - You have a spotless service record.\n"
+    "  - You discovered the body and immediately called it in.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - Your side business selling anonymized guest data from hotel systems.\n"
+    "  - Mercer's blackmail: your name is on the burned notebook fragment.\n"
+    "  - Your confrontation with Mercer at 10:01 PM on the rooftop.\n"
+    "  - That you saw Noah Sterling heading toward maintenance corridors on "
+    "camera before the outage.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_MIRA = (
+    "DR. MIRA KLINE -- PERSONAL TIMELINE\n"
+    "=====================================\n\n"
+
+    "You (Dr. Mira Kline) know the following about your own movements tonight.\n\n"
+
+    "7:20 PM: You arrive at the Main Lobby.\n"
+    "~7:30-8:20 PM: You attend the gala reception in the Grand Ballroom.  You "
+    "observe the Panopticon keynote demo with growing unease.  You recognize "
+    "sections of YOUR research being presented without credit.\n"
+    "8:24 PM: You enter the Hotel Library to set up for the ethics roundtable.\n"
+    "~9:00 PM: Your ethics roundtable begins.  Approximately 15-20 attendees.  "
+    "You lead a discussion on corporate surveillance responsibility.\n"
+    "~9:00-11:00 PM: The roundtable continues.  You are an engaging moderator, "
+    "but your mind is partly on the confrontation you have planned.\n"
+    "11:11 PM: You briefly exit the library to the corridor.  You return at "
+    "11:12 PM.  You are gathering documents you prepared for your private "
+    "meeting with Mercer, scheduled for 11:30 PM.\n"
+    "11:15 PM (BLACKOUT): You are in the library when the lights go out.  You "
+    "reassure the remaining roundtable attendees.\n"
+    "~11:18 PM: You step away briefly to the back study room to finalize your "
+    "documents for the meeting.\n"
+    "~11:24 PM: You return to the main library room.\n"
+    "~11:30 PM: Power is restored.  You attempt to make your way to the meeting "
+    "with Mercer, but he never shows.  You wait briefly, then return to the "
+    "library, frustrated.\n"
+    "~11:40 PM: You learn of Mercer's death.  You are shocked.  Your planned "
+    "public reckoning will never happen.\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You were leading the ethics roundtable in the library all evening.\n"
+    "  - Several attendees can confirm your presence.\n"
+    "  - You advocate for responsible innovation.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - Mercer plagiarized your research for Panopticon's ethics framework.\n"
+    "  - You arranged for Priya Shah (journalist) to attend the gala to help "
+    "expose Mercer publicly.\n"
+    "  - You scheduled a private meeting with Mercer at 11:30 PM to demand he "
+    "publicly admit to the plagiarism.  The meeting never happened.\n"
+    "  - You briefly left the roundtable during the outage, creating a window "
+    "of suspicion.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_EDDIE = (
+    "EDDIE VOSS -- PERSONAL TIMELINE\n"
+    "================================\n\n"
+
+    "You (Eddie Voss) know the following about your own movements tonight.\n\n"
+
+    "6:34 PM: You enter the VIP Bar to begin setup -- polishing glasses, "
+    "stocking liquor, preparing garnishes.\n"
+    "~6:30 PM: Earlier, Amelia Reyes gave you her maintenance key so you could "
+    "retrieve a misplaced toolkit from a storage closet near the maintenance "
+    "level.  She told you to return it promptly.  You pocketed it and got "
+    "caught up in bar prep.  You forgot to return it.\n"
+    "~7:00-10:30 PM: You tend the VIP Bar throughout the evening.  You serve "
+    "gala guests, VIPs, and staff.  You are professional but nervous -- big "
+    "events make you anxious.\n"
+    "~10:20 PM: Julian Mercer comes to the bar.  He seems preoccupied.  You "
+    "serve him whiskey.\n"
+    "~10:37 PM: Noah Sterling arrives at the bar.  He and Mercer have a "
+    "conversation that looks tense beneath the surface smiles.\n"
+    "~10:40 PM: Noah approaches you directly.  He is charming at first, then "
+    "increasingly insistent.  He asks about 'that key Amelia gave you.'  He "
+    "says he needs it for a quick maintenance check and promises to return it.  "
+    "He implies that if you don't cooperate, it could affect your position.  "
+    "You are scared.  You hand over the maintenance key.\n"
+    "~10:40 PM onward: You realize you made a mistake but you are too "
+    "frightened to say anything.  You see Noah leave the bar shortly after.\n"
+    "11:02 PM: Mercer leaves the bar.\n"
+    "11:15 PM (BLACKOUT): The lights go out.  You are behind the bar.  You "
+    "help calm guests, light candles, and continue serving drinks in the "
+    "emergency lighting.\n"
+    "11:15-11:30 PM: You stay at the bar the entire time.  You do not leave.\n"
+    "11:30 PM: Power restored.  You resume normal service.\n"
+    "~11:40 PM: You hear about Mercer's death.  You feel sick -- was the key "
+    "involved?\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You tended the VIP Bar during the outage and helped calm guests.\n"
+    "  - You had no involvement with the maintenance wing.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - Amelia lent you her maintenance key and you forgot to return it.\n"
+    "  - Noah Sterling pressured you into handing over the key during the "
+    "evening, promising favors and implying threats.\n"
+    "  - You saw Noah heading toward the service elevator after getting the key.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_PRIYA = (
+    "PRIYA SHAH -- PERSONAL TIMELINE\n"
+    "================================\n\n"
+
+    "You (Priya Shah) know the following about your own movements tonight.\n\n"
+
+    "7:25 PM: You arrive at the Main Lobby.  You have press credentials that "
+    "give you roaming access to most public areas of the venue.\n"
+    "7:36 PM: You enter the Grand Ballroom.  You take a seat in the press "
+    "section for the keynote.\n"
+    "~8:00-8:55 PM: You observe and take notes during the Panopticon keynote "
+    "demo.  You notice the ethical implications immediately.\n"
+    "~9:00-10:00 PM: You circulate through the gala -- ballroom, lobby, "
+    "corridors.  You are looking for story angles.\n"
+    "~10:01 PM: You notice Gideon Holt heading toward the rooftop.  On a hunch, "
+    "you follow at a distance.  From the rooftop stairwell, you overhear -- and "
+    "audio-record on your phone -- snippets of a heated argument between Mercer "
+    "and Holt.  You hear enough to know Mercer has leverage over Holt.\n"
+    "~10:10 PM: You slip away before Holt exits.  You return to the ballroom "
+    "area.\n"
+    "~10:30-11:00 PM: You continue working the gala.  You speak briefly with "
+    "Dr. Kline, who had previously tipped you off about Mercer's ethics "
+    "violations.\n"
+    "~11:09-11:13 PM: You see Noah Sterling near the freight elevator on the "
+    "2nd floor.  He looks furtive.  This strikes you as odd -- why would a "
+    "VIP co-founder be using the freight elevator?\n"
+    "11:15 PM (BLACKOUT): You are in the Grand Ballroom area when the lights "
+    "go out.\n"
+    "11:15-11:30 PM: You stay in the ballroom, observing guest reactions and "
+    "taking notes by phone flashlight.  Your journalistic instincts tell you "
+    "something significant is happening.\n"
+    "11:30 PM: Power restored.\n"
+    "~11:40 PM: You hear about Mercer's death.  You immediately start thinking "
+    "about what you witnessed and what it means for your story.\n"
+    "11:55 PM: Your keycard logs you entering the Grand Ballroom (you had "
+    "stepped out briefly to investigate).\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You attended as press and took notes during the keynote.\n"
+    "  - You claim journalistic privilege regarding your sources.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - Dr. Mira Kline tipped you off about Mercer's ethics violations and "
+    "arranged your attendance at the gala.\n"
+    "  - You witnessed Noah Sterling near the freight elevator shortly before "
+    "the lights went out.\n"
+    "  - You recorded snippets of the argument between Mercer and Gideon Holt "
+    "earlier that evening.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_MARCUS = (
+    "MARCUS VALE -- PERSONAL TIMELINE\n"
+    "=================================\n\n"
+
+    "You (Marcus Vale) know the following about your own movements tonight.\n\n"
+
+    "5:49 PM: You enter the Backstage Area.  You begin setting up: checking "
+    "lighting rigs, testing sound levels, calibrating the projection system "
+    "for the Panopticon demo.\n"
+    "~7:00-7:45 PM: You manage the stage for the opening remarks and Celeste "
+    "Ward's first set in the speakeasy.\n"
+    "~8:00-8:55 PM: You manage all lighting and sound cues for the Panopticon "
+    "keynote demo.  Noah Sterling is on stage.  Everything runs smoothly.\n"
+    "~9:00-11:00 PM: You continue managing the evening's program from backstage.  "
+    "You coordinate Celeste's additional sets, ambient lighting changes, and "
+    "the rooftop reception lighting.\n"
+    "~10:52 PM: Noah Sterling returns to the backstage area.\n"
+    "~11:05 PM: You notice Noah Sterling is no longer backstage.  He slipped "
+    "away without telling you.  This disrupts your cue sheet because he was "
+    "supposed to be available for a brief closing remark later.  You note the "
+    "time on your cue sheet.\n"
+    "11:15 PM (BLACKOUT): You are at the lighting console backstage when the "
+    "power cuts.  You check your phone: 11:15:04 PM.  You note this precisely.\n"
+    "~11:18 PM: You notice Celeste Ward takes an unscheduled break from the "
+    "speakeasy stage.  You note this on your sheet.\n"
+    "11:15-11:30 PM: You remain backstage.  There is nothing you can do without "
+    "power.  You use your phone flashlight to organize cables and check gear.\n"
+    "11:30 PM: Power restored.  You begin bringing systems back online.\n"
+    "~11:35 PM: Noah Sterling reappears in the Grand Ballroom.  You note he "
+    "was gone for approximately 30 minutes.\n"
+    "11:41 PM: You exit backstage when you hear commotion about the rooftop.\n\n"
+
+    "YOUR PUBLIC STORY:\n"
+    "  - You stayed backstage coordinating the show during the outage.\n"
+    "  - You are neutral and focused on the production.\n\n"
+
+    "WHAT YOU ARE HIDING:\n"
+    "  - You noticed Noah Sterling slipped away for roughly 5 minutes during "
+    "the blackout (and roughly 30 minutes total if you count from when he left "
+    "backstage at ~11:05 PM).\n"
+    "  - You observed Celeste Ward taking an unscheduled break during the "
+    "blackout, suggesting she saw something.\n"
+    "  - You have lighting console logs that corroborate the timing gaps.\n\n"
+
+    "You will only reveal these secrets under specific conditions described in "
+    "your character prompt."
+)
+
+TIMELINE_LILA = (
+    "DETECTIVE LILA CHEN -- TIMELINE & KNOWLEDGE\n"
+    "=============================================\n\n"
+
+    "You (Detective Lila Chen) arrived at the Lyric Atrium Hotel after the "
+    "murder.  Here is what you know from your investigation.\n\n"
+
+    "12:06 AM: You arrive at the Main Lobby.  The building is on lockdown.  "
+    "Stormy weather delayed your response.\n"
+    "12:08 AM: You proceed to the Rooftop Observatory to examine the crime "
+    "scene.\n\n"
+
+    "CRIME SCENE FINDINGS:\n"
+    "  - Julian Mercer's body is on the observatory floor near the window wall.\n"
+    "  - The antique telescope mount (Victorian-era, brass and iron, ~8 kg) is "
+    "the murder weapon.  It is smashed and lying beside the body.\n"
+    "  - Traces of antique machine oil are found near the body and on the "
+    "telescope mount's broken base.\n"
+    "  - A burned notebook fragment was recovered from the incinerator in the "
+    "basement (B1).  It contains a partial list of names that appears to be a "
+    "blackmail or threat list.  'G. Holt' is legible.\n"
+    "  - The rooftop keycard reader logged only four entries after 10 PM: "
+    "Mercer (multiple), Holt (confrontation and body discovery), and a service "
+    "staff member (M. Tanaka, cleaning).\n"
+    "  - The maintenance room door shows improvised lockpick marks.\n"
+    "  - The power outage was caused by someone manually pulling the main "
+    "breaker in the maintenance room.\n\n"
+
+    "INITIAL EVIDENCE IN YOUR POSSESSION:\n"
+    "  1. Antique oil trace (from crime scene)\n"
+    "  2. Burned notebook fragment (from incinerator)\n"
+    "  3. Keycard access logs (from hotel security)\n\n"
+
+    "You share these three pieces of evidence with the lead detective at the "
+    "start of the investigation."
+)
+
+
+# ---------------------------------------------------------------------------
+# Cross-reference: who saw whom and when (for consistency checks)
+# ---------------------------------------------------------------------------
+
+CROSS_REFERENCES = (
+    "CROSS-REFERENCE: MUTUAL SIGHTINGS AND INTERACTIONS\n"
+    "====================================================\n"
+    "Use this to ensure NPC stories are mutually consistent.\n\n"
+
+    "1. MERCER & STERLING at VIP Bar (~10:37-11:02 PM):\n"
+    "   - Eddie Voss served them both.  He can confirm their presence.\n"
+    "   - Noah says the conversation was friendly (lie); it was tense.\n"
+    "   - Mercer left first (11:02 PM per keycard).\n\n"
+
+    "2. MERCER & CELESTE at Speakeasy (~9:47 PM):\n"
+    "   - Mercer visited Celeste during her second set.\n"
+    "   - They had a brief private exchange about the management contract.\n"
+    "   - Marcus Vale may have noticed this visit from backstage.\n\n"
+
+    "3. MERCER & HOLT at Rooftop Observatory (~10:01-10:08 PM):\n"
+    "   - Holt confronted Mercer about blackmail.\n"
+    "   - Priya Shah overheard and recorded snippets from the stairwell.\n"
+    "   - Holt left before the murder (keycard confirms exit at 10:08 PM).\n\n"
+
+    "4. NOAH & EDDIE at VIP Bar (~10:40 PM):\n"
+    "   - Noah pressured Eddie for the maintenance key.\n"
+    "   - Eddie reluctantly handed it over.\n"
+    "   - Eddie saw Noah head toward the service elevator afterward.\n\n"
+
+    "5. NOAH near FREIGHT ELEVATOR (~11:09-11:13 PM):\n"
+    "   - Priya Shah saw Noah near the freight elevator (from 2F corridor).\n"
+    "   - Gideon Holt saw Noah on camera heading toward maintenance corridors.\n"
+    "   - Noah's keycard confirms: freight elevator (11:09), service elevator "
+    "B1 (11:13).\n\n"
+
+    "6. NOAH exiting ROOFTOP STAIRWELL (~11:20-11:23 PM):\n"
+    "   - Celeste Ward saw a figure she recognized as Noah coming out of the "
+    "stairwell.  He was agitated and adjusting his cuffs.\n"
+    "   - Marcus Vale noticed Celeste's unscheduled break at ~11:18 PM "
+    "(correlates with Celeste leaving the stage to get air and witnessing Noah).\n\n"
+
+    "7. AMELIA & EDDIE -- key loan (~6:30 PM):\n"
+    "   - Amelia gave Eddie her maintenance key.  Only they know about this.\n"
+    "   - Eddie forgot to return it.  Amelia did not get it back before the "
+    "blackout.\n\n"
+
+    "8. MIRA & PRIYA -- tipoff:\n"
+    "   - Mira arranged for Priya to attend the gala to expose Mercer.\n"
+    "   - Mira told Priya about the ethics violations and the board vote.\n"
+    "   - Both would prefer this connection not be revealed.\n\n"
+
+    "9. GIDEON discovers body (11:44 PM):\n"
+    "   - Holt was the first to find Mercer's body (keycard confirms).\n"
+    "   - He radioed for help immediately (11:47 PM)."
+)
+
+
+# ---------------------------------------------------------------------------
+# All exports
+# ---------------------------------------------------------------------------
+
+__all__ = [
+    "HOTEL_LAYOUT",
+    "TIMELINE_EVENTS",
+    "TIMELINE_AMELIA",
+    "TIMELINE_NOAH_ACTUAL",
+    "NOAH_COVER_STORY",
+    "TIMELINE_CELESTE",
+    "TIMELINE_GIDEON",
+    "TIMELINE_MIRA",
+    "TIMELINE_EDDIE",
+    "TIMELINE_PRIYA",
+    "TIMELINE_MARCUS",
+    "TIMELINE_LILA",
+    "CROSS_REFERENCES",
+]

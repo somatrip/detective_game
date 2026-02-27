@@ -153,6 +153,78 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
+    /* ── Auth Prompt Screen (between title card and game) ── */
+    #auth-prompt {
+      position: fixed; inset: 0; z-index: 145;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #0e0c09, #14110c);
+      animation: fadeIn 0.3s ease;
+    }
+    #auth-prompt.hidden { display: none; }
+    .auth-prompt-card {
+      text-align: center;
+      max-width: 380px; width: 90%;
+      padding: 2.5rem 2rem;
+    }
+    .auth-prompt-heading {
+      font-family: var(--font-noir);
+      color: var(--accent);
+      font-size: 1.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .auth-prompt-desc {
+      font-family: var(--font-typewriter);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+    .auth-prompt-buttons {
+      display: flex; gap: 0.7rem; justify-content: center;
+      margin-bottom: 1.2rem;
+    }
+    .auth-prompt-btn {
+      font-family: var(--font-typewriter);
+      border: none;
+      border-radius: 6px;
+      padding: 0.7rem 1.6rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .auth-prompt-btn.primary {
+      background: var(--accent);
+      color: var(--bg-dark);
+    }
+    .auth-prompt-btn.primary:hover {
+      background: #b8862e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .auth-prompt-skip {
+      font-family: var(--font-typewriter);
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.15s;
+      margin-bottom: 0.5rem;
+    }
+    .auth-prompt-skip:hover {
+      color: var(--text-main);
+    }
+    .auth-prompt-warning {
+      font-family: var(--font-typewriter);
+      color: rgba(212,160,80,0.35);
+      font-size: 0.68rem;
+      font-style: italic;
+    }
 
     /* ── Intro Screen ──────────────────────────────────────── */
     #intro-screen {
@@ -1636,6 +1708,164 @@
       width: auto; padding: 0.5rem 1rem;
     }
 
+    /* ── Auth Modal ────────────────────────────────────── */
+    #auth-modal {
+      position: fixed; inset: 0; z-index: 260;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    #auth-modal.visible { display: flex; }
+    .auth-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 90%; max-width: 380px;
+      overflow: hidden;
+    }
+    .auth-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-header h2 {
+      font-family: var(--font-noir);
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); margin: 0;
+    }
+    .auth-close-btn {
+      background: none; border: none;
+      color: var(--text-faint); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+      padding: 0 0.2rem;
+      transition: color 0.15s;
+    }
+    .auth-close-btn:hover { color: var(--text); }
+    .auth-body { padding: 1.25rem; }
+    .auth-tabs {
+      display: flex; gap: 0; margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-tab-btn {
+      flex: 1; padding: 0.6rem 0.5rem;
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-faint);
+      font-family: var(--font-noir);
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: color 0.15s, border-color 0.15s;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .auth-tab-btn.active {
+      color: var(--noir-amber);
+      border-bottom-color: var(--noir-amber);
+    }
+    .auth-tab-btn:hover { color: var(--text); }
+    .auth-field { margin-bottom: 0.85rem; }
+    .auth-field label {
+      display: block;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .auth-field input {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+    .auth-field input:focus {
+      outline: none;
+      border-color: var(--noir-amber);
+    }
+    .auth-submit-btn {
+      width: 100%; padding: 0.7rem;
+      border: none; border-radius: 8px;
+      background: var(--noir-amber);
+      color: var(--noir-warm);
+      font-family: var(--font-noir);
+      font-size: 0.85rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .auth-submit-btn:hover {
+      background: #b8862e;
+      transform: translateY(-1px);
+    }
+    .auth-submit-btn:disabled {
+      opacity: 0.5; cursor: not-allowed;
+      transform: none;
+    }
+    .auth-error {
+      color: var(--danger);
+      font-size: 0.78rem;
+      margin-bottom: 0.7rem;
+      min-height: 1.2em;
+    }
+    .auth-info {
+      color: var(--success);
+      font-size: 0.78rem;
+      margin-bottom: 0.7rem;
+      min-height: 1.2em;
+    }
+    .auth-user-bar {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0;
+    }
+    .auth-user-email {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .auth-logout-btn {
+      padding: 0.35rem 0.7rem;
+      border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 6px;
+      background: rgba(248,113,113,0.1);
+      color: var(--danger);
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .auth-logout-btn:hover { background: rgba(248,113,113,0.2); }
+    .auth-status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .auth-status-pill.cloud {
+      background: rgba(168,184,142,0.15);
+      color: var(--success);
+    }
+    .auth-status-pill.local {
+      background: rgba(212,160,80,0.12);
+      color: var(--noir-amber);
+    }
+    .cloud-save-indicator {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      text-align: center;
+      padding: 0.5rem 0;
+      min-height: 1.6em;
+    }
+    .cloud-save-indicator.saving { color: var(--noir-amber); }
+    .cloud-save-indicator.saved { color: var(--success); }
+    .cloud-save-indicator.error { color: var(--danger); }
+
     /* ── Voice: Per-message replay button ──────────────── */
     .msg-audio-btn {
       display: inline-flex; align-items: center; gap: 4px;
@@ -1797,6 +2027,20 @@
       <span data-i18n="titlecard.division">Det. Division — Homicide</span>
     </div>
     <button class="title-card-open-btn" id="title-card-btn" data-i18n="titlecard.open">Open Case File</button>
+  </div>
+</div>
+
+<!-- ════════ Auth Prompt (shown after title card, before game) ════════ -->
+<div id="auth-prompt" class="hidden">
+  <div class="auth-prompt-card">
+    <h2 class="auth-prompt-heading">Save Your Progress</h2>
+    <p class="auth-prompt-desc">Sign in to save your investigation to the cloud. Your progress will be safe across devices.</p>
+    <div class="auth-prompt-buttons">
+      <button class="auth-prompt-btn primary" id="auth-prompt-signin">Sign In</button>
+      <button class="auth-prompt-btn primary" id="auth-prompt-signup">Create Account</button>
+    </div>
+    <button class="auth-prompt-skip" id="auth-prompt-skip">Continue without account</button>
+    <p class="auth-prompt-warning">Progress will only be saved locally and may be lost.</p>
   </div>
 </div>
 
@@ -1998,6 +2242,14 @@
           <button class="lang-btn" data-lang="sr">SR</button>
         </div>
       </div>
+      <div class="settings-row" id="settings-account-row">
+        <button id="settings-account-btn" class="settings-cancel-btn" style="width:100%;">
+          <span id="settings-account-label">Sign In / Create Account</span>
+        </button>
+      </div>
+      <div class="settings-row" id="settings-logout-row" style="display:none;">
+        <button id="settings-logout-btn" class="settings-danger-btn" style="width:100%;">Sign Out</button>
+      </div>
       <div class="settings-row">
         <button id="settings-tutorial-btn" class="settings-cancel-btn" data-i18n="tutorial.replay" style="width:100%;">Replay Tutorial</button>
       </div>
@@ -2010,6 +2262,45 @@
           <button id="settings-restart-cancel" class="settings-cancel-btn" data-i18n="settings.restart_cancel">Cancel</button>
           <button id="settings-restart-yes" class="settings-danger-btn" data-i18n="settings.restart_yes">Yes, restart</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Auth Modal ════════ -->
+<div id="auth-modal">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2 id="auth-modal-title">Sign In</h2>
+      <button id="auth-close" class="auth-close-btn">&times;</button>
+    </div>
+    <div class="auth-body">
+      <!-- Logged-out view -->
+      <div id="auth-forms">
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" data-auth-tab="login">Sign In</button>
+          <button class="auth-tab-btn" data-auth-tab="signup">Create Account</button>
+        </div>
+        <div class="auth-error" id="auth-error"></div>
+        <div class="auth-info" id="auth-info"></div>
+        <div class="auth-field">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="detective@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" placeholder="Min. 6 characters" autocomplete="current-password" />
+        </div>
+        <button id="auth-submit" class="auth-submit-btn">Sign In</button>
+      </div>
+      <!-- Logged-in view -->
+      <div id="auth-logged-in" style="display:none;">
+        <div class="auth-user-bar">
+          <span class="auth-status-pill cloud">CLOUD SAVE</span>
+          <span class="auth-user-email" id="auth-user-email"></span>
+          <button id="auth-logout" class="auth-logout-btn">Sign Out</button>
+        </div>
+        <div class="cloud-save-indicator" id="cloud-save-indicator"></div>
       </div>
     </div>
   </div>
@@ -2062,6 +2353,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="i18n.js?v=12"></script>
 <script>
 /* ================================================================
@@ -2077,6 +2369,426 @@
 
   const API_BASE = window.location.origin;
   const CULPRIT_ID = "noah-sterling";
+
+  /* ══════════════════════════════════════════════════════════════
+     AUTH & CLOUD SAVE MODULE
+     ══════════════════════════════════════════════════════════════ */
+  const AUTH_STORAGE_KEY = "echoes_auth";
+  const SUPABASE_URL = "https://hnfrnqizlahwxlootoho.supabase.co";
+
+  // Auth state
+  let authUser = null;          // { user_id, email, access_token, refresh_token }
+  let cloudSaveTimer = null;
+  let cloudSavePending = false;
+  let supabaseConfigured = false;
+
+  // ── Persist auth tokens in localStorage ───────────────────────
+  function saveAuthTokens(data) {
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+        user_id: data.user_id,
+        email: data.email,
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      }));
+    } catch {}
+  }
+
+  function loadAuthTokens() {
+    try {
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
+  }
+
+  function clearAuthTokens() {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+
+  // ── Auth API calls ────────────────────────────────────────────
+  async function authSignup(email, password) {
+    const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Signup failed");
+    return data;
+  }
+
+  async function authLogin(email, password) {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Login failed");
+    return data;
+  }
+
+  async function authLogout() {
+    if (!authUser?.access_token) return;
+    try {
+      await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authUser.access_token}` },
+      });
+    } catch {}
+  }
+
+  async function authCheckSession(token) {
+    const res = await fetch(`${API_BASE}/api/auth/session`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Session expired");
+    return await res.json();
+  }
+
+  async function authRefreshToken(refreshToken) {
+    const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) throw new Error("Refresh failed");
+    return await res.json();
+  }
+
+  // ── Cloud state API calls ─────────────────────────────────────
+  async function cloudSaveState(stateObj) {
+    if (!authUser?.access_token) return;
+    const res = await fetch(`${API_BASE}/api/state/save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authUser.access_token}`,
+      },
+      body: JSON.stringify({ state: stateObj }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Save failed: HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async function cloudLoadState() {
+    if (!authUser?.access_token) return null;
+    const res = await fetch(`${API_BASE}/api/state/load`, {
+      headers: { Authorization: `Bearer ${authUser.access_token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Load failed: HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async function cloudDeleteState() {
+    if (!authUser?.access_token) return;
+    await fetch(`${API_BASE}/api/state/delete`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${authUser.access_token}` },
+    });
+  }
+
+  // ── Check if Supabase is configured on the server ─────────────
+  async function checkSupabaseStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/status`);
+      const data = await res.json();
+      supabaseConfigured = data.supabase_configured === true;
+    } catch {
+      supabaseConfigured = false;
+    }
+    return supabaseConfigured;
+  }
+
+  // ── Debounced cloud save (auto-save after changes) ────────────
+  function scheduleCloudSave() {
+    if (!authUser) return;
+    cloudSavePending = true;
+    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(() => flushCloudSave(), 3000);
+  }
+
+  async function flushCloudSave() {
+    if (!authUser || !cloudSavePending) return;
+    cloudSavePending = false;
+    const indicator = document.getElementById("cloud-save-indicator");
+    try {
+      if (indicator) {
+        indicator.textContent = "Saving to cloud...";
+        indicator.className = "cloud-save-indicator saving";
+      }
+      const stateObj = buildStateObject();
+      await cloudSaveState(stateObj);
+      if (indicator) {
+        indicator.textContent = "Saved to cloud";
+        indicator.className = "cloud-save-indicator saved";
+        setTimeout(() => { indicator.textContent = ""; }, 2000);
+      }
+    } catch (err) {
+      console.error("[cloud-save] Failed:", err);
+      if (indicator) {
+        indicator.textContent = "Cloud save failed";
+        indicator.className = "cloud-save-indicator error";
+      }
+    }
+  }
+
+  // ── Session restore on page load ──────────────────────────────
+  async function restoreAuthSession() {
+    const stored = loadAuthTokens();
+    if (!stored || !stored.access_token) return false;
+
+    try {
+      // Validate the token is still good
+      const session = await authCheckSession(stored.access_token);
+      authUser = stored;
+      updateAuthUI();
+      return true;
+    } catch {
+      // Try refreshing the token
+      if (stored.refresh_token) {
+        try {
+          const refreshed = await authRefreshToken(stored.refresh_token);
+          authUser = refreshed;
+          saveAuthTokens(refreshed);
+          updateAuthUI();
+          return true;
+        } catch {
+          clearAuthTokens();
+          return false;
+        }
+      }
+      clearAuthTokens();
+      return false;
+    }
+  }
+
+  // ── Auth UI Management ────────────────────────────────────────
+  function updateAuthUI() {
+    const formsDiv = document.getElementById("auth-forms");
+    const loggedInDiv = document.getElementById("auth-logged-in");
+    const emailSpan = document.getElementById("auth-user-email");
+    const modalTitle = document.getElementById("auth-modal-title");
+    const accountBtn = document.getElementById("settings-account-btn");
+    const accountLabel = document.getElementById("settings-account-label");
+
+    const logoutRow = document.getElementById("settings-logout-row");
+
+    if (authUser) {
+      formsDiv.style.display = "none";
+      loggedInDiv.style.display = "";
+      emailSpan.textContent = authUser.email;
+      modalTitle.textContent = "Account";
+      if (accountLabel) accountLabel.textContent = authUser.email;
+      if (logoutRow) logoutRow.style.display = "";
+    } else {
+      formsDiv.style.display = "";
+      loggedInDiv.style.display = "none";
+      modalTitle.textContent = "Sign In";
+      if (accountLabel) accountLabel.textContent = "Sign In / Create Account";
+      if (logoutRow) logoutRow.style.display = "none";
+    }
+  }
+
+  function openAuthModal() {
+    document.getElementById("auth-error").textContent = "";
+    document.getElementById("auth-info").textContent = "";
+    document.getElementById("auth-modal").classList.add("visible");
+    updateAuthUI();
+  }
+
+  function closeAuthModal() {
+    document.getElementById("auth-modal").classList.remove("visible");
+    window.__authFromTitleCard = false;
+  }
+
+  // ── Wire up auth UI events (called once at boot) ──────────────
+  function initAuthUI() {
+    const modal = document.getElementById("auth-modal");
+    const closeBtn = document.getElementById("auth-close");
+    const submitBtn = document.getElementById("auth-submit");
+    const logoutBtn = document.getElementById("auth-logout");
+    const emailInput = document.getElementById("auth-email");
+    const passInput = document.getElementById("auth-password");
+    const errorEl = document.getElementById("auth-error");
+    const infoEl = document.getElementById("auth-info");
+    const tabBtns = document.querySelectorAll("[data-auth-tab]");
+    const accountBtn = document.getElementById("settings-account-btn");
+
+    let currentTab = "login";
+
+    // Tab switching
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentTab = btn.dataset.authTab;
+        tabBtns.forEach(b => b.classList.toggle("active", b.dataset.authTab === currentTab));
+        submitBtn.textContent = currentTab === "login" ? "Sign In" : "Create Account";
+        passInput.placeholder = currentTab === "signup" ? "Min. 6 characters" : "Password";
+        passInput.autocomplete = currentTab === "signup" ? "new-password" : "current-password";
+        errorEl.textContent = "";
+        infoEl.textContent = "";
+      });
+    });
+
+    // Submit
+    submitBtn.addEventListener("click", async () => {
+      // Read active tab from DOM (in case it was changed externally, e.g. title card flow)
+      const activeTabBtn = document.querySelector("[data-auth-tab].active");
+      if (activeTabBtn) currentTab = activeTabBtn.dataset.authTab;
+
+      const email = emailInput.value.trim();
+      const password = passInput.value;
+      errorEl.textContent = "";
+      infoEl.textContent = "";
+
+      if (!email || !password) {
+        errorEl.textContent = "Please enter email and password.";
+        return;
+      }
+      if (currentTab === "signup" && password.length < 6) {
+        errorEl.textContent = "Password must be at least 6 characters.";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = currentTab === "login" ? "Signing in..." : "Creating account...";
+
+      try {
+        let result;
+        if (currentTab === "signup") {
+          result = await authSignup(email, password);
+          if (!result.access_token) {
+            // Email confirmation required
+            infoEl.textContent = "Check your email to confirm your account, then sign in.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Create Account";
+            return;
+          }
+        } else {
+          result = await authLogin(email, password);
+        }
+
+        authUser = result;
+        saveAuthTokens(result);
+        updateAuthUI();
+
+        // After login, try loading cloud state
+        await mergeCloudState();
+
+        // If login came from auth prompt, close modal and enter the game
+        if (window.__authFromTitleCard) {
+          window.__authFromTitleCard = false;
+          closeAuthModal();
+          const authPrompt = document.getElementById("auth-prompt");
+          authPrompt.classList.add("hidden");
+          showHubOnCaseboard();
+          if (!isTutorialDone()) {
+            chatTutorialPending = true;
+            setTimeout(() => startTutorial("hub"), 500);
+          }
+        }
+
+      } catch (err) {
+        errorEl.textContent = err.message;
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = currentTab === "login" ? "Sign In" : "Create Account";
+    });
+
+    // Enter key submits
+    [emailInput, passInput].forEach(input => {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitBtn.click();
+      });
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+      await authLogout();
+      authUser = null;
+      clearAuthTokens();
+      updateAuthUI();
+    });
+
+    // Close
+    closeBtn.addEventListener("click", closeAuthModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeAuthModal();
+    });
+
+    // Settings account button
+    if (accountBtn) {
+      accountBtn.addEventListener("click", () => {
+        // Close settings first if it's open
+        const settingsModal = document.getElementById("settings-modal");
+        if (settingsModal) settingsModal.classList.remove("visible");
+        openAuthModal();
+      });
+    }
+
+    // Settings logout button — sign out and return to title card
+    const settingsLogoutBtn = document.getElementById("settings-logout-btn");
+    if (settingsLogoutBtn) {
+      settingsLogoutBtn.addEventListener("click", async () => {
+        await authLogout();
+        authUser = null;
+        clearAuthTokens();
+        updateAuthUI();
+        // Close settings
+        const settingsModal = document.getElementById("settings-modal");
+        if (settingsModal) settingsModal.classList.remove("visible");
+        // Leave chat if in one
+        if (chatScreen.classList.contains("active")) {
+          leaveChat();
+        }
+        // Show title card again
+        localStorage.removeItem(TITLE_STORAGE_KEY);
+        titleCard.classList.remove("dismissed", "hidden");
+        hubScreen.classList.remove("active");
+      });
+    }
+  }
+
+  // ── Merge cloud state with local state ────────────────────────
+  async function mergeCloudState() {
+    if (!authUser) return;
+    try {
+      const cloudData = await cloudLoadState();
+      if (!cloudData || !cloudData.state) {
+        // No cloud save — push local state up
+        const stateObj = buildStateObject();
+        if (Object.keys(stateObj.conversations || {}).length > 0) {
+          await cloudSaveState(stateObj);
+        }
+        return;
+      }
+
+      // Cloud state exists — compare timestamps and conversation counts
+      const localConvCount = Object.keys(conversations).filter(k => conversations[k]?.length > 0).length;
+      const cloudConvCount = Object.keys(cloudData.state.conversations || {}).filter(k => cloudData.state.conversations[k]?.length > 0).length;
+
+      if (cloudConvCount > 0 && cloudConvCount >= localConvCount) {
+        // Cloud has more or equal progress — restore it
+        applyStateObject(cloudData.state);
+      } else if (localConvCount > cloudConvCount) {
+        // Local has more progress — push it up
+        await cloudSaveState(buildStateObject());
+      }
+    } catch (err) {
+      console.error("[cloud-load] Failed to merge cloud state:", err);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     END AUTH MODULE
+     ══════════════════════════════════════════════════════════════ */
 
   /* ── NPC metadata (initials & order; roles come from i18n) ── */
   const NPC_META = {
@@ -2260,13 +2972,55 @@
   const restartBtn        = $("#restart-btn");
 
   /* ── Helpers ────────────────────────────────────────────── */
+
+  /** Build a plain object from current game state (used for both localStorage and cloud). */
+  function buildStateObject() {
+    return {
+      conversations,
+      evidence,
+      activeNpcId,
+      discoveries,
+      npcInterrogation,
+      caseReadyPromptShown,
+      briefingOpen,
+      // Also persist tutorial / UI flags for full cloud restore
+      tutorialDone: localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true",
+      titleSeen: !!localStorage.getItem(TITLE_STORAGE_KEY),
+      lilaHintSeen: !!localStorage.getItem(LILA_HINT_STORAGE_KEY),
+      audioEnabled,
+      language: window.currentLang || "en",
+    };
+  }
+
+  /** Apply a state object (from cloud or localStorage) to the running game variables. */
+  function applyStateObject(s) {
+    if (!s) return;
+    if (s.conversations) conversations = s.conversations;
+    if (s.evidence) evidence = s.evidence;
+    if (s.activeNpcId) activeNpcId = s.activeNpcId;
+    if (s.discoveries) discoveries = s.discoveries;
+    if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
+    if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
+    if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
+    // Restore tutorial flags
+    if (s.tutorialDone) localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+    if (s.titleSeen) localStorage.setItem(TITLE_STORAGE_KEY, "1");
+    if (s.lilaHintSeen) localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
+    if (s.language && typeof switchLanguage === "function") {
+      window.currentLang = s.language;
+    }
+  }
+
   function saveState() {
+    // Always save to localStorage (offline-first)
     try {
       localStorage.setItem("echoes_state_v2", JSON.stringify({
         conversations, evidence, activeNpcId, discoveries,
         npcInterrogation, caseReadyPromptShown, briefingOpen,
       }));
     } catch {}
+    // Schedule a debounced cloud save if logged in
+    scheduleCloudSave();
   }
 
   function loadState() {
@@ -2296,6 +3050,10 @@
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
     audioCache.clear();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    // Also clear cloud save if logged in
+    if (authUser) {
+      cloudDeleteState().catch(err => console.error("[cloud] Failed to delete:", err));
+    }
   }
 
   function escapeHtml(str) {
@@ -3960,20 +4718,94 @@
   /* ── Boot ───────────────────────────────────────────────── */
   initLanguage();
   updateAudioToggle();
-  // Title card dismiss handler
-  titleCardBtn.addEventListener("click", () => {
+  initAuthUI();
+
+  // Check Supabase availability and restore auth session in background
+  checkSupabaseStatus().then(configured => {
+    if (!configured) {
+      // Hide the account button if Supabase is not configured
+      const accountRow = document.getElementById("settings-account-row");
+      if (accountRow) accountRow.style.display = "none";
+      return;
+    }
+    // Try restoring a previous auth session
+    restoreAuthSession().then(restored => {
+      if (restored) {
+        console.log("[auth] Session restored for", authUser.email);
+        // Merge cloud state with local state (cloud wins if it has more progress)
+        mergeCloudState().then(() => {
+          // Re-render UI with potentially restored cloud state
+          if (typeof renderNpcGrid === "function") renderNpcGrid();
+          if (typeof renderEvidence === "function") renderEvidence();
+        });
+      }
+    });
+  });
+
+  // Flush cloud save when tab becomes hidden (more reliable than beforeunload)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && authUser && cloudSavePending) {
+      flushCloudSave();
+    }
+  });
+  // Also try on beforeunload as a fallback
+  window.addEventListener("beforeunload", () => {
+    if (authUser && cloudSavePending) {
+      flushCloudSave();
+    }
+  });
+
+  // Shared: enter the game (dismiss title card or auth prompt, show hub)
+  function enterGame() {
     titleCard.classList.add("dismissed");
     localStorage.setItem(TITLE_STORAGE_KEY, "1");
+    document.getElementById("auth-prompt").classList.add("hidden");
     setTimeout(() => {
       titleCard.classList.add("hidden");
       showHubOnCaseboard();
-      // Start tutorial for first-time player
       if (!isTutorialDone()) {
         chatTutorialPending = true;
         setTimeout(() => startTutorial("hub"), 500);
       }
     }, 500);
+  }
+
+  // Title card "Open Case File" button
+  titleCardBtn.addEventListener("click", () => {
+    // If Supabase configured and user not logged in, show auth prompt
+    if (supabaseConfigured && !authUser) {
+      titleCard.classList.add("dismissed");
+      localStorage.setItem(TITLE_STORAGE_KEY, "1");
+      setTimeout(() => {
+        titleCard.classList.add("hidden");
+        document.getElementById("auth-prompt").classList.remove("hidden");
+      }, 500);
+      return;
+    }
+    // Already logged in or no Supabase — go straight to game
+    enterGame();
   });
+
+  // Auth prompt buttons
+  document.getElementById("auth-prompt-skip").addEventListener("click", () => {
+    document.getElementById("auth-prompt").classList.add("hidden");
+    showHubOnCaseboard();
+    if (!isTutorialDone()) {
+      chatTutorialPending = true;
+      setTimeout(() => startTutorial("hub"), 500);
+    }
+  });
+
+  function authPromptFlow(tab) {
+    const tabBtns = document.querySelectorAll("[data-auth-tab]");
+    tabBtns.forEach(b => b.classList.toggle("active", b.dataset.authTab === tab));
+    const submitBtn = document.getElementById("auth-submit");
+    if (submitBtn) submitBtn.textContent = tab === "signup" ? "Create Account" : "Sign In";
+    window.__authFromTitleCard = true;
+    openAuthModal();
+  }
+  document.getElementById("auth-prompt-signin").addEventListener("click", () => authPromptFlow("login"));
+  document.getElementById("auth-prompt-signup").addEventListener("click", () => authPromptFlow("signup"));
 
   init().then(() => {
     // Start tutorial on first visit (no existing conversations = new player)

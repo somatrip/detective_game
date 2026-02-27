@@ -62,6 +62,18 @@ class Settings(BaseSettings):
         description="Cheaper Anthropic model for turn classification and evidence detection.",
     )
 
+    # ── Supabase ──────────────────────────────────────────────────────────
+    supabase_url: str | None = Field(
+        default=None,
+        description="Supabase project URL.",
+        validation_alias=AliasChoices("ECHO_SUPABASE_URL", "SUPABASE_URL"),
+    )
+    supabase_key: str | None = Field(
+        default=None,
+        description="Supabase anon or service-role key.",
+        validation_alias=AliasChoices("ECHO_SUPABASE_KEY", "SUPABASE_KEY"),
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:
