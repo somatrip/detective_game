@@ -634,6 +634,117 @@
       100% { opacity: 1; transform: none; }
     }
 
+    /* ── Tab flash + badge for case board updates ─────── */
+    .tab-flash {
+      color: var(--gold) !important;
+      animation: tabPulse 0.8s ease 3 !important;
+    }
+    @keyframes tabPulse {
+      0%, 100% { color: var(--gold); text-shadow: none; }
+      50% { color: var(--accent); text-shadow: 0 0 8px rgba(212,160,80,0.4); }
+    }
+    .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 20px; height: 20px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: var(--bg-dark, #0e0c09);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0 5px;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+      animation: gauge-pulse 0.6s ease;
+    }
+
+    /* ── Discovery exclamation on chat messages ─────────── */
+    .msg-has-discovery {
+      border-color: rgba(212,160,80,0.35);
+    }
+    .msg-discovery-icon {
+      position: absolute;
+      top: -6px; right: -6px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg-dark, #0e0c09);
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      animation: gauge-pulse 0.6s ease;
+    }
+
+    /* ── Discovery toast notifications ──────────────────── */
+    #discovery-toast-container {
+      position: fixed;
+      top: 60px; right: 16px;
+      z-index: 11000;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .discovery-toast {
+      pointer-events: auto;
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      background: var(--bg-card, #1e1a14);
+      border: 1.5px solid rgba(212,160,80,0.5);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      max-width: 340px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      animation: toastSlideIn 0.4s ease forwards;
+      opacity: 1;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .discovery-toast.hiding {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    .discovery-toast-icon {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(212,160,80,0.15);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+    .discovery-toast-body { flex: 1; }
+    .discovery-toast-heading {
+      font-family: var(--font-typewriter);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.2rem;
+    }
+    .discovery-toast-text {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── NPC discovery badge ────────────────────────────── */
+    .npc-card-discovery-badge {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg-dark, #0e0c09);
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      animation: gauge-pulse 0.6s ease;
+    }
+
     /* ── Interrogation Icon Gauges ──────────────────────── */
     .interrogation-gauges {
       display: flex;
@@ -812,6 +923,7 @@
         var(--noir-warm);
     }
     .msg {
+      position: relative;
       max-width: 75%;
       padding: 0.8rem 1rem;
       border-radius: 12px;
@@ -1942,13 +2054,18 @@
   </div>
 </div>
 
-<script src="i18n.js?v=11"></script>
+<script src="i18n.js?v=12"></script>
 <script>
 /* ================================================================
    ECHOES IN THE ATRIUM — Game Frontend
    ================================================================ */
 (() => {
   "use strict";
+
+  // Create toast container dynamically (avoids HTML parser issues)
+  const _toastContainer = document.createElement("div");
+  _toastContainer.id = "discovery-toast-container";
+  document.body.appendChild(_toastContainer);
 
   const API_BASE = window.location.origin;
   const CULPRIT_ID = "noah-sterling";
@@ -2321,6 +2438,15 @@
 
       card.appendChild(portraitDiv);
       card.appendChild(infoDiv);
+
+      // Discovery badge — shows exclamation when this NPC yielded unseen discoveries
+      if (npcsWithNewDiscoveries.has(npc.npc_id)) {
+        const badge = document.createElement("div");
+        badge.className = "npc-card-discovery-badge";
+        badge.textContent = "!";
+        card.appendChild(badge);
+      }
+
       card.addEventListener("click", () => selectNpc(npc.npc_id));
 
       // First 5 go to row 1, rest to row 2
@@ -2682,36 +2808,79 @@
     }
 
     if (newTexts.length > 0) {
-      for (const txt of newTexts) showDiscoveryInChat(txt);
+      for (const txt of newTexts) showDiscoveryToast(txt);
+      npcsWithNewDiscoveries.add(npcId);
+      markLastAssistantMessage();
       renderEvidence();
       flashCaseBoardTab();
     }
   }
 
-  function showDiscoveryInChat(discoveryText) {
-    const card = document.createElement("div");
-    card.className = "chat-discovery-card";
-    card.innerHTML = `
-      <div class="discovery-card-icon">
+  function markLastAssistantMessage() {
+    const msgs = chatMessages.querySelectorAll(".msg.assistant");
+    const last = msgs[msgs.length - 1];
+    if (!last || last.querySelector(".msg-discovery-icon")) return;
+    const icon = document.createElement("span");
+    icon.className = "msg-discovery-icon";
+    icon.title = t("toast.new_discovery");
+    icon.textContent = "!";
+    last.appendChild(icon);
+    last.classList.add("msg-has-discovery");
+  }
+
+  let unseenDiscoveryCount = 0;
+
+  function flashCaseBoardTab() {
+    unseenDiscoveryCount++;
+    // Flash both the hub caseboard tab and the chat-nav caseboard tab
+    const tabs = document.querySelectorAll('.manila-tab[data-hub-tab="caseboard"], #nav-to-caseboard');
+    tabs.forEach(tab => {
+      tab.classList.add("tab-flash");
+      setTimeout(() => tab.classList.remove("tab-flash"), 4000);
+      // Add or update badge
+      let badge = tab.querySelector(".tab-badge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "tab-badge";
+        tab.appendChild(badge);
+      }
+      badge.textContent = unseenDiscoveryCount;
+    });
+  }
+
+  function clearCaseBoardBadges() {
+    unseenDiscoveryCount = 0;
+    document.querySelectorAll('.manila-tab .tab-badge').forEach(b => b.remove());
+    if (npcsWithNewDiscoveries.size > 0) {
+      npcsWithNewDiscoveries.clear();
+      renderNpcGrid();
+    }
+  }
+
+  function showDiscoveryToast(text) {
+    const container = document.getElementById("discovery-toast-container");
+    const toast = document.createElement("div");
+    toast.className = "discovery-toast";
+    toast.innerHTML = `
+      <div class="discovery-toast-icon">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </div>
-      <div class="discovery-card-label">${escapeHtml(t("chat.discovery_label"))}</div>
-      <div class="discovery-card-text">${escapeHtml(discoveryText)}</div>
-    `;
-    chatMessages.appendChild(card);
-    scrollToBottom();
+      <div class="discovery-toast-body">
+        <div class="discovery-toast-heading">${escapeHtml(t("toast.new_discovery"))}</div>
+        <div class="discovery-toast-text">${escapeHtml(text)}</div>
+      </div>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add("hiding");
+      toast.addEventListener("transitionend", () => toast.remove());
+    }, 4500);
   }
 
-  function flashCaseBoardTab() {
-    const caseTab = document.querySelector('.manila-tab[data-hub-tab="caseboard"]');
-    if (caseTab) {
-      caseTab.style.color = "var(--gold)";
-      setTimeout(() => { caseTab.style.color = ""; }, 3000);
-    }
-  }
+  /* ── NPC Discovery Badges ──────────────────────────────── */
+  const npcsWithNewDiscoveries = new Set();
 
   function detectEvidence(evidenceIds, npcId) {
     const npcName = npcs.find(n => n.npc_id === npcId)?.display_name?.split(" — ")[0] || npcId;
@@ -2725,8 +2894,8 @@
         evidence.push({
           id: id,
           label: t("evidence." + id + "_label") || meta.label,
-          text: t("evidence.mentioned_by", { name: npcName }),
-          textKey: "evidence.mentioned_by",
+          text: t(npcId === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by", { name: npcName }),
+          textKey: npcId === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by",
           source: npcId,
         });
         found = true;
@@ -2769,9 +2938,10 @@
     const label = t("evidence." + e.id + "_label") || e.label;
     let text = e.text;
     if (e.textKey) {
-      if (e.textKey === "evidence.mentioned_by") {
+      if (e.textKey === "evidence.mentioned_by" || e.textKey === "evidence.mentioned_by_partner") {
         const npcName = npcs.find(n => n.npc_id === e.source)?.display_name?.split(" — ")[0] || e.source;
-        text = t(e.textKey, { name: npcName }) || text;
+        const key = e.source === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by";
+        text = t(key, { name: npcName }) || text;
       } else {
         text = t(e.textKey) || text;
       }
@@ -3001,6 +3171,7 @@
     document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
     document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
     document.getElementById("hub-caseboard").classList.add("active");
+    clearCaseBoardBadges();
   });
 
   // Hub manila folder tabs (only tabs with data-hub-tab attribute)
@@ -3011,6 +3182,7 @@
       tab.classList.add("active");
       const panelId = `hub-${tab.dataset.hubTab}`;
       document.getElementById(panelId).classList.add("active");
+      if (tab.dataset.hubTab === "caseboard") clearCaseBoardBadges();
     });
   });
 

@@ -46,6 +46,7 @@ window.I18N = {
     "chat.error": "Error: {message}. Check that the server is running.",
     "chat.badge_title": "Interviewed",
     "chat.discovery_label": "Discovery",
+    "toast.new_discovery": "New Discovery",
 
     // Evidence panel
     "evidence.tab": "Evidence and Discoveries",
@@ -54,6 +55,7 @@ window.I18N = {
     "evidence.empty": "No evidence collected yet. Interrogate suspects to uncover clues.",
     "evidence.timeline_empty": "Events will appear here as you piece together what happened.",
     "evidence.mentioned_by": "Mentioned by {name} during interrogation.",
+    "evidence.mentioned_by_partner": "Shared by {name} during case briefing.",
     "evidence.crime_scene": "Recovered from the crime scene by forensics.",
     "evidence.security_systems": "Obtained from hotel security systems.",
 
@@ -331,6 +333,7 @@ window.I18N = {
     "chat.error": "Gre\u0161ka: {message}. Proverite da li server radi.",
     "chat.badge_title": "Ispitan/a",
     "chat.discovery_label": "Otkri\u0107e",
+    "toast.new_discovery": "Novo Otkriće",
 
     // Evidence panel
     "evidence.tab": "Dokazi i otkri\u0107a",
@@ -339,6 +342,7 @@ window.I18N = {
     "evidence.empty": "Nema prikupljenih dokaza. Ispitajte osumnji\u010dene da biste otkrili tragove.",
     "evidence.timeline_empty": "Doga\u0111aji \u0107e se pojaviti ovde dok sklapate sliku o tome \u0161ta se desilo.",
     "evidence.mentioned_by": "Pomenuo/la {name} tokom ispitivanja.",
+    "evidence.mentioned_by_partner": "Podeljeno od {name} tokom brifinga o slučaju.",
     "evidence.crime_scene": "Prona\u0111eno na mestu zlo\u010dina od strane forenzi\u010dara.",
     "evidence.security_systems": "Dobijeno iz hotelskih sigurnosnih sistema.",
 
