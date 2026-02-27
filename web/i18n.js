@@ -260,11 +260,13 @@ window.I18N = {
 
     // Tutorial coach marks
     "tutorial.step_caseboard": "This is your Case Board — review evidence and the case briefing here.",
-    "tutorial.step_briefing": "Expand the Case Briefing to review the crime details and initial evidence.",
-    "tutorial.step_suspects": "Switch here to see all persons of interest you can interrogate.",
+    "tutorial.step_briefing": "Expand or collapse the Case Briefing here.",
+    "tutorial.step_suspects": "Click this tab to see all persons of interest.",
+    "tutorial.step_partner": "This is your partner, Detective Lila Chen. She can brief you on the case and offer guidance.",
     "tutorial.step_npc_card": "Click a suspect to begin interrogating them.",
     "tutorial.step_gauges": "These show the suspect's emotional state — Pressure and Trust.",
-    "tutorial.step_info": "Tap here to read the suspect's background dossier.",
+    "tutorial.step_info_desktop": "Hover here to read the suspect's background dossier.",
+    "tutorial.step_info_mobile": "Tap here to read the suspect's background dossier.",
     "tutorial.step_input": "Type your questions here, or tap the mic for voice chat.",
     "tutorial.next": "Next",
     "tutorial.skip": "Skip",
@@ -530,11 +532,13 @@ window.I18N = {
 
     // Tutorial coach marks
     "tutorial.step_caseboard": "Ovo je vaša Tabla Slučaja — pregledajte dokaze i brifing ovde.",
-    "tutorial.step_briefing": "Proširite Brifing o Slučaju da pregledate detalje zločina i početne dokaze.",
-    "tutorial.step_suspects": "Prebacite se ovde da vidite sve osumnjičene koje možete ispitati.",
+    "tutorial.step_briefing": "Otvorite ili zatvorite brifing o slučaju ovde.",
+    "tutorial.step_suspects": "Kliknite na ovu karticu da vidite sve osumnjičene.",
+    "tutorial.step_partner": "Ovo je vaš partner, detektiv Lila Chen. Ona vas može informisati o slučaju i ponuditi smernice.",
     "tutorial.step_npc_card": "Kliknite na osumnjičenog da započnete ispitivanje.",
     "tutorial.step_gauges": "Ovi pokazuju emocionalno stanje osumnjičenog — Pritisak i Poverenje.",
-    "tutorial.step_info": "Dodirnite ovde da pročitate dosije osumnjičenog.",
+    "tutorial.step_info_desktop": "Pređite kursorom ovde da pročitate dosije osumnjičenog.",
+    "tutorial.step_info_mobile": "Dodirnite ovde da pročitate dosije osumnjičenog.",
     "tutorial.step_input": "Unesite pitanja ovde, ili dodirnite mikrofon za glasovni čet.",
     "tutorial.next": "Dalje",
     "tutorial.skip": "Preskoči",
