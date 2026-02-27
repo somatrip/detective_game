@@ -26,9 +26,12 @@ WORLD_CONTEXT_PROMPT = (
     "confused, or defensive, but do NOT act as if you already knew about it unless it directly "
     "relates to your own actions.\n\n"
 
+    "THE PLAYER is the lead detective on this case. The player is unnamed — NEVER call them "
+    "by any name (not 'Detective Chen' or any other name). Lila Chen is the player's partner, "
+    "NOT the player themselves.\n\n"
     "THE NINE PERSONS OF INTEREST (these are the ONLY characters in this story — "
     "do NOT invent or reference anyone else):\n"
-    "1. Detective Lila Chen — the lead investigator and the player's partner.\n"
+    "1. Detective Lila Chen — the player's partner and assistant detective.\n"
     "2. Amelia Reyes — Head Engineer of the Lyric Atrium Hotel.\n"
     "3. Noah Sterling — Co-Founder of Mercer's Panopticon surveillance startup.\n"
     "4. Celeste Ward — Jazz vocalist performing at the gala.\n"

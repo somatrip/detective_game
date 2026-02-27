@@ -776,9 +776,17 @@
     .gauge-rapport.neutral .gauge-icon   { filter: drop-shadow(0 0 6px rgba(251,191,36,0.25)) drop-shadow(0 0 12px rgba(251,191,36,0.1)); }
     .gauge-rapport.open .gauge-icon      { filter: drop-shadow(0 0 10px rgba(251,191,36,0.5)) drop-shadow(0 0 22px rgba(251,191,36,0.2)); }
     .gauge-rapport.trusting .gauge-icon  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.7)) drop-shadow(0 0 30px rgba(251,191,36,0.3)); }
-    /* Pulse animation on state change */
+    /* Continuous throb when gauge is maxed */
+    @keyframes gauge-throb {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    .gauge-pressure.cornered .gauge-icon { animation: gauge-throb 1.5s ease-in-out infinite; }
+    .gauge-rapport.trusting .gauge-icon  { animation: gauge-throb 1.5s ease-in-out infinite; }
+    /* Pulse animation on state change (overrides throb) */
     .gauge-icon.pulse {
-      animation: gauge-pulse 0.6s ease;
+      animation: gauge-pulse 0.6s ease !important;
     }
     @keyframes gauge-pulse {
       0%   { transform: scale(1); }
@@ -2506,8 +2514,16 @@
 
     // Trigger chat-phase tutorial if pending
     if (typeof chatTutorialPending !== "undefined" && chatTutorialPending) {
-      chatTutorialPending = false;
-      setTimeout(() => startTutorial("chat"), 600);
+      if (npcId === "lila-chen") {
+        // Lila has no gauges/info — show hint btn + input tutorial instead
+        // Keep chatTutorialPending alive so gauges/info tutorial fires for suspects
+        setTimeout(() => startTutorial("lila_chat"), 600);
+      } else {
+        chatTutorialPending = false;
+        // If Lila's chat already showed the input bar, only show gauges + info
+        const lilaAlreadySeen = localStorage.getItem(LILA_HINT_STORAGE_KEY);
+        setTimeout(() => startTutorial(lilaAlreadySeen ? "chat_short" : "chat"), 600);
+      }
     }
     // Lila hint button tutorial — show once on first Lila chat visit
     else if (npcId === "lila-chen"
@@ -2875,7 +2891,8 @@
     container.appendChild(toast);
     setTimeout(() => {
       toast.classList.add("hiding");
-      toast.addEventListener("transitionend", () => toast.remove());
+      toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 500);
     }, 4500);
   }
 
@@ -3380,6 +3397,10 @@
 
   /* ── Voice: TTS Playback ───────────────────────────────── */
   async function speakText(text, npcId, cacheKey) {
+    /* Stop any in-flight TTS fetch or playing audio first */
+    if (ttsAbortController) { ttsAbortController.abort(); ttsAbortController = null; }
+    if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+
     if (audioCache.has(cacheKey)) {
       playAudioBlob(audioCache.get(cacheKey), cacheKey);
       return;
@@ -3677,11 +3698,21 @@
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
   ];
+  // Suspect chat steps without input bar (used when Lila chat already covered it)
+  const CHAT_STEPS_SHORT = [
+    { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
+    { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
+  ];
 
   // Lila-specific tutorial (shown the first time Lila's chat is opened)
   const LILA_HINT_STORAGE_KEY = "echoes_lila_hint_seen";
   const LILA_STEPS = [
     { selector: '#lila-hint-btn', text: "tutorial.step_hint_btn", arrow: "bottom" },
+  ];
+  // Combined Lila tutorial for when Lila is opened first (hint btn + input bar)
+  const LILA_CHAT_STEPS = [
+    { selector: '#lila-hint-btn', text: "tutorial.step_hint_btn", arrow: "bottom" },
+    { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
   ];
 
   let tutorialSteps = [];
@@ -3701,7 +3732,11 @@
 
   function startTutorial(phase) {
     tutorialPhase = phase;
-    tutorialSteps = phase === "hub" ? HUB_STEPS : phase === "lila" ? LILA_STEPS : CHAT_STEPS;
+    tutorialSteps = phase === "hub" ? HUB_STEPS
+                  : phase === "lila" ? LILA_STEPS
+                  : phase === "lila_chat" ? LILA_CHAT_STEPS
+                  : phase === "chat_short" ? CHAT_STEPS_SHORT
+                  : CHAT_STEPS;
     tutorialCurrentStep = 0;
     showTutorialStep(0);
   }
@@ -3761,12 +3796,15 @@
 
       // Position tooltip
       const isLila = tutorialPhase === "lila";
-      const globalIdx = isLila ? 0 : tutorialPhase === "chat" ? HUB_STEPS.length + idx : idx;
-      const globalTotal = isLila ? 1 : HUB_STEPS.length + CHAT_STEPS.length;
+      const isLilaChat = tutorialPhase === "lila_chat";
+      const isChatShort = tutorialPhase === "chat_short";
+      const isChatLike = tutorialPhase === "chat" || isChatShort;
+      const globalIdx = (isLila || isLilaChat) ? idx : isChatLike ? HUB_STEPS.length + idx : idx;
+      const globalTotal = (isLila || isLilaChat) ? tutorialSteps.length : HUB_STEPS.length + tutorialSteps.length;
       tutorialStepInd.textContent = `${globalIdx + 1} / ${globalTotal}`;
       tutorialText.textContent = t(step.text);
 
-      const isLast = isLila || (tutorialPhase === "chat" && idx === CHAT_STEPS.length - 1);
+      const isLast = isLila || (isLilaChat && idx === LILA_CHAT_STEPS.length - 1) || (isChatLike && idx === tutorialSteps.length - 1);
       tutorialSkipBtn.textContent = t("tutorial.skip");
 
       // clickToAdvance: hide Next button, show pulsing ring, advance on target click
@@ -3844,8 +3882,9 @@
     tutorialOverlay.classList.remove("active");
     if (tutorialPhase === "hub") {
       // Don't mark as done yet — chat steps remain
-    } else if (tutorialPhase === "lila") {
+    } else if (tutorialPhase === "lila" || tutorialPhase === "lila_chat") {
       localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
+      // Don't markTutorialDone — chat steps for suspects still pending
     } else {
       markTutorialDone();
     }
@@ -3856,8 +3895,9 @@
     cleanupClickToAdvance();
     tutorialOverlay.classList.remove("active");
 
-    if (tutorialPhase === "lila") {
+    if (tutorialPhase === "lila" || tutorialPhase === "lila_chat") {
       localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
+      // Don't markTutorialDone — chat steps for suspects still pending
     } else if (tutorialPhase === "hub") {
       // Don't mark tutorial as fully done — chat steps should still fire.
       // If user skipped before reaching the suspects tab, set up a one-time
