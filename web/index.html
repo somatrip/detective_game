@@ -1952,7 +1952,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=9"></script>
+<script src="i18n.js?v=10"></script>
 <script>
 /* ================================================================
    ECHOES IN THE ATRIUM — Game Frontend
@@ -2483,9 +2483,10 @@
   }
 
   /* ── Send Message ───────────────────────────────────────── */
-  async function sendMessage(overrideText) {
+  async function sendMessage(overrideText, displayText) {
     const text = overrideText || chatInput.value.trim();
     if (!text || !activeNpcId || sending) return;
+    const shownText = displayText || text; // what appears in the chat bubble
 
     sending = true;
     sendBtn.disabled = true;
@@ -2501,10 +2502,10 @@
     const starters = chatMessages.querySelector(".chat-starters");
     if (starters) starters.remove();
 
-    // Add user bubble
+    // Add user bubble (show friendly display text, store API text in history)
     conversations[activeNpcId].push({ role: "user", content: text });
     const userIdx = conversations[activeNpcId].length - 1;
-    appendMessageBubble("user", text, userIdx);
+    appendMessageBubble("user", shownText, userIdx);
     scrollToBottom();
 
     // Show typing indicator
@@ -3065,10 +3066,17 @@
 
   sendBtn.addEventListener("click", () => sendMessage());
 
-  // Lila hint button — asks her to review case state and give directional hint
+  // Lila hint button — sends detailed prompt but shows a casual message in chat
+  const HINT_DISPLAY_KEYS = [
+    "chat.hint_display.0", "chat.hint_display.1", "chat.hint_display.2",
+    "chat.hint_display.3", "chat.hint_display.4", "chat.hint_display.5",
+    "chat.hint_display.6", "chat.hint_display.7", "chat.hint_display.8",
+    "chat.hint_display.9",
+  ];
   document.getElementById("lila-hint-btn").addEventListener("click", () => {
     if (sending || activeNpcId !== "lila-chen") return;
-    sendMessage(t("chat.hint_prompt"));
+    const displayKey = HINT_DISPLAY_KEYS[Math.floor(Math.random() * HINT_DISPLAY_KEYS.length)];
+    sendMessage(t("chat.hint_prompt"), t(displayKey));
   });
 
   cancelAccuse.addEventListener("click", closeAccusationModal);
