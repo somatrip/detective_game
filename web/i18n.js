@@ -5,8 +5,9 @@ window.I18N = {
   en: {
     // Case briefing (case board)
     "intro.briefing_label": "Case Briefing",
-    "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.",
-    "intro.time_of_death": "<strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.",
+    "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of the Panopticon surveillance startup — found dead in the hotel's rooftop observatory.",
+    "intro.time_of_death": "<strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.",
+    "intro.body_discovered": "<strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Gideon Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.",
     "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
     "intro.starting_evidence": "<strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
     "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
@@ -85,7 +86,7 @@ window.I18N = {
     // Outcome screen
     "outcome.correct_title": "Case Solved",
     "outcome.wrong_title": "Wrong Suspect",
-    "outcome.correct_text": "<p>Your accusation of <strong>{name}</strong> is correct.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. During the blackout, he obtained the maintenance key from Eddie Voss, accessed the rooftop observatory, and bludgeoned Mercer with the antique telescope mount.</p><p>The antique oil on his cufflinks, the key trail through Eddie Voss, Celeste's eyewitness testimony, and the encrypted board vote schedule all sealed the case.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
+    "outcome.correct_text": "<p>Your accusation of <strong>{name}</strong> is correct.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. He pressured Eddie Voss into handing over the maintenance key earlier that evening, then used it during the blackout to access the rooftop observatory and bludgeon Mercer with the antique telescope mount.</p><p>The antique oil on his cufflinks, the key trail through Eddie Voss, Celeste's eyewitness testimony, and the encrypted board vote schedule all sealed the case.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
     "outcome.wrong_text": "<p>You accused <strong>{name}</strong>, but they are not the killer.</p><p>The real murderer slips away as internal affairs questions your judgment. The case goes cold.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Keep investigating \u2014 look for contradictions in alibis, follow the physical evidence, and trace the maintenance key.</p>",
     "outcome.restart": "New Investigation",
 
@@ -96,7 +97,7 @@ window.I18N = {
     "role.celeste-ward": "Jazz Vocalist",
     "role.gideon-holt": "Security Director",
     "role.mira-kline": "Ethicist Consultant",
-    "role.eddie-voss": "Bartender",
+    "role.eddie-voss": "Junior Engineer",
     "role.priya-shah": "Journalist",
     "role.marcus-vale": "Stage Manager",
 
@@ -125,7 +126,7 @@ window.I18N = {
     "dossier.celeste-ward.bio": "Award-winning jazz vocalist hired as the featured performer for the gala's speakeasy lounge set. Magnetic and emotionally guarded. Tabloids have speculated about a connection to Mercer, though she distances herself from corporate politics publicly.",
     "dossier.gideon-holt.bio": "Director of Security at the Lyric Atrium Hotel. Former military intelligence \u2014 two tours overseas. Stern, rule-bound, with a black-and-white worldview. Has full access to all hotel security systems including cameras, door sensors, and keycard readers. Coordinated emergency protocols during the outage.",
     "dossier.mira-kline.bio": "Ethicist consultant with a PhD in Bioethics. Brought in by Mercer six months ago to review Panopticon's compliance and public ethics profile. Previously published papers critical of unregulated surveillance technology. Was hosting an ethics roundtable in the library during the outage.",
-    "dossier.eddie-voss.bio": "The hotel's bartender and Amelia Reyes's eager protege. Has worked every major event at the Lyric Atrium for three years. Known among staff for his nervous disposition and eagerness to please. Tended the VIP bar during the gala and helped calm guests during the blackout.",
+    "dossier.eddie-voss.bio": "Amelia Reyes's engineering protege and the hotel's junior engineer. Despite his talent for engineering, his true passion is mixology — he volunteered to tend the VIP bar tonight. Has worked at the Lyric Atrium for three years. Known among staff for his nervous disposition and eagerness to please. Helped calm guests during the blackout.",
     "dossier.priya-shah.bio": "Investigative journalist covering corporate surveillance abuses. Attended the gala as invited press to cover the Panopticon unveiling. Has previously broken stories on tech industry misconduct. Sharp, probing, and protective of her sources. Press credentials gave her roaming access to the venue.",
     "dossier.marcus-vale.bio": "Meticulous freelance stage manager responsible for lighting, sound cues, and technical production of the gala. Has worked events at the Lyric Atrium for two years. Tracks every performer's cue and logistics with operational precision. Stayed backstage coordinating the show during the outage.",
 
@@ -141,7 +142,7 @@ window.I18N = {
     "discovery.noah-cctv-gap": "CCTV footage gaps and witness sightings place Noah near the freight elevator and maintenance corridors during the blackout.",
     "discovery.celeste-affair": "Celeste and Julian Mercer had a secret romantic relationship. He promised to free her from a predatory management contract.",
     "discovery.celeste-recordings": "Celeste possesses audio recordings of Mercer admitting to illegal surveillance tactics used in Panopticon.",
-    "discovery.celeste-rooftop-witness": "Celeste saw a figure \u2014 recognizable as Noah Sterling \u2014 leaving the rooftop stairwell during the blackout.",
+    "discovery.celeste-rooftop-witness": "Celeste saw a figure \u2014 recognizable as Noah Sterling \u2014 descending the atrium stairwell during the blackout.",
     "discovery.gideon-blackmail": "Mercer was blackmailing Gideon \u2014 his name appears on the burned notebook fragment's threat list.",
     "discovery.gideon-data-sales": "Gideon has been running a side business selling anonymized guest data from the hotel's systems.",
     "discovery.gideon-notebook": "The burned notebook fragment lists Gideon Holt as one of Mercer's blackmail targets.",
@@ -149,7 +150,7 @@ window.I18N = {
     "discovery.mira-plagiarism": "Mercer plagiarized Dr. Kline's research for the Panopticon ethics framework. She planned to expose him publicly.",
     "discovery.mira-meeting": "Mira scheduled a private meeting with Mercer at 11:30 PM to demand a public admission. Mercer never showed \u2014 he was already dead.",
     "discovery.eddie-key-loan": "Eddie Voss borrowed Amelia's maintenance key to retrieve a toolkit and forgot to return it immediately.",
-    "discovery.eddie-gave-noah-key": "Noah Sterling pressured Eddie into handing over the maintenance key during the blackout, promising favors.",
+    "discovery.eddie-gave-noah-key": "Noah Sterling pressured Eddie into handing over the maintenance key at the VIP bar earlier that evening, promising favors.",
     "discovery.priya-saw-noah": "Priya witnessed Noah Sterling near the freight elevator shortly before the lights went out.",
     "discovery.priya-holt-argument": "Priya recorded snippets of an argument between Mercer and Gideon Holt earlier that evening.",
     "discovery.priya-mira-tip": "Dr. Mira Kline tipped off Priya about Mercer's ethics violations and arranged her attendance at the gala.",
@@ -289,8 +290,9 @@ window.I18N = {
   sr: {
     // Case briefing (case board)
     "intro.briefing_label": "Brifing o Slu\u010daju",
-    "intro.victim": "<strong>\u017drtva:</strong> D\u017eulijan Merser, harizamti\u010dan preduzetnik i direktor startapa Panopticon za nadzor, prona\u0111en mrtav u opservatoriji na krovu hotela Lyric Atrium.",
-    "intro.time_of_death": "<strong>Vreme smrti:</strong> Pribli\u017eno 23:40, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih. \u017drtva je ubijena anti\u010dkim postolem teleskopa.",
+    "intro.victim": "<strong>\u017drtva:</strong> D\u017eulijan Merser, harizamti\u010dan preduzetnik, ve\u0107inski vlasnik hotela Lyric Atrium i direktor startapa Panopticon za nadzor \u2014 prona\u0111en mrtav u opservatoriji na krovu hotela.",
+    "intro.time_of_death": "<strong>Procenjeno vreme smrti:</strong> Izme\u0111u 23:15 i 23:30 (tokom nestanka struje). \u017drtva je ubijena anti\u010dkim postolem teleskopa.",
+    "intro.body_discovered": "<strong>Telo prona\u0111eno:</strong> Pribli\u017eno u 23:44, od strane direktora obezbe\u0111enja Gideona Holta u opservatoriji na krovu, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih.",
     "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije.",
     "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> i tragove <em>anti\u010dkog ma\u0161inskog ulja</em> pored tela. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
     "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte devet osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
@@ -369,7 +371,7 @@ window.I18N = {
     // Outcome screen
     "outcome.correct_title": "Slu\u010daj Re\u0161en",
     "outcome.wrong_title": "Pogre\u0161an Osumnji\u010deni",
-    "outcome.correct_text": "<p>Va\u0161a optu\u017enica protiv <strong>{name}</strong> je ta\u010dna.</p><p>Noa Sterling je ubio D\u017eulijana Mersera da spre\u010di otkrivanje pronevere i preuzme kontrolu nad startapom Panopticon. Tokom nestanka struje, dobio je klju\u010d za odr\u017eavanje od Edija Vosa, pristupao opservatoriji na krovu i ubio Mersera anti\u010dkim postoljem teleskopa.</p><p>Anti\u010dko ulje na njegovim dug\u0123madima za man\u017eetne, trag klju\u010da preko Edija Vosa, svedo\u010denje Selest kao o\u010devica i \u0161ifrovani raspored glasanja uprave \u2014 sve je zape\u010datilo slu\u010daj.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
+    "outcome.correct_text": "<p>Va\u0161a optu\u017enica protiv <strong>{name}</strong> je ta\u010dna.</p><p>Noa Sterling je ubio D\u017eulijana Mersera da spre\u010di otkrivanje pronevere i preuzme kontrolu nad startapom Panopticon. Pritiskao je Edija Vosa da mu preda klju\u010d za odr\u017eavanje ranije te ve\u010deri, a zatim ga iskoristio tokom nestanka struje da pristupi opservatoriji na krovu i ubije Mersera anti\u010dkim postoljem teleskopa.</p><p>Anti\u010dko ulje na njegovim dugmadima za man\u017eetne, trag klju\u010da preko Edija Vosa, svedo\u010denje Selest kao o\u010devica i \u0161ifrovani raspored glasanja uprave \u2014 sve je zape\u010datilo slu\u010daj.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
     "outcome.wrong_text": "<p>Optu\u017eili ste <strong>{name}</strong>, ali ta osoba nije ubica.</p><p>Pravi ubica izmi\u010de dok unutra\u0161nja kontrola dovodi u pitanje va\u0161 sud. Slu\u010daj se gasi.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Nastavite istragu \u2014 tra\u017eite kontradikcije u alibijima, pratite fizi\u010dke dokaze i trag klju\u010da za odr\u017eavanje.</p>",
     "outcome.restart": "Nova Istraga",
 
@@ -380,7 +382,7 @@ window.I18N = {
     "role.celeste-ward": "D\u017eez Peva\u010dica",
     "role.gideon-holt": "Direktor Obezbe\u0111enja",
     "role.mira-kline": "Etik Konsultant",
-    "role.eddie-voss": "Barmen",
+    "role.eddie-voss": "Mladi in\u017eenjer",
     "role.priya-shah": "Novinarka",
     "role.marcus-vale": "Menad\u017eer Scene",
 
@@ -409,7 +411,7 @@ window.I18N = {
     "dossier.celeste-ward.bio": "Nagra\u0111ivana d\u017eez peva\u010dica anga\u017eovana za nastup u speakeasy salonu na gali. Magnetska i emocionalno zatvorena. Tabloidi su spekulisali o vezi sa Merserom, mada se javno distancira od korporativne politike.",
     "dossier.gideon-holt.bio": "Direktor obezbe\u0111enja hotela Lyric Atrium. Biv\u0161i vojni obave\u0161tajac \u2014 dve ture u inostranstvu. Strog, principijelan, sa crno-belim pogledom na svet. Ima potpun pristup svim hotelskim bezbednosnim sistemima uklju\u010duju\u0107i kamere, senzore i \u010dita\u010de kartica. Koordinirao je hitne protokole tokom nestanka struje.",
     "dossier.mira-kline.bio": "Eti\u010darka i konsultant sa doktoratom iz bioetike. Merser ju je anga\u017eovao pre \u0161est meseci da pregleda usklađenost i eti\u010dki profil Panopticona. Ranije objavljivala radove kriti\u010dne prema neregulisanim tehnologijama nadzora. Vodila je okrugli sto o etici u biblioteci tokom nestanka struje.",
-    "dossier.eddie-voss.bio": "Barmen hotela i revni \u0161ti\u0107enik Amelije Rejes. Radio je na svakom velikom doga\u0111aju u Lyric Atriumu tri godine. Me\u0111u osobljem poznat po nervoznoj naravi i \u017eelji da udovolji. Slu\u017eio je VIP bar tokom gale i pomagao da se gosti smire tokom nestanka struje.",
+    "dossier.eddie-voss.bio": "In\u017eenjerski \u0161ti\u0107enik Amelije Rejes i mladi in\u017eenjer hotela. Uprkos talentu za in\u017eenjering, prava strast mu je miksologija \u2014 dobrovoljno je slu\u017eio VIP bar ve\u010deras. Radi u Lyric Atriumu tri godine. Me\u0111u osobljem poznat po nervoznoj naravi i \u017eelji da udovolji. Pomagao da se gosti smire tokom nestanka struje.",
     "dossier.priya-shah.bio": "Istra\u017eiva\u010dka novinarka koja prati zloupotrebe u oblasti korporativnog nadzora. Do\u0161la na galu kao pozvana \u0161tampa da pokrije predstavljanje Panopticona. Ranije je objavljivala pri\u010de o zlouporeti u tehnolo\u0161koj industriji. O\u0161tra, istra\u017ena i za\u0161titni\u010dka prema izvorima. Novinarska akreditacija joj je omogu\u0107ila pristup ve\u0107ini prostorija.",
     "dossier.marcus-vale.bio": "Pedantan slobodni menad\u017eer scene zadu\u017een za osvetljenje, zvu\u010dne signale i tehni\u010dku produkciju gale. Radio je doga\u0111aje u Lyric Atriumu dve godine. Prati svaki signal i logistiku izvo\u0111a\u010da sa operativnom precizno\u0161\u0107u. Ostao je iza scene koordiniraju\u0107i \u0161ou tokom nestanka struje.",
 
@@ -425,7 +427,7 @@ window.I18N = {
     "discovery.noah-cctv-gap": "Praznine u CCTV snimcima i svedo\u010denja o\u010devidaca postavljaju Nou blizu teretnog lifta i hodnika za odr\u017eavanje tokom nestanka struje.",
     "discovery.celeste-affair": "Selest i D\u017eulijan Merser su imali tajnu romansu. On joj je obe\u0107ao da \u0107e je osloboditi nepovoljnog menad\u017eerskog ugovora.",
     "discovery.celeste-recordings": "Selest poseduje audio snimke na kojima Merser priznaje kori\u0161\u0107enje nelegalnih taknika nadzora u Panopticonu.",
-    "discovery.celeste-rooftop-witness": "Selest je videla figuru \u2014 prepoznatljivu kao Noa Sterling \u2014 kako izlazi iz stepeni\u0161ta ka krovu tokom nestanka struje.",
+    "discovery.celeste-rooftop-witness": "Selest je videla figuru \u2014 prepoznatljivu kao Noa Sterling \u2014 kako silazi niz stepeni\u0161te atrijuma tokom nestanka struje.",
     "discovery.gideon-blackmail": "Merser je ucenjivao Gideona \u2014 njegovo ime se nalazi na listi pretnji iz spaljenog fragmenta bele\u017enice.",
     "discovery.gideon-data-sales": "Gideon vodi sporedni posao prodaje anonimizovanih podataka gostiju iz hotelskih sistema.",
     "discovery.gideon-notebook": "Spaljeni fragment bele\u017enice navodi Gideona Holta kao jednu od Merserovih meta za ucenu.",
@@ -433,7 +435,7 @@ window.I18N = {
     "discovery.mira-plagiarism": "Merser je plagirao istra\u017eivanje Dr Klajn za eti\u010dki okvir Panopticona. Ona je planirala da ga javno razotkrije.",
     "discovery.mira-meeting": "Mira je zakazala privatni sastanak sa Merserom u 23:30 da zahteva javno priznanje. Merser se nije pojavio \u2014 ve\u0107 je bio mrtav.",
     "discovery.eddie-key-loan": "Edi Vos je pozajmio Amelijin klju\u010d za odr\u017eavanje da preuzme alat i zaboravio da ga odmah vrati.",
-    "discovery.eddie-gave-noah-key": "Noa Sterling je pritiskao Edija da mu preda klju\u010d za odr\u017eavanje tokom nestanka struje, obe\u0107avaju\u0107i usluge.",
+    "discovery.eddie-gave-noah-key": "Noa Sterling je pritiskao Edija da mu preda klju\u010d za odr\u017eavanje na VIP baru ranije te ve\u010deri, obe\u0107avaju\u0107i usluge.",
     "discovery.priya-saw-noah": "Prija je videla Nou Sterlinga blizu teretnog lifta neposredno pre nego \u0161to je nestalo struje.",
     "discovery.priya-holt-argument": "Prija je snimila delove svađe izme\u0111u Mersera i Gideona Holta ranije te ve\u010deri.",
     "discovery.priya-mira-tip": "Dr Mira Klajn je obavestila Priju o Merserovim eti\u010dkim prekr\u0161ajima i organizovala njeno prisustvo na gali.",

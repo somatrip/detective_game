@@ -3,8 +3,8 @@
 ## Overview
 - **Title:** "Echoes in the Atrium"
 - **Setting:** The historic Lyric Atrium Hotel, a refurbished 1920s art deco landmark hosting an exclusive tech-retro gala.
-- **Victim:** Julian Mercer, charismatic venture capitalist behind the controversial "Panopticon" surveillance startup.
-- **Crime:** Mercer is found dead in the hotel’s rooftop observatory at 11:40 p.m., bludgeoned by an antique telescope mount. Power was cut between 11:15–11:30 p.m., giving cover for the murderer. Stormy weather delayed police arrival, allowing suspects time to coordinate alibis.
+- **Victim:** Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO behind the controversial "Panopticon" surveillance startup.
+- **Crime:** Mercer’s body is discovered in the hotel’s rooftop observatory at approximately 11:44 p.m. by Security Director Gideon Holt, bludgeoned by an antique telescope mount. Forensics estimate the time of death between 11:15 and 11:30 p.m. — during a power outage caused by someone manually pulling the breaker. Stormy weather delayed police arrival, allowing suspects time to coordinate alibis.
 - **Themes:** Privacy vs. control, the cost of ambition, loyalty under pressure, and the ethics of innovation.
 
 ## Investigation Checkpoints & Key Revelations
@@ -80,7 +80,7 @@
    - *Hidden Truth:* She orchestrated the anonymous tip that brought press to gala.
 
 ### Secondary Characters
-- **Eddie Voss – Bartender & Amelia’s Protégé:** Holds borrowed maintenance key; nervous.
+- **Eddie Voss – Junior Engineer & Amelia’s Protégé:** Amelia’s engineering protege who volunteered to tend the VIP bar tonight; holds borrowed maintenance key; nervous.
 - **Priya Shah – Investigative Journalist:** Received Mira’s tip; saw Noah near freight elevator.
 - **Marcus Vale – Stage Manager:** Can confirm Noah’s brief absence and Celeste’s performance gaps.
 
