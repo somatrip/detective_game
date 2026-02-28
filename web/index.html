@@ -2766,22 +2766,41 @@
         return;
       }
 
-      const localState = buildStateObject();
       const cloudState = cloudData.state;
-
-      // Compare recency: cloud updated_at (server-side trigger) vs local savedAt
-      const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
-      const localTime = localState.savedAt ? new Date(localState.savedAt).getTime() : 0;
-
-      // Content richness as tiebreaker / backward-compat for old saves without savedAt
-      const localRichness = stateRichness(localState);
       const cloudRichness = stateRichness(cloudState);
 
-      let useCloud;
-      if (localRichness === 0 && cloudRichness > 0) {
+      // Read the PERSISTED localStorage state rather than calling buildStateObject(),
+      // which always stamps savedAt with the current time (making local always "newer").
+      let persistedLocal = null;
+      try {
+        const raw = localStorage.getItem("echoes_state_v2");
+        if (raw) persistedLocal = JSON.parse(raw);
+      } catch {}
+
+      // Detect a fresh device by checking for real user-generated content
+      // (conversations), NOT total richness — seedStartingEvidence() adds 3
+      // evidence items on every fresh page load, inflating richness even when
+      // the user has never actually played on this device.
+      const localConvCount = persistedLocal?.conversations
+        ? Object.values(persistedLocal.conversations)
+            .reduce((n, msgs) => n + (Array.isArray(msgs) ? msgs.length : 0), 0)
+        : 0;
+
+      if (localConvCount === 0 && cloudRichness > 0) {
         // Fresh device / cleared local — cloud is clearly better
-        useCloud = true;
-      } else if (cloudRichness === 0 && localRichness > 0) {
+        console.log("[cloud-merge] Fresh device — using cloud state (%d items)", cloudRichness);
+        applyStateObject(cloudState);
+        saveState(); // persist to localStorage so local matches cloud
+        return;
+      }
+
+      // Both sides have real user data — compare using persisted timestamps
+      const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
+      const localTime = persistedLocal?.savedAt ? new Date(persistedLocal.savedAt).getTime() : 0;
+      const localRichness = stateRichness(persistedLocal);
+
+      let useCloud;
+      if (cloudRichness === 0 && localRichness > 0) {
         // Cloud is empty but local has data — keep local
         useCloud = false;
       } else if (cloudTime && localTime) {
@@ -2805,7 +2824,7 @@
       } else {
         console.log("[cloud-merge] Keeping local state (local=%d, cloud=%d items)",
                     localRichness, cloudRichness);
-        await cloudSaveState(localState);
+        await cloudSaveState(buildStateObject());
       }
     } catch (err) {
       console.error("[cloud-load] Failed to merge cloud state:", err);
