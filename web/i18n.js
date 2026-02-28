@@ -3,9 +3,7 @@
    ================================================================ */
 window.I18N = {
   en: {
-    // Intro screen
-    "intro.title": "Echoes in the Atrium",
-    "intro.subtitle": "A Murder Mystery Investigation",
+    // Case briefing (case board)
     "intro.briefing_label": "Case Briefing",
     "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.",
     "intro.time_of_death": "<strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.",
@@ -14,7 +12,6 @@ window.I18N = {
     "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
     "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.",
     "intro.tip": "<strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
-    "intro.start": "Begin Investigation",
 
     // Hub screen
     "hub.tab_suspects": "Persons of Interest",
@@ -290,9 +287,7 @@ window.I18N = {
   },
 
   sr: {
-    // Intro screen
-    "intro.title": "Odjeci u Atrijumu",
-    "intro.subtitle": "Istraga Ubistva",
+    // Case briefing (case board)
     "intro.briefing_label": "Brifing o Slu\u010daju",
     "intro.victim": "<strong>\u017drtva:</strong> D\u017eulijan Merser, harizamti\u010dan preduzetnik i direktor startapa Panopticon za nadzor, prona\u0111en mrtav u opservatoriji na krovu hotela Lyric Atrium.",
     "intro.time_of_death": "<strong>Vreme smrti:</strong> Pribli\u017eno 23:40, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih. \u017drtva je ubijena anti\u010dkim postolem teleskopa.",
@@ -301,7 +296,6 @@ window.I18N = {
     "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte devet osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
     "intro.your_partner": "<strong>Va\u0161 partner:</strong> Detektiv Lila \u010cen \u0107e vam pomo\u0107i sa takti\u010dkim savetima i pravnim smernicama. Po\u010dnite sa njom za pregled slu\u010daja.",
     "intro.tip": "<strong>Savet:</strong> Likovi \u0107e pa\u017eeljivo \u010duvati svoje tajne. Predstavite dokaze i izgradite pritisak da probijete njihovu odbranu. Obratite pa\u017enju na kontradikcije izme\u0111u svedo\u010denja.",
-    "intro.start": "Zapo\u010dni Istragu",
 
     // Hub screen
     "hub.tab_suspects": "Osumnji\u010deni",

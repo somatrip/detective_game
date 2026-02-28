@@ -226,73 +226,6 @@
       font-style: italic;
     }
 
-    /* ── Intro Screen ──────────────────────────────────────── */
-    #intro-screen {
-      position: fixed; inset: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(160deg, rgba(26,21,16,0.97), rgba(28,23,18,0.95)),
-        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23d4a05008' fill='none'/%3E%3C/svg%3E");
-    }
-    #intro-screen.hidden { display: none; }
-    .intro-card {
-      max-width: 640px; width: 90vw;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 3rem;
-      box-shadow: 0 32px 64px rgba(0,0,0,0.5);
-      text-align: center;
-    }
-    .intro-card h1 {
-      font-family: var(--font-noir);
-      font-size: 2rem; font-weight: 700;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--noir-amber), #b8862e);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .intro-card .subtitle {
-      font-size: 0.95rem; color: var(--text-dim);
-      margin-bottom: 2rem; font-style: italic;
-    }
-    .briefing {
-      text-align: left;
-      background: var(--bg-dark);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      font-size: 0.9rem;
-      line-height: 1.75;
-      color: var(--text-dim);
-      max-height: 320px;
-      overflow-y: auto;
-    }
-    .briefing strong { color: var(--text); }
-    .briefing .label {
-      display: inline-block;
-      font-family: var(--font-noir);
-      font-size: 0.75rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
-    }
-    .briefing p { margin-bottom: 0.75rem; }
-    #start-btn {
-      font-family: var(--font-noir);
-      background: linear-gradient(120deg, var(--noir-amber), #b8862e);
-      border: none; border-radius: 10px;
-      padding: 0.85rem 2.5rem;
-      font-size: 1rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: #1a1510; cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    #start-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px var(--accent-glow);
-    }
-
     /* ── Hub Screen ────────────────────────────────────────── */
     #hub-screen {
       display: none;
@@ -1565,7 +1498,6 @@
       background: var(--bg-panel-alt);
       color: var(--text);
     }
-    .intro-lang-row { margin-bottom: 1.5rem; }
 
     /* ── Voice: Mic Button ──────────────────────────────── */
     #mic-btn {
@@ -2044,26 +1976,6 @@
   </div>
 </div>
 
-<!-- ════════ Intro Screen ════════ -->
-<div id="intro-screen">
-  <div class="intro-card">
-    <h1 data-i18n="intro.title">Echoes in the Atrium</h1>
-    <p class="subtitle" data-i18n="intro.subtitle">A Murder Mystery Investigation</p>
-    <div class="intro-lang-row"></div>
-    <div class="briefing">
-      <span class="label" data-i18n="intro.briefing_label">Case Briefing</span>
-      <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist and CEO of the Panopticon surveillance startup, found dead in the rooftop observatory of the Lyric Atrium Hotel.</p>
-      <p data-i18n="intro.time_of_death" data-i18n-html><strong>Time of Death:</strong> Approximately 11:40 PM, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel. The body was bludgeoned with an antique telescope mount.</p>
-      <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
-      <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
-      <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
-      <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
-      <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
-    </div>
-    <button id="start-btn" data-i18n="intro.start">Begin Investigation</button>
-  </div>
-</div>
-
 <!-- ════════ Hub Screen ════════ -->
 <div id="hub-screen">
   <div class="manila-tabs">
@@ -2380,6 +2292,7 @@
   let authUser = null;          // { user_id, email, access_token, refresh_token }
   let cloudSaveTimer = null;
   let cloudSavePending = false;
+  let _cloudMergePromise = null; // set during boot so init() can await it
   let supabaseConfigured = false;
 
   // ── Persist auth tokens in localStorage ───────────────────────
@@ -2937,10 +2850,8 @@
   // Screens
   const titleCard         = $("#title-card");
   const titleCardBtn      = $("#title-card-btn");
-  const introScreen       = $("#intro-screen");
   const hubScreen         = $("#hub-screen");
   const chatScreen        = $("#chat-screen");
-  const startBtn          = $("#start-btn");
   const TITLE_STORAGE_KEY = "echoes_title_seen";
 
   // Hub elements
@@ -3143,6 +3054,11 @@
     if (isNewGame) {
       trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
     }
+    // Wait for cloud merge to finish (if any) before first render
+    // so we always render with the latest cloud state
+    if (_cloudMergePromise) {
+      await _cloudMergePromise.catch(() => {});
+    }
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
       const data = await res.json();
@@ -3170,9 +3086,6 @@
     briefingToggle.setAttribute("aria-expanded", String(briefingOpen));
     if (briefingOpen) briefingBody.classList.add("open");
     else briefingBody.classList.remove("open");
-
-    // Skip old intro — always hidden
-    introScreen.classList.add("hidden");
 
     const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
     const hasConversations = Object.keys(conversations).length > 0;
@@ -4762,26 +4675,19 @@
   updateAudioToggle();
   initAuthUI();
 
-  // Check Supabase availability and restore auth session in background
-  checkSupabaseStatus().then(configured => {
+  // Check Supabase availability and restore auth session
+  // Store promise so init() can await it before first render
+  _cloudMergePromise = checkSupabaseStatus().then(async configured => {
     if (!configured) {
-      // Hide the account button if Supabase is not configured
       const accountRow = document.getElementById("settings-account-row");
       if (accountRow) accountRow.style.display = "none";
       return;
     }
-    // Try restoring a previous auth session
-    restoreAuthSession().then(restored => {
-      if (restored) {
-        console.log("[auth] Session restored for", authUser.email);
-        // Merge cloud state with local state (cloud wins if it has more progress)
-        mergeCloudState().then(() => {
-          // Re-render UI with potentially restored cloud state
-          if (typeof renderNpcGrid === "function") renderNpcGrid();
-          if (typeof renderEvidence === "function") renderEvidence();
-        });
-      }
-    });
+    const restored = await restoreAuthSession();
+    if (restored) {
+      console.log("[auth] Session restored for", authUser.email);
+      await mergeCloudState();
+    }
   });
 
   // Flush cloud save when tab becomes hidden (more reliable than beforeunload)
