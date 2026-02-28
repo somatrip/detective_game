@@ -3,6 +3,9 @@
    ================================================================ */
 window.I18N = {
   en: {
+    // Title card
+    "intro.subtitle": "A Murder Mystery Investigation",
+
     // Case briefing (case board)
     "intro.briefing_label": "Case Briefing",
     "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of the Panopticon surveillance startup — found dead in the hotel's rooftop observatory.",
@@ -10,7 +13,7 @@ window.I18N = {
     "intro.body_discovered": "<strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Gideon Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.",
     "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
     "intro.starting_evidence": "<strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
-    "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
+    "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
     "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.",
     "intro.tip": "<strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
 
@@ -288,6 +291,9 @@ window.I18N = {
   },
 
   sr: {
+    // Title card
+    "intro.subtitle": "Istraga ubistva",
+
     // Case briefing (case board)
     "intro.briefing_label": "Brifing o Slu\u010daju",
     "intro.victim": "<strong>\u017drtva:</strong> D\u017eulijan Merser, harizamti\u010dan preduzetnik, ve\u0107inski vlasnik hotela Lyric Atrium i direktor startapa Panopticon za nadzor \u2014 prona\u0111en mrtav u opservatoriji na krovu hotela.",
@@ -295,7 +301,7 @@ window.I18N = {
     "intro.body_discovered": "<strong>Telo prona\u0111eno:</strong> Pribli\u017eno u 23:44, od strane direktora obezbe\u0111enja Gideona Holta u opservatoriji na krovu, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih.",
     "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije.",
     "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> i tragove <em>anti\u010dkog ma\u0161inskog ulja</em> pored tela. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
-    "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte devet osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
+    "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte osam osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
     "intro.your_partner": "<strong>Va\u0161 partner:</strong> Detektiv Lila \u010cen \u0107e vam pomo\u0107i sa takti\u010dkim savetima i pravnim smernicama. Po\u010dnite sa njom za pregled slu\u010daja.",
     "intro.tip": "<strong>Savet:</strong> Likovi \u0107e pa\u017eeljivo \u010duvati svoje tajne. Predstavite dokaze i izgradite pritisak da probijete njihovu odbranu. Obratite pa\u017enju na kontradikcije izme\u0111u svedo\u010denja.",
 

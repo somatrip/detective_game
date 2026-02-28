@@ -866,7 +866,7 @@ graph TD
 >
 > **Initial Evidence:** Forensics recovered a burned notebook fragment and traces of antique machine oil near the body. Hotel security has also provided keycard access logs for the rooftop. Use these to press suspects during interrogation.
 >
-> **Your Role:** You are the lead detective. Interrogate nine persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.
+> **Your Role:** You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.
 
 ---
 
