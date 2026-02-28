@@ -2770,13 +2770,20 @@
         return;
       }
 
-      // Cloud state exists — compare timestamps and conversation counts
+      // Always restore meta/tutorial flags from cloud (even with zero conversations)
+      const cs = cloudData.state;
+      if (cs.tutorialDone) localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+      if (cs.titleSeen) localStorage.setItem(TITLE_STORAGE_KEY, "1");
+      if (cs.lilaHintSeen) localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
+      if (cs.gameId) { gameId = cs.gameId; localStorage.setItem("echoes_game_id", gameId); }
+
+      // Compare conversation counts to decide which gameplay state wins
       const localConvCount = Object.keys(conversations).filter(k => conversations[k]?.length > 0).length;
-      const cloudConvCount = Object.keys(cloudData.state.conversations || {}).filter(k => cloudData.state.conversations[k]?.length > 0).length;
+      const cloudConvCount = Object.keys(cs.conversations || {}).filter(k => cs.conversations[k]?.length > 0).length;
 
       if (cloudConvCount > 0 && cloudConvCount >= localConvCount) {
         // Cloud has more or equal progress — restore it
-        applyStateObject(cloudData.state);
+        applyStateObject(cs);
       } else if (localConvCount > cloudConvCount) {
         // Local has more progress — push it up
         await cloudSaveState(buildStateObject());
@@ -2900,7 +2907,8 @@
   let accusationTarget = null;
 
   /* ── Gameplay tracking ─────────────────────────────────── */
-  let sessionId = crypto.randomUUID();
+  let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
+  localStorage.setItem("echoes_game_id", gameId);
 
   function trackEvent(endpoint, payload) {
     fetch(`${API_BASE}/api/track/${endpoint}`, {
@@ -3000,6 +3008,7 @@
       lilaHintSeen: !!localStorage.getItem(LILA_HINT_STORAGE_KEY),
       audioEnabled,
       language: window.currentLang || "en",
+      gameId,
     };
   }
 
@@ -3020,6 +3029,7 @@
     if (s.language && typeof switchLanguage === "function") {
       window.currentLang = s.language;
     }
+    if (s.gameId) { gameId = s.gameId; localStorage.setItem("echoes_game_id", gameId); }
   }
 
   function saveState() {
@@ -3027,7 +3037,7 @@
     try {
       localStorage.setItem("echoes_state_v2", JSON.stringify({
         conversations, evidence, activeNpcId, discoveries,
-        npcInterrogation, caseReadyPromptShown, briefingOpen,
+        npcInterrogation, caseReadyPromptShown, briefingOpen, gameId,
       }));
     } catch {}
     // Schedule a debounced cloud save if logged in
@@ -3046,6 +3056,7 @@
       if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
       if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
       if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
+      if (s.gameId) { gameId = s.gameId; localStorage.setItem("echoes_game_id", gameId); }
     } catch {}
   }
 
@@ -3057,8 +3068,9 @@
     npcInterrogation = {};
     caseReadyPromptShown = false;
     activeNpcId = null;
-    sessionId = crypto.randomUUID();
-    trackEvent("session", { session_id: sessionId, language: window.currentLang || "en" });
+    gameId = crypto.randomUUID();
+    localStorage.setItem("echoes_game_id", gameId);
+    trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
     localStorage.removeItem("echoes_state_v2");
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
     audioCache.clear();
@@ -3121,9 +3133,12 @@
   let briefingOpen = true; // default: open on first visit
 
   async function init() {
+    const isNewGame = !localStorage.getItem("echoes_state_v2");
     loadState();
     seedStartingEvidence();
-    trackEvent("session", { session_id: sessionId, language: window.currentLang || "en" });
+    if (isNewGame) {
+      trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
+    }
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
       const data = await res.json();
@@ -3437,7 +3452,7 @@
           pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
           rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
           player_evidence_ids: evidence.map(e => e.id),
-          session_id: sessionId,
+          session_id: gameId,
         }),
         signal: chatAbortController?.signal,
       });
@@ -3689,7 +3704,7 @@
           source: npcId,
         });
         found = true;
-        trackEvent("discovery", { session_id: sessionId, evidence_id: id, npc_id: npcId });
+        trackEvent("discovery", { session_id: gameId, evidence_id: id, npc_id: npcId });
       }
 
       detectDiscoveries(id, npcId);
@@ -3886,7 +3901,7 @@
 
     const interviewCount = Object.keys(conversations).filter(k => conversations[k].length > 0).length;
     trackEvent("accusation", {
-      session_id: sessionId,
+      session_id: gameId,
       target_npc_id: target,
       correct,
       evidence_count: evidence.length,
