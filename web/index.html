@@ -3369,6 +3369,8 @@
           language: window.currentLang || "en",
           pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
           rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
+          peak_pressure: (npcInterrogation[activeNpcId] || {}).peak_pressure ??
+                         (npcInterrogation[activeNpcId] || {}).pressure ?? 0,
           player_evidence_ids: evidence.map(e => e.id),
           player_discovery_ids: Object.values(discoveries).flat().map(d => d.id),
           session_id: gameId,
@@ -3419,6 +3421,7 @@
           rapport: data.rapport,
           pressure_band: data.pressure_band || "calm",
           rapport_band: data.rapport_band || "cold",
+          peak_pressure: data.peak_pressure ?? data.pressure,
         };
         updateInterrogationUI(activeNpcId);
       }

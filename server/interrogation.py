@@ -115,6 +115,11 @@ EVIDENCE_MULTIPLIERS: Dict[str, float] = {
     "smoking_gun": 3.0,
 }
 
+#: Multiplier applied to pressure_decay when accelerated decay is active.
+#: Triggers when: (a) NPC was never cornered (peak < 75), AND
+#: (b) the current turn's effective pressure delta is <= 0.
+ACCELERATED_DECAY_MULTIPLIER: float = 4.0
+
 
 # ---------------------------------------------------------------------------
 # Band mapping
@@ -170,11 +175,28 @@ def apply_update(
     delta_p: int,
     delta_r: int,
     archetype: ArchetypeProfile,
-) -> Tuple[int, int]:
-    """Apply deltas (with decay) and clamp to 0–100."""
-    p = current_pressure - archetype.pressure_decay + delta_p
+    peak_pressure: int = 0,
+) -> Tuple[int, int, int]:
+    """Apply deltas (with decay) and clamp to 0–100.
+
+    Returns ``(new_pressure, new_rapport, new_peak_pressure)``.
+
+    Accelerated decay kicks in when the NPC has never been cornered
+    (peak_pressure < 75) and the current turn is not applying pressure
+    (delta_p <= 0).  This makes pressure bleed away quickly if the
+    player backs off before truly breaking the NPC.
+    """
+    was_cornered = peak_pressure >= 75
+    if not was_cornered and delta_p <= 0:
+        effective_decay = archetype.pressure_decay * ACCELERATED_DECAY_MULTIPLIER
+    else:
+        effective_decay = archetype.pressure_decay
+
+    p = current_pressure - effective_decay + delta_p
     r = current_rapport - archetype.rapport_decay + delta_r
-    return max(0, min(100, round(p))), max(0, min(100, round(r)))
+    new_p = max(0, min(100, round(p)))
+    new_r = max(0, min(100, round(r)))
+    return new_p, new_r, max(peak_pressure, new_p)
 
 
 # ---------------------------------------------------------------------------
@@ -187,19 +209,21 @@ def process_turn(
     npc_id: str,
     current_pressure: int,
     current_rapport: int,
+    peak_pressure: int = 0,
 ) -> dict:
     """Process one interrogation turn and return updated state.
 
     Returns a dict with keys:
         pressure, rapport, pressure_band, rapport_band,
-        archetype_id, delta_pressure, delta_rapport
+        archetype_id, delta_pressure, delta_rapport, peak_pressure
     """
     archetype_id = NPC_ARCHETYPE_MAP.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES[archetype_id]
 
     delta_p, delta_r = compute_deltas(tactic_type, evidence_strength, archetype)
-    new_p, new_r = apply_update(
+    new_p, new_r, new_peak = apply_update(
         current_pressure, current_rapport, delta_p, delta_r, archetype,
+        peak_pressure=peak_pressure,
     )
 
     return {
@@ -210,6 +234,7 @@ def process_turn(
         "archetype_id": archetype_id,
         "delta_pressure": delta_p,
         "delta_rapport": delta_r,
+        "peak_pressure": new_peak,
     }
 
 

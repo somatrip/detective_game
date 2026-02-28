@@ -47,6 +47,12 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Discovery IDs the player has already collected.",
     )
+    peak_pressure: int = Field(
+        default=0,
+        ge=0,
+        le=100,
+        description="Highest pressure this NPC has ever reached (0–100).",
+    )
     session_id: str | None = Field(
         default=None,
         description="Client-generated session UUID for gameplay tracking.",
@@ -98,6 +104,10 @@ class ChatResponse(BaseModel):
     evidence_strength: str = Field(
         default="none",
         description="Classified evidence strength for this turn.",
+    )
+    peak_pressure: int = Field(
+        default=0,
+        description="Updated peak pressure after this turn (max of old peak and new pressure).",
     )
 
 

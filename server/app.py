@@ -170,6 +170,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
             npc_id=request.npc_id,
             current_pressure=request.pressure,
             current_rapport=request.rapport,
+            peak_pressure=request.peak_pressure,
         )
     except Exception as exc:
         log.exception("[chat] Step 2 FAILED: process_turn")
@@ -290,6 +291,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
         rapport_band=interrogation_result["rapport_band"],
         tactic_type=tactic_type,
         evidence_strength=evidence_strength,
+        peak_pressure=interrogation_result["peak_pressure"],
     )
 
 
