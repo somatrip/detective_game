@@ -2681,6 +2681,8 @@
 
         // After login, try loading cloud state
         await mergeCloudState();
+        renderNpcGrid();
+        renderEvidence();
 
         // If login came from auth prompt, close modal and enter the game
         if (window.__authFromTitleCard) {
@@ -2714,7 +2716,13 @@
       await authLogout();
       authUser = null;
       clearAuthTokens();
+      resetLocalState();
       updateAuthUI();
+      closeAuthModal();
+      // Return to title card
+      chatScreen.classList.remove("active");
+      hubScreen.classList.remove("active");
+      titleCard.classList.remove("dismissed", "hidden");
     });
 
     // Close
@@ -2740,6 +2748,7 @@
         await authLogout();
         authUser = null;
         clearAuthTokens();
+        resetLocalState();
         updateAuthUI();
         // Close settings
         const settingsModal = document.getElementById("settings-modal");
@@ -2748,10 +2757,10 @@
         if (chatScreen.classList.contains("active")) {
           leaveChat();
         }
-        // Show title card again
-        localStorage.removeItem(TITLE_STORAGE_KEY);
-        titleCard.classList.remove("dismissed", "hidden");
+        // Return to title card
+        chatScreen.classList.remove("active");
         hubScreen.classList.remove("active");
+        titleCard.classList.remove("dismissed", "hidden");
       });
     }
   }
@@ -2762,32 +2771,13 @@
     try {
       const cloudData = await cloudLoadState();
       if (!cloudData || !cloudData.state) {
-        // No cloud save — push local state up
-        const stateObj = buildStateObject();
-        if (Object.keys(stateObj.conversations || {}).length > 0) {
-          await cloudSaveState(stateObj);
-        }
+        // No cloud save — push local state up (first login / new account)
+        await cloudSaveState(buildStateObject());
         return;
       }
-
-      // Always restore meta/tutorial flags from cloud (even with zero conversations)
-      const cs = cloudData.state;
-      if (cs.tutorialDone) localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
-      if (cs.titleSeen) localStorage.setItem(TITLE_STORAGE_KEY, "1");
-      if (cs.lilaHintSeen) localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
-      if (cs.gameId) { gameId = cs.gameId; localStorage.setItem("echoes_game_id", gameId); }
-
-      // Compare conversation counts to decide which gameplay state wins
-      const localConvCount = Object.keys(conversations).filter(k => conversations[k]?.length > 0).length;
-      const cloudConvCount = Object.keys(cs.conversations || {}).filter(k => cs.conversations[k]?.length > 0).length;
-
-      if (cloudConvCount > 0 && cloudConvCount >= localConvCount) {
-        // Cloud has more or equal progress — restore it
-        applyStateObject(cs);
-      } else if (localConvCount > cloudConvCount) {
-        // Local has more progress — push it up
-        await cloudSaveState(buildStateObject());
-      }
+      // Cloud save exists — it is the source of truth. Apply it fully.
+      applyStateObject(cloudData.state);
+      saveState(); // persist to localStorage so local matches cloud
     } catch (err) {
       console.error("[cloud-load] Failed to merge cloud state:", err);
     }
@@ -3030,6 +3020,10 @@
       window.currentLang = s.language;
     }
     if (s.gameId) { gameId = s.gameId; localStorage.setItem("echoes_game_id", gameId); }
+    if (s.audioEnabled !== undefined) {
+      audioEnabled = s.audioEnabled;
+      localStorage.setItem("echoes_audio", String(audioEnabled));
+    }
   }
 
   function saveState() {
@@ -3060,7 +3054,8 @@
     } catch {}
   }
 
-  function clearState() {
+  /** Wipe all local game state (memory + localStorage). Does NOT touch cloud. */
+  function resetLocalState() {
     if (voiceMode) exitVoiceMode();
     conversations = {};
     evidence = [];
@@ -3069,13 +3064,22 @@
     caseReadyPromptShown = false;
     activeNpcId = null;
     gameId = crypto.randomUUID();
-    localStorage.setItem("echoes_game_id", gameId);
-    trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
-    localStorage.removeItem("echoes_state_v2");
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
     audioCache.clear();
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    // Also clear cloud save if logged in
+    localStorage.removeItem("echoes_state_v2");
+    localStorage.removeItem("echoes_game_id");
+    localStorage.removeItem("echoes_tutorial_done");
+    localStorage.removeItem("echoes_title_seen");
+    localStorage.removeItem("echoes_lila_hint_seen");
+    // Keep echoes_audio (device preference)
+  }
+
+  /** Full restart: wipe local state, delete cloud save, start new game session. */
+  function clearState() {
+    resetLocalState();
+    localStorage.setItem("echoes_game_id", gameId);
+    trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
     if (authUser) {
       cloudDeleteState().catch(err => console.error("[cloud] Failed to delete:", err));
     }
