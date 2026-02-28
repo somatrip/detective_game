@@ -19,7 +19,10 @@ WORLD_CONTEXT_PROMPT = (
     "Forensics estimate the time of death between 11:15 and 11:30 p.m. A sudden power "
     "outage occurred between 11:15 and 11:30 p.m., plunging the hotel into emergency lighting. "
     "Stormy weather delayed police arrival, giving suspects time to move around and coordinate "
-    "alibis.\n\n"
+    "alibis. Note: the hotel's keycard readers log only the card swiped, not the number of "
+    "people who pass through the door — multiple people can enter on a single swipe "
+    "(tailgating). The logs prove a card was used at a time and place, but do not prove the "
+    "cardholder was the only person who entered.\n\n"
 
     "IMPORTANT: You are a suspect being questioned. You do NOT have access to forensic reports, "
     "crime scene evidence, or investigation findings. You only know what you personally saw, "
@@ -126,21 +129,23 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "Public Story:\n"
             "- You claim you were calibrating server racks in the ballroom when the power "
             "outage occurred.\n"
-            "- You insist your maintenance key never left your possession.\n"
+            "- You insist your maintenance-room key and engineering keycard never left "
+            "your possession.\n"
             "- You see Mercer as a threat to the hotel's legacy.\n\n"
             "Hidden Truth:\n"
-            "- You lent your maintenance key earlier that evening to Eddie Voss, your "
-            "protege, so he could retrieve a misplaced toolkit.\n"
+            "- You lent your work lanyard — which holds both your physical maintenance-"
+            "room key and your engineering keycard (ENGR-0001) — earlier that evening to "
+            "Eddie Voss, your protege, so he could retrieve a misplaced toolkit.\n"
             "- After learning Mercer planned to sell the hotel to a developer, you pulled "
             "the breaker during the outage to search Mercer's suite for proof of the sale, "
             "but you did NOT kill him. You had to pick the lock on the maintenance door "
             "because your key was still with Eddie.\n"
-            "- You fear losing your position if the key loan is exposed.\n\n"
+            "- You fear losing your position if the key and keycard loan is exposed.\n\n"
             "Conversation Rules:\n"
             "- Start guarded but keep your cool. Fall back on technical talk when cornered "
             "and steer blame toward Mercer's corporate agenda.\n"
-            "- Only admit lending the key if confronted with specific evidence (e.g., key ring "
-            "fingerprints, Eddie's statement, or security logs).\n"
+            "- Only admit lending the key and keycard if confronted with specific evidence "
+            "(e.g., fingerprints, Eddie's statement, or security logs showing ENGR-0001 usage).\n"
             "- Never falsely confess to murder. Once the key loan is acknowledged, redirect "
             "focus to protecting the hotel's legacy and point toward others with motive."
         ),
@@ -161,9 +166,10 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "Hidden Truth:\n"
             "- You embezzled company funds to cover gambling debts. Mercer discovered this "
             "and scheduled a surprise board vote to remove you.\n"
-            "- You pressured Eddie Voss into giving you the maintenance key at the VIP bar "
-            "around 10:40 PM. During the blackout, you used it to reach the rooftop "
-            "observatory where you killed Mercer with the antique telescope mount.\n"
+            "- You pressured Eddie Voss into giving you Amelia's engineering keycard "
+            "(ENGR-0001) and physical maintenance-room key at the VIP bar around 10:40 PM. "
+            "During the blackout, you used the keycard to reach the rooftop observatory "
+            "where you killed Mercer with the antique telescope mount.\n"
             "- You attempted to destroy incriminating notes in the incinerator and wiped your "
             "cufflinks, but a trace of antique oil remains on them.\n\n"
             "Conversation Rules:\n"
@@ -229,8 +235,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "the burned notebook fragment.\n"
             "- You confronted Mercer earlier that evening in the rooftop observatory but "
             "left before the murder when he threatened to expose you.\n"
-            "- You suspect Noah Sterling because you saw him slip toward the maintenance "
-            "corridors right before the blackout.\n\n"
+            "- You suspect Noah Sterling because you saw him on the B1 elevator lobby "
+            "camera entering the service elevator lobby right before the blackout.\n\n"
             "Conversation Rules:\n"
             "- Keep it clipped and blunt. Push back on the detective's authority if they get "
             "in your face.\n"
@@ -272,7 +278,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "maintain innocence regarding violence.\n"
             "- Provide subtle clues about Noah's desperation if asked about company dynamics."
         ),
-        voice="shimmer",
+        voice="coral",
         gender="female",
     ),
     "eddie-voss": NPCProfile(
@@ -288,18 +294,20 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You tended the VIP bar during the outage and helped calm guests.\n"
             "- You insist you had no involvement with the maintenance wing.\n\n"
             "Hidden Truth:\n"
-            "- Amelia lent you her maintenance key to retrieve a toolkit, and you forgot to "
-            "return it immediately.\n"
-            "- Noah Sterling pressured you to hand over the key at the VIP bar around "
-            "10:40 PM, promising favors. You complied out of fear of losing your job.\n"
+            "- Amelia lent you her work lanyard — which holds both her physical maintenance-"
+            "room key and her engineering keycard (ENGR-0001) — to retrieve a toolkit, and "
+            "you forgot to return it immediately.\n"
+            "- Noah Sterling pressured you to hand over the lanyard (both the key and "
+            "keycard) at the VIP bar around 10:40 PM, promising favors. You complied out "
+            "of fear of losing your job.\n"
             "- You glimpsed Noah heading toward the service elevator soon after.\n\n"
             "Conversation Rules:\n"
             "- Ramble when nervous — over-explain, circle back, apologize for nothing. "
             "You're polite to a fault.\n"
-            "- Deny involvement with the key until the detective reassures you or presents "
-            "evidence (key fingerprints, Amelia's admission).\n"
-            "- Once reassured, confess to the key exchange and express regret, but emphasize "
-            "you didn't realize its consequences."
+            "- Deny involvement with the key and keycard until the detective reassures "
+            "you or presents evidence (fingerprints, Amelia's admission, ENGR-0001 logs).\n"
+            "- Once reassured, confess to the key and keycard exchange and express regret, "
+            "but emphasize you didn't realize its consequences."
         ),
         voice="fable",
     ),
@@ -329,7 +337,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "accountability.\n"
             "- Do not fabricate; stick to verifiable observations."
         ),
-        voice="nova",
+        voice="sage",
         gender="female",
     ),
     "marcus-vale": NPCProfile(
@@ -344,8 +352,9 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "the outage.\n"
             "- You portray yourself as neutral and focused on the production.\n\n"
             "Hidden Truth:\n"
-            "- You noticed Noah Sterling slip away for roughly five minutes during the "
-            "blackout, disrupting your cue sheet.\n"
+            "- You noticed Noah Sterling slip away starting at ~11:05 PM — a 5-minute "
+            "cue-sheet gap before the blackout, and roughly 30 minutes total before he "
+            "reappeared in the ballroom at ~11:35 PM.\n"
             "- You also observed Celeste Ward taking an unscheduled break, suggesting she "
             "saw something.\n"
             "- You possess lighting console logs that corroborate the timing gaps.\n\n"
@@ -357,7 +366,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- Provide logs when asked formally or when presented with a warrant or "
             "authorization from Lila Chen."
         ),
-        voice="echo",
+        voice="ash",
     ),
 }
 

@@ -48,8 +48,8 @@ SMOKING_GUN_MAP: Dict[str, List[str]] = {
 EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
     "oil-trace": "Antique oil traces found at the crime scene or on the telescope mount",
     "burned-notebook": "A burned notebook fragment or threat list found in the incinerator",
-    "keycard-logs": "Specific rooftop keycard access logs showing only four entries after 10 PM",
-    "key-trail": "The maintenance key was lent from Amelia to Eddie, or from Eddie to Noah",
+    "keycard-logs": "Rooftop keycard access logs showing only four entry events after 10 PM: Holt (10:01), Tanaka (10:43), Mercer (11:08), Holt (11:44)",
+    "key-trail": "The maintenance-room key and engineering keycard (ENGR-0001) were lent from Amelia to Eddie, then pressured from Eddie to Noah",
     "power-outage": "Someone DELIBERATELY pulled the breaker to cause the outage (not just mentioning lights went out)",
     "encrypted-schedule": "Mercer's encrypted schedule or a surprise board vote to oust Noah",
     "financial-misconduct": "Noah's embezzlement or gambling debts",
@@ -78,7 +78,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "amelia-key-loan": {
         "npc_id": "amelia-reyes",
         "evidence_id": "key-trail",
-        "description": "Amelia admits she lent her maintenance key to Eddie Voss",
+        "description": "Amelia admits she lent her maintenance-room key and engineering keycard to Eddie Voss",
     },
     "amelia-breaker": {
         "npc_id": "amelia-reyes",
@@ -114,12 +114,12 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "noah-key-access": {
         "npc_id": "noah-sterling",
         "evidence_id": "key-trail",
-        "description": "Noah obtained the maintenance key through Eddie Voss, giving him rooftop access",
+        "description": "Noah obtained the maintenance-room key and engineering keycard (ENGR-0001) through Eddie Voss, giving him rooftop access",
     },
     "noah-cctv-gap": {
         "npc_id": "noah-sterling",
         "evidence_id": "surveillance",
-        "description": "CCTV footage gaps or witness sightings place Noah near the freight elevator or maintenance corridors during the blackout",
+        "description": "CCTV footage gaps or witness sightings place Noah near the freight elevator or on the B1 elevator lobby camera entering the service elevator lobby",
     },
     # Celeste Ward
     "celeste-affair": {
@@ -156,7 +156,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "gideon-saw-noah": {
         "npc_id": "gideon-holt",
         "evidence_id": "surveillance",
-        "description": "Gideon saw Noah Sterling slip toward the maintenance corridors right before the blackout",
+        "description": "Gideon saw Noah Sterling on the B1 elevator lobby camera entering the service elevator lobby right before the blackout",
     },
     # Dr. Mira Kline
     "mira-plagiarism": {
@@ -173,12 +173,12 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "eddie-key-loan": {
         "npc_id": "eddie-voss",
         "evidence_id": "key-trail",
-        "description": "Eddie borrowed Amelia's maintenance key to retrieve a toolkit",
+        "description": "Eddie borrowed Amelia's maintenance-room key and engineering keycard to retrieve a toolkit",
     },
     "eddie-gave-noah-key": {
         "npc_id": "eddie-voss",
         "evidence_id": "key-trail",
-        "description": "Noah Sterling pressured Eddie into handing over the maintenance key",
+        "description": "Noah Sterling pressured Eddie into handing over the maintenance-room key and engineering keycard",
     },
     # Priya Shah
     "priya-saw-noah": {
@@ -200,7 +200,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "marcus-noah-absence": {
         "npc_id": "marcus-vale",
         "evidence_id": "stage-timing",
-        "description": "Marcus's cue sheet shows Noah Sterling slipped away for roughly five minutes during the blackout",
+        "description": "Marcus's cue sheet shows Noah Sterling was absent for a 5-minute cue-sheet gap before the blackout (11:05-11:10 PM), and roughly 30 minutes total before reappearing at ~11:35 PM",
     },
     "marcus-celeste-break": {
         "npc_id": "marcus-vale",

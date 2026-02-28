@@ -11,7 +11,7 @@
 1. **Crime Scene Sweep (Rooftop Observatory)**
    - Find the smashed telescope mount with traces of rare antique oil.
    - Discover Mercer's burned notebook page in the incinerator (partial threat list).
-   - Collect rooftop keycard reader logs (only four accesses after 10 p.m.).
+   - Collect rooftop keycard reader logs (only four entry events to the observatory after 10 p.m.: Holt 10:01, Tanaka 10:43, Mercer 11:08, Holt 11:44).
 
 2. **Power Outage Reconstruction (Maintenance Level)**
    - Determine outage was manual: breaker pulled from inside maintenance room.
@@ -80,7 +80,7 @@
    - *Hidden Truth:* She orchestrated the anonymous tip that brought press to gala.
 
 ### Secondary Characters
-- **Eddie Voss – Junior Engineer & Amelia’s Protégé:** Amelia’s engineering protege who volunteered to tend the VIP bar tonight; holds borrowed maintenance key; nervous.
+- **Eddie Voss – Junior Engineer & Amelia’s Protégé:** Amelia’s engineering protege who volunteered to tend the VIP bar tonight; holds borrowed maintenance-room key and engineering keycard; nervous.
 - **Priya Shah – Investigative Journalist:** Received Mira’s tip; saw Noah near freight elevator.
 - **Marcus Vale – Stage Manager:** Can confirm Noah’s brief absence and Celeste’s performance gaps.
 
@@ -94,7 +94,7 @@
 ## Culprit & Resolution
 - **Murderer:** Noah Sterling.
 - **Motive:** Prevent public ousting and loss of fortune; secure control of Panopticon by eliminating Mercer.
-- **Method:** During blackout, Noah used borrowed maintenance key (through Amelia’s protégé) to access rooftop, waited for Mercer, bludgeoned him, then attempted to destroy evidence (incinerated notebook). Antique oil from display telescope transferred to his clothing.
+- **Method:** During blackout, Noah used borrowed engineering keycard and maintenance-room key (obtained through Amelia’s protégé) to access rooftop, waited for Mercer, bludgeoned him, then attempted to destroy evidence (incinerated notebook). Antique oil from display telescope transferred to his clothing.
 - **Critical Contradictions:**
   - Noah’s presence on rooftop despite alibi (oil evidence + Celeste testimony).
   - Maintenance key trail exposing access opportunity.

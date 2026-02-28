@@ -51,19 +51,19 @@
   {"timestamp":"2024-11-15T23:02:30","zone":"VIP-BAR","zone_label":"VIP Bar & Lounge","card_id":"VIP-0001","card_holder":"J. Mercer","card_type":"vip","access":"granted","direction":"exit"},
   {"timestamp":"2024-11-15T23:06:22","zone":"GUEST-7F","zone_label":"Guest Floor 7 (VIP)","card_id":"VIP-0001","card_holder":"J. Mercer","card_type":"vip","access":"granted","direction":"entry"},
   {"timestamp":"2024-11-15T23:08:02","zone":"ROOF-OBS","zone_label":"Rooftop Observatory","card_id":"VIP-0001","card_holder":"J. Mercer","card_type":"vip","access":"granted","direction":"entry"},
-  {"timestamp":"2024-11-15T23:09:33","zone":"FRT-ELEV","zone_label":"Freight Elevator","card_id":"VIP-0002","card_holder":"N. Sterling","card_type":"vip","access":"granted","direction":"entry"},
+  {"timestamp":"2024-11-15T23:09:33","zone":"FRT-ELEV","zone_label":"Freight Elevator","card_id":"ENGR-0001","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"entry"},
   {"timestamp":"2024-11-15T23:11:40","zone":"LIBR-MAIN","zone_label":"Hotel Library","card_id":"VIP-0006","card_holder":"M. Kline","card_type":"vip","access":"granted","direction":"exit"},
   {"timestamp":"2024-11-15T23:12:08","zone":"LIBR-MAIN","zone_label":"Hotel Library","card_id":"VIP-0006","card_holder":"M. Kline","card_type":"vip","access":"granted","direction":"entry"},
-  {"timestamp":"2024-11-15T23:13:22","zone":"SVC-ELEV","zone_label":"Service Elevator (B1)","card_id":"VIP-0002","card_holder":"N. Sterling","card_type":"vip","access":"granted","direction":"entry"},
+  {"timestamp":"2024-11-15T23:13:22","zone":"SVC-ELEV","zone_label":"Service Elevator (B1)","card_id":"ENGR-0001","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"entry"},
 
   {"timestamp":"2024-11-15T23:15:04","zone":"ALL","zone_label":"System Event","card_id":"SYSTEM","card_holder":"SYSTEM","card_type":"service","access":"system_offline","direction":"entry","note":"POWER FAILURE DETECTED — All keycard readers offline. Emergency lighting activated. Backup generator failed to engage primary access control."},
 
   {"timestamp":"2024-11-15T23:30:17","zone":"ALL","zone_label":"System Event","card_id":"SYSTEM","card_holder":"SYSTEM","card_type":"service","access":"system_restored","direction":"entry","note":"POWER RESTORED — Keycard access control systems rebooting. Full reader connectivity re-established. All zones returning to normal operation."},
 
   {"timestamp":"2024-11-15T23:31:02","zone":"CMD-CTR","zone_label":"Security Command Center","card_id":"STAFF-0012","card_holder":"G. Holt","card_type":"security","access":"granted","direction":"entry"},
-  {"timestamp":"2024-11-15T23:31:44","zone":"UTIL-CORR","zone_label":"Utility Corridor (B1)","card_id":"VIP-0002","card_holder":"N. Sterling","card_type":"vip","access":"granted","direction":"exit"},
+  {"timestamp":"2024-11-15T23:31:44","zone":"UTIL-CORR","zone_label":"Utility Corridor (B1)","card_id":"ENGR-0001","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"exit"},
   {"timestamp":"2024-11-15T23:32:30","zone":"BALL-MAIN","zone_label":"Grand Ballroom","card_id":"STAFF-0003","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"entry"},
-  {"timestamp":"2024-11-15T23:33:18","zone":"SVC-ELEV","zone_label":"Service Elevator (B1)","card_id":"VIP-0002","card_holder":"N. Sterling","card_type":"vip","access":"granted","direction":"entry"},
+  {"timestamp":"2024-11-15T23:33:18","zone":"SVC-ELEV","zone_label":"Service Elevator (B1)","card_id":"ENGR-0001","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"entry"},
   {"timestamp":"2024-11-15T23:34:05","zone":"SPEAK-LOUNGE","zone_label":"Speakeasy Lounge","card_id":"VIP-0005","card_holder":"C. Ward","card_type":"vip","access":"granted","direction":"entry"},
   {"timestamp":"2024-11-15T23:35:22","zone":"BALL-MAIN","zone_label":"Grand Ballroom","card_id":"VIP-0002","card_holder":"N. Sterling","card_type":"vip","access":"granted","direction":"entry"},
   {"timestamp":"2024-11-15T23:39:44","zone":"MAINT-LVL","zone_label":"Maintenance Level","card_id":"STAFF-0003","card_holder":"A. Reyes","card_type":"staff","access":"granted","direction":"entry"},

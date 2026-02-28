@@ -86,8 +86,8 @@ window.I18N = {
     // Outcome screen
     "outcome.correct_title": "Case Solved",
     "outcome.wrong_title": "Wrong Suspect",
-    "outcome.correct_text": "<p>Your accusation of <strong>{name}</strong> is correct.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. He pressured Eddie Voss into handing over the maintenance key earlier that evening, then used it during the blackout to access the rooftop observatory and bludgeon Mercer with the antique telescope mount.</p><p>The antique oil on his cufflinks, the key trail through Eddie Voss, Celeste's eyewitness testimony, and the encrypted board vote schedule all sealed the case.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
-    "outcome.wrong_text": "<p>You accused <strong>{name}</strong>, but they are not the killer.</p><p>The real murderer slips away as internal affairs questions your judgment. The case goes cold.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Keep investigating \u2014 look for contradictions in alibis, follow the physical evidence, and trace the maintenance key.</p>",
+    "outcome.correct_text": "<p>Your accusation of <strong>{name}</strong> is correct.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. He pressured Eddie Voss into handing over the maintenance-room key and engineering keycard earlier that evening, then used them during the blackout to access the rooftop observatory and bludgeon Mercer with the antique telescope mount.</p><p>The antique oil on his cufflinks, the key and keycard trail through Eddie Voss, Celeste's eyewitness testimony, and the encrypted board vote schedule all sealed the case.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
+    "outcome.wrong_text": "<p>You accused <strong>{name}</strong>, but they are not the killer.</p><p>The real murderer slips away as internal affairs questions your judgment. The case goes cold.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Keep investigating \u2014 look for contradictions in alibis, follow the physical evidence, and trace the maintenance-room key and engineering keycard.</p>",
     "outcome.restart": "New Investigation",
 
     // NPC roles
@@ -131,30 +131,30 @@ window.I18N = {
     "dossier.marcus-vale.bio": "Meticulous freelance stage manager responsible for lighting, sound cues, and technical production of the gala. Has worked events at the Lyric Atrium for two years. Tracks every performer's cue and logistics with operational precision. Stayed backstage coordinating the show during the outage.",
 
     // Discovery texts
-    "discovery.amelia-key-loan": "Amelia admits she lent her maintenance key to Eddie Voss earlier that evening to retrieve a misplaced toolkit.",
+    "discovery.amelia-key-loan": "Amelia admits she lent her maintenance-room key and engineering keycard to Eddie Voss earlier that evening to retrieve a misplaced toolkit.",
     "discovery.amelia-breaker": "Amelia deliberately pulled the breaker to search Mercer's suite for proof that he planned to sell the hotel.",
     "discovery.amelia-hotel-sale": "Amelia learned that Mercer intended to sell the Lyric Atrium Hotel to a developer, threatening the hotel's heritage.",
     "discovery.amelia-lockpick": "Lockpick marks on the maintenance room door suggest someone without the key forced entry \u2014 Amelia's key was already with Eddie.",
     "discovery.noah-embezzlement": "Financial records reveal Noah Sterling embezzled company funds to cover gambling debts. Mercer found out.",
     "discovery.noah-board-vote": "Mercer's encrypted schedule reveals he planned a surprise board vote to oust Noah from the company.",
     "discovery.noah-oil-cufflinks": "Antique oil residue was found on Noah's cufflinks \u2014 consistent with the oil from the telescope mount at the crime scene.",
-    "discovery.noah-key-access": "The maintenance key trail leads from Amelia to Eddie to Noah \u2014 giving Noah access to the rooftop during the blackout.",
-    "discovery.noah-cctv-gap": "CCTV footage gaps and witness sightings place Noah near the freight elevator and maintenance corridors during the blackout.",
+    "discovery.noah-key-access": "The maintenance-room key and engineering keycard trail leads from Amelia to Eddie to Noah \u2014 giving Noah access to the rooftop during the blackout.",
+    "discovery.noah-cctv-gap": "CCTV footage gaps and witness sightings place Noah near the freight elevator and on the B1 elevator lobby camera during the blackout.",
     "discovery.celeste-affair": "Celeste and Julian Mercer had a secret romantic relationship. He promised to free her from a predatory management contract.",
     "discovery.celeste-recordings": "Celeste possesses audio recordings of Mercer admitting to illegal surveillance tactics used in Panopticon.",
     "discovery.celeste-rooftop-witness": "Celeste saw a figure \u2014 recognizable as Noah Sterling \u2014 descending the atrium stairwell during the blackout.",
     "discovery.gideon-blackmail": "Mercer was blackmailing Gideon \u2014 his name appears on the burned notebook fragment's threat list.",
     "discovery.gideon-data-sales": "Gideon has been running a side business selling anonymized guest data from the hotel's systems.",
     "discovery.gideon-notebook": "The burned notebook fragment lists Gideon Holt as one of Mercer's blackmail targets.",
-    "discovery.gideon-saw-noah": "Gideon saw Noah Sterling slip toward the maintenance corridors right before the blackout began.",
+    "discovery.gideon-saw-noah": "Gideon saw Noah Sterling on the B1 elevator lobby camera entering the service elevator lobby right before the blackout began.",
     "discovery.mira-plagiarism": "Mercer plagiarized Dr. Kline's research for the Panopticon ethics framework. She planned to expose him publicly.",
     "discovery.mira-meeting": "Mira scheduled a private meeting with Mercer at 11:30 PM to demand a public admission. Mercer never showed \u2014 he was already dead.",
-    "discovery.eddie-key-loan": "Eddie Voss borrowed Amelia's maintenance key to retrieve a toolkit and forgot to return it immediately.",
-    "discovery.eddie-gave-noah-key": "Noah Sterling pressured Eddie into handing over the maintenance key at the VIP bar earlier that evening, promising favors.",
+    "discovery.eddie-key-loan": "Eddie Voss borrowed Amelia's maintenance-room key and engineering keycard to retrieve a toolkit and forgot to return them immediately.",
+    "discovery.eddie-gave-noah-key": "Noah Sterling pressured Eddie into handing over the maintenance-room key and engineering keycard at the VIP bar earlier that evening, promising favors.",
     "discovery.priya-saw-noah": "Priya witnessed Noah Sterling near the freight elevator shortly before the lights went out.",
     "discovery.priya-holt-argument": "Priya recorded snippets of an argument between Mercer and Gideon Holt earlier that evening.",
     "discovery.priya-mira-tip": "Dr. Mira Kline tipped off Priya about Mercer's ethics violations and arranged her attendance at the gala.",
-    "discovery.marcus-noah-absence": "Marcus's cue sheet shows Noah Sterling slipped away for roughly five minutes during the blackout.",
+    "discovery.marcus-noah-absence": "Marcus's cue sheet shows Noah Sterling was absent for a 5-minute gap before the blackout, and roughly 30 minutes total before reappearing.",
     "discovery.marcus-celeste-break": "Marcus noticed Celeste Ward took an unscheduled break during the blackout, suggesting she saw something.",
 
     // Conversation starters (3 per NPC)
