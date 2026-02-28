@@ -2371,10 +2371,24 @@
     return await res.json();
   }
 
+  // ── Mid-session token refresh ────────────────────────────────
+  /** Try to refresh the access token. Returns true if successful. */
+  async function tryRefreshAccessToken() {
+    if (!authUser?.refresh_token) return false;
+    try {
+      const refreshed = await authRefreshToken(authUser.refresh_token);
+      authUser = refreshed;
+      saveAuthTokens(refreshed);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   // ── Cloud state API calls ─────────────────────────────────────
   async function cloudSaveState(stateObj) {
     if (!authUser?.access_token) return;
-    const res = await fetch(`${API_BASE}/api/state/save`, {
+    let res = await fetch(`${API_BASE}/api/state/save`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2382,6 +2396,17 @@
       },
       body: JSON.stringify({ state: stateObj }),
     });
+    // Retry once with refreshed token on 401
+    if (res.status === 401 && await tryRefreshAccessToken()) {
+      res = await fetch(`${API_BASE}/api/state/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authUser.access_token}`,
+        },
+        body: JSON.stringify({ state: stateObj }),
+      });
+    }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.detail || `Save failed: HTTP ${res.status}`);
@@ -2391,9 +2416,15 @@
 
   async function cloudLoadState() {
     if (!authUser?.access_token) return null;
-    const res = await fetch(`${API_BASE}/api/state/load`, {
+    let res = await fetch(`${API_BASE}/api/state/load`, {
       headers: { Authorization: `Bearer ${authUser.access_token}` },
     });
+    // Retry once with refreshed token on 401
+    if (res.status === 401 && await tryRefreshAccessToken()) {
+      res = await fetch(`${API_BASE}/api/state/load`, {
+        headers: { Authorization: `Bearer ${authUser.access_token}` },
+      });
+    }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.detail || `Load failed: HTTP ${res.status}`);
@@ -2403,10 +2434,17 @@
 
   async function cloudDeleteState() {
     if (!authUser?.access_token) return;
-    await fetch(`${API_BASE}/api/state/delete`, {
+    let res = await fetch(`${API_BASE}/api/state/delete`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${authUser.access_token}` },
     });
+    // Retry once with refreshed token on 401
+    if (res.status === 401 && await tryRefreshAccessToken()) {
+      await fetch(`${API_BASE}/api/state/delete`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${authUser.access_token}` },
+      });
+    }
   }
 
   // ── Check if Supabase is configured on the server ─────────────
@@ -2627,6 +2665,7 @@
 
     // Logout
     logoutBtn.addEventListener("click", async () => {
+      await flushCloudSave(); // persist any pending state before clearing auth
       await authLogout();
       authUser = null;
       clearAuthTokens();
@@ -2659,6 +2698,7 @@
     const settingsLogoutBtn = document.getElementById("settings-logout-btn");
     if (settingsLogoutBtn) {
       settingsLogoutBtn.addEventListener("click", async () => {
+        await flushCloudSave(); // persist any pending state before clearing auth
         await authLogout();
         authUser = null;
         clearAuthTokens();
@@ -2919,7 +2959,7 @@
     if (!s) return;
     if (s.conversations) conversations = s.conversations;
     if (s.evidence) evidence = s.evidence;
-    if (s.activeNpcId) activeNpcId = s.activeNpcId;
+    if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
     if (s.discoveries) discoveries = s.discoveries;
     if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
     if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
@@ -2939,12 +2979,9 @@
   }
 
   function saveState() {
-    // Always save to localStorage (offline-first)
+    // Always save to localStorage (offline-first) — use buildStateObject for consistency
     try {
-      localStorage.setItem("echoes_state_v2", JSON.stringify({
-        conversations, evidence, activeNpcId, discoveries,
-        npcInterrogation, caseReadyPromptShown, briefingOpen, gameId,
-      }));
+      localStorage.setItem("echoes_state_v2", JSON.stringify(buildStateObject()));
     } catch {}
     // Schedule a debounced cloud save if logged in
     scheduleCloudSave();
@@ -2957,7 +2994,7 @@
       const s = JSON.parse(raw);
       if (s.conversations) conversations = s.conversations;
       if (s.evidence) evidence = s.evidence;
-      if (s.activeNpcId) activeNpcId = s.activeNpcId;
+      if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
       if (s.discoveries) discoveries = s.discoveries;
       if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
       if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
@@ -2974,6 +3011,7 @@
     discoveries = {};
     npcInterrogation = {};
     caseReadyPromptShown = false;
+    briefingOpen = true;
     activeNpcId = null;
     gameId = crypto.randomUUID();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
@@ -3049,16 +3087,19 @@
   let briefingOpen = true; // default: open on first visit
 
   async function init() {
-    const isNewGame = !localStorage.getItem("echoes_state_v2");
     loadState();
     seedStartingEvidence();
-    if (isNewGame) {
-      trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
-    }
     // Wait for cloud merge to finish (if any) before first render
     // so we always render with the latest cloud state
     if (_cloudMergePromise) {
       await _cloudMergePromise.catch(() => {});
+    }
+    // Check isNewGame AFTER cloud merge — a returning user on a new device
+    // will have no localStorage but WILL have a cloud save, so this avoids
+    // a false-positive "new game" analytics event.
+    const isNewGame = !conversations || Object.keys(conversations).length === 0;
+    if (isNewGame) {
+      trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
     }
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
@@ -3882,6 +3923,8 @@
   function leaveChat() {
     cancelResponse();
     if (voiceMode) exitVoiceMode();
+    activeNpcId = null;
+    saveState();
   }
   navToSuspects.addEventListener("click", () => {
     leaveChat();
