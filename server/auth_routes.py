@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Query
 from pydantic import BaseModel, Field
 
 from .supabase_client import get_supabase, is_supabase_configured
@@ -209,9 +209,13 @@ def _get_user_id_from_token(authorization: str | None) -> str:
 async def save_state(
     body: SaveStateRequest,
     authorization: str | None = Header(default=None),
+    token: str | None = Query(default=None),
 ):
     """Upsert the user's game state (single save slot per user)."""
     sb = _require_supabase()
+    # Accept token from query param (for sendBeacon which can't set headers)
+    if not authorization and token:
+        authorization = f"Bearer {token}"
     user_id = _get_user_id_from_token(authorization)
 
     try:

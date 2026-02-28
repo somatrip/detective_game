@@ -2447,6 +2447,22 @@
     }
   }
 
+  /** Fire-and-forget cloud save using sendBeacon (survives page close). */
+  function cloudSaveBeacon() {
+    if (!authUser?.access_token || !cloudSavePending) return;
+    try {
+      const payload = JSON.stringify({ state: buildStateObject() });
+      const blob = new Blob([payload], { type: "application/json" });
+      // sendBeacon can't set Authorization header, so pass token as query param
+      const url = `${API_BASE}/api/state/save?token=${encodeURIComponent(authUser.access_token)}`;
+      if (navigator.sendBeacon(url, blob)) {
+        cloudSavePending = false;
+      }
+    } catch (err) {
+      console.error("[cloud-save-beacon] Failed:", err);
+    }
+  }
+
   // ── Check if Supabase is configured on the server ─────────────
   async function checkSupabaseStatus() {
     try {
@@ -2460,16 +2476,19 @@
   }
 
   // ── Debounced cloud save (auto-save after changes) ────────────
+  let cloudSaveRetries = 0;
+  const MAX_CLOUD_RETRIES = 3;
+
   function scheduleCloudSave() {
     if (!authUser) return;
     cloudSavePending = true;
+    cloudSaveRetries = 0; // fresh user action resets retry count
     if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
     cloudSaveTimer = setTimeout(() => flushCloudSave(), 3000);
   }
 
   async function flushCloudSave() {
     if (!authUser || !cloudSavePending) return;
-    cloudSavePending = false;
     const indicator = document.getElementById("cloud-save-indicator");
     try {
       if (indicator) {
@@ -2478,6 +2497,9 @@
       }
       const stateObj = buildStateObject();
       await cloudSaveState(stateObj);
+      // Clear pending flag AFTER success (not before try)
+      cloudSavePending = false;
+      cloudSaveRetries = 0;
       if (indicator) {
         indicator.textContent = "Saved to cloud";
         indicator.className = "cloud-save-indicator saved";
@@ -2485,9 +2507,23 @@
       }
     } catch (err) {
       console.error("[cloud-save] Failed:", err);
-      if (indicator) {
-        indicator.textContent = "Cloud save failed";
-        indicator.className = "cloud-save-indicator error";
+      // cloudSavePending stays true — schedule retry with backoff
+      cloudSaveRetries++;
+      if (cloudSaveRetries <= MAX_CLOUD_RETRIES) {
+        const backoff = Math.min(1000 * Math.pow(2, cloudSaveRetries), 15000);
+        if (indicator) {
+          indicator.textContent = "Cloud save failed — retrying...";
+          indicator.className = "cloud-save-indicator error";
+        }
+        cloudSaveTimer = setTimeout(() => flushCloudSave(), backoff);
+      } else {
+        console.error("[cloud-save] Giving up after", MAX_CLOUD_RETRIES, "retries");
+        cloudSavePending = false;
+        cloudSaveRetries = 0;
+        if (indicator) {
+          indicator.textContent = "Cloud save failed";
+          indicator.className = "cloud-save-indicator error";
+        }
       }
     }
   }
@@ -2699,6 +2735,10 @@
     if (settingsLogoutBtn) {
       settingsLogoutBtn.addEventListener("click", async () => {
         await flushCloudSave(); // persist any pending state before clearing auth
+        // Leave chat BEFORE resetting state so saveState() saves the real state
+        if (chatScreen.classList.contains("active")) {
+          leaveChat();
+        }
         await authLogout();
         authUser = null;
         clearAuthTokens();
@@ -2707,10 +2747,6 @@
         // Close settings
         const settingsModal = document.getElementById("settings-modal");
         if (settingsModal) settingsModal.classList.remove("visible");
-        // Leave chat if in one
-        if (chatScreen.classList.contains("active")) {
-          leaveChat();
-        }
         // Return to title card
         chatScreen.classList.remove("active");
         hubScreen.classList.remove("active");
@@ -2729,9 +2765,48 @@
         await cloudSaveState(buildStateObject());
         return;
       }
-      // Cloud save exists — it is the source of truth. Apply it fully.
-      applyStateObject(cloudData.state);
-      saveState(); // persist to localStorage so local matches cloud
+
+      const localState = buildStateObject();
+      const cloudState = cloudData.state;
+
+      // Compare recency: cloud updated_at (server-side trigger) vs local savedAt
+      const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
+      const localTime = localState.savedAt ? new Date(localState.savedAt).getTime() : 0;
+
+      // Content richness as tiebreaker / backward-compat for old saves without savedAt
+      const localRichness = stateRichness(localState);
+      const cloudRichness = stateRichness(cloudState);
+
+      let useCloud;
+      if (localRichness === 0 && cloudRichness > 0) {
+        // Fresh device / cleared local — cloud is clearly better
+        useCloud = true;
+      } else if (cloudRichness === 0 && localRichness > 0) {
+        // Cloud is empty but local has data — keep local
+        useCloud = false;
+      } else if (cloudTime && localTime) {
+        // Both have timestamps — newer wins, but within 5s use richness as tiebreaker
+        const drift = Math.abs(cloudTime - localTime);
+        if (drift < 5000) {
+          useCloud = cloudRichness > localRichness;
+        } else {
+          useCloud = cloudTime > localTime;
+        }
+      } else {
+        // Missing timestamp(s) — fall back to richness
+        useCloud = cloudRichness >= localRichness;
+      }
+
+      if (useCloud) {
+        console.log("[cloud-merge] Using cloud state (cloud=%d, local=%d items)",
+                    cloudRichness, localRichness);
+        applyStateObject(cloudState);
+        saveState(); // persist to localStorage so local matches cloud
+      } else {
+        console.log("[cloud-merge] Keeping local state (local=%d, cloud=%d items)",
+                    localRichness, cloudRichness);
+        await cloudSaveState(localState);
+      }
     } catch (err) {
       console.error("[cloud-load] Failed to merge cloud state:", err);
     }
@@ -2934,6 +3009,19 @@
 
   /* ── Helpers ────────────────────────────────────────────── */
 
+  /** Count total conversation messages + evidence items as a state richness proxy. */
+  function stateRichness(s) {
+    if (!s) return 0;
+    let count = 0;
+    if (s.conversations) {
+      for (const msgs of Object.values(s.conversations)) {
+        count += Array.isArray(msgs) ? msgs.length : 0;
+      }
+    }
+    if (Array.isArray(s.evidence)) count += s.evidence.length;
+    return count;
+  }
+
   /** Build a plain object from current game state (used for both localStorage and cloud). */
   function buildStateObject() {
     return {
@@ -2951,6 +3039,7 @@
       audioEnabled,
       language: window.currentLang || "en",
       gameId,
+      savedAt: new Date().toISOString(),
     };
   }
 
@@ -3026,12 +3115,13 @@
   }
 
   /** Full restart: wipe local state, delete cloud save, start new game session. */
-  function clearState() {
+  async function clearState() {
     resetLocalState();
     localStorage.setItem("echoes_game_id", gameId);
     trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
     if (authUser) {
-      cloudDeleteState().catch(err => console.error("[cloud] Failed to delete:", err));
+      try { await cloudDeleteState(); }
+      catch (err) { console.error("[cloud] Failed to delete:", err); }
     }
   }
 
@@ -4022,14 +4112,16 @@
   cancelAccuse.addEventListener("click", closeAccusationModal);
   confirmAccuse.addEventListener("click", resolveAccusation);
 
-  restartBtn.addEventListener("click", () => {
-    clearState();
+  restartBtn.addEventListener("click", async () => {
+    restartBtn.disabled = true;
+    await clearState();
     briefingOpen = true;
     outcomeScreen.classList.remove("visible");
     chatScreen.classList.remove("active");
     hubScreen.classList.remove("active");
     chatMessages.innerHTML = "";
-    init();
+    await init();
+    restartBtn.disabled = false;
   });
 
   // Close modal on backdrop click
@@ -4732,16 +4824,27 @@
     }
   });
 
-  // Flush cloud save when tab becomes hidden (more reliable than beforeunload)
+  // Flush cloud save when tab becomes hidden — use keepalive fetch for reliability
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && authUser && cloudSavePending) {
-      flushCloudSave();
+    if (document.visibilityState === "hidden" && authUser?.access_token && cloudSavePending) {
+      try {
+        const stateObj = buildStateObject();
+        fetch(`${API_BASE}/api/state/save`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authUser.access_token}`,
+          },
+          body: JSON.stringify({ state: stateObj }),
+          keepalive: true, // survives page hide
+        }).then(() => { cloudSavePending = false; }).catch(() => {});
+      } catch {}
     }
   });
-  // Also try on beforeunload as a fallback
+  // beforeunload: use sendBeacon as last resort (guaranteed to be queued)
   window.addEventListener("beforeunload", () => {
     if (authUser && cloudSavePending) {
-      flushCloudSave();
+      cloudSaveBeacon();
     }
   });
 
