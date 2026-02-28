@@ -2899,6 +2899,17 @@
   let sending = false;
   let accusationTarget = null;
 
+  /* ── Gameplay tracking ─────────────────────────────────── */
+  let sessionId = crypto.randomUUID();
+
+  function trackEvent(endpoint, payload) {
+    fetch(`${API_BASE}/api/track/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});  // fire-and-forget
+  }
+
   /* ── Canonical evidence for endgame trigger ────────── */
   const CANONICAL_EVIDENCE = [
     "oil-trace", "burned-notebook", "keycard-logs", "key-trail",
@@ -3046,6 +3057,8 @@
     npcInterrogation = {};
     caseReadyPromptShown = false;
     activeNpcId = null;
+    sessionId = crypto.randomUUID();
+    trackEvent("session", { session_id: sessionId, language: window.currentLang || "en" });
     localStorage.removeItem("echoes_state_v2");
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
     audioCache.clear();
@@ -3110,6 +3123,7 @@
   async function init() {
     loadState();
     seedStartingEvidence();
+    trackEvent("session", { session_id: sessionId, language: window.currentLang || "en" });
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
       const data = await res.json();
@@ -3423,6 +3437,7 @@
           pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
           rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
           player_evidence_ids: evidence.map(e => e.id),
+          session_id: sessionId,
         }),
         signal: chatAbortController?.signal,
       });
@@ -3674,6 +3689,7 @@
           source: npcId,
         });
         found = true;
+        trackEvent("discovery", { session_id: sessionId, evidence_id: id, npc_id: npcId });
       }
 
       detectDiscoveries(id, npcId);
@@ -3869,6 +3885,13 @@
     outcomeCard.className = "outcome-card " + (correct ? "correct" : "wrong");
 
     const interviewCount = Object.keys(conversations).filter(k => conversations[k].length > 0).length;
+    trackEvent("accusation", {
+      session_id: sessionId,
+      target_npc_id: target,
+      correct,
+      evidence_count: evidence.length,
+      interview_count: interviewCount,
+    });
     if (correct) {
       outcomeTitle.textContent = t("outcome.correct_title");
       outcomeText.innerHTML = t("outcome.correct_text", {

@@ -43,6 +43,10 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Evidence IDs the player has collected so far.",
     )
+    session_id: str | None = Field(
+        default=None,
+        description="Client-generated session UUID for gameplay tracking.",
+    )
 
 
 class ChatResponse(BaseModel):

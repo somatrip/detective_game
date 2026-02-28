@@ -22,6 +22,7 @@ from .llm.base import ChatMessage, LLMClient
 from .npc_registry import WORLD_CONTEXT_PROMPT, get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
 from .auth_routes import router as auth_router, state_router
+from .tracking_routes import router as tracking_router, log_chat_event
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +63,7 @@ app.add_middleware(
 # ── Supabase auth & state routers ─────────────────────────────────────────
 app.include_router(auth_router)
 app.include_router(state_router)
+app.include_router(tracking_router)
 
 
 async def get_llm_client() -> LLMClient:
@@ -252,7 +254,23 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
-    # ── Step 6: Return combined response ───────────────────────────────
+    # ── Step 6: Track & return combined response ────────────────────────
+    if request.session_id:
+        log_chat_event(
+            session_id=request.session_id,
+            npc_id=request.npc_id,
+            player_message=request.message,
+            npc_reply=clean_reply,
+            tactic_type=tactic_type,
+            evidence_strength=evidence_strength,
+            pressure=interrogation_result["pressure"],
+            rapport=interrogation_result["rapport"],
+            pressure_band=interrogation_result["pressure_band"],
+            rapport_band=interrogation_result["rapport_band"],
+            expression=expression,
+            evidence_ids=evidence_ids,
+        )
+
     log.info("[chat] Step 6: returning response for npc=%s", request.npc_id)
     return ChatResponse(
         reply=clean_reply,
