@@ -3370,6 +3370,7 @@
           pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
           rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
           player_evidence_ids: evidence.map(e => e.id),
+          player_discovery_ids: Object.values(discoveries).flat().map(d => d.id),
           session_id: gameId,
         }),
         signal: chatAbortController?.signal,
@@ -3402,8 +3403,9 @@
         speakText(data.reply, activeNpcId, cacheKey);
       }
 
-      // Process evidence
+      // Process evidence and discoveries
       detectEvidence(data.evidence_ids || [], activeNpcId);
+      detectNewDiscoveries(data.discovery_ids || [], activeNpcId, data.discovery_summaries || {});
 
       // Update expression
       if (data.expression) {
@@ -3474,59 +3476,52 @@
     "stage-timing":         { label: "Stage Timing Gaps" },
   };
 
-  const DISCOVERY_MAP = [
-    /* Amelia Reyes */
-    { evidenceId: "key-trail",          npcId: "amelia-reyes",   discoveryId: "amelia-key-loan",       textKey: "discovery.amelia-key-loan" },
-    { evidenceId: "power-outage",       npcId: "amelia-reyes",   discoveryId: "amelia-breaker",        textKey: "discovery.amelia-breaker" },
-    { evidenceId: "hotel-sale",         npcId: "amelia-reyes",   discoveryId: "amelia-hotel-sale",     textKey: "discovery.amelia-hotel-sale" },
-    { evidenceId: "lockpick-marks",     npcId: "amelia-reyes",   discoveryId: "amelia-lockpick",       textKey: "discovery.amelia-lockpick" },
-    /* Noah Sterling */
-    { evidenceId: "financial-misconduct", npcId: "noah-sterling", discoveryId: "noah-embezzlement",    textKey: "discovery.noah-embezzlement" },
-    { evidenceId: "encrypted-schedule", npcId: "noah-sterling",  discoveryId: "noah-board-vote",       textKey: "discovery.noah-board-vote" },
-    { evidenceId: "oil-cufflinks",      npcId: "noah-sterling",  discoveryId: "noah-oil-cufflinks",    textKey: "discovery.noah-oil-cufflinks" },
-    { evidenceId: "key-trail",          npcId: "noah-sterling",  discoveryId: "noah-key-access",       textKey: "discovery.noah-key-access" },
-    { evidenceId: "surveillance",       npcId: "noah-sterling",  discoveryId: "noah-cctv-gap",         textKey: "discovery.noah-cctv-gap" },
-    /* Celeste Ward */
-    { evidenceId: "secret-affair",      npcId: "celeste-ward",   discoveryId: "celeste-affair",        textKey: "discovery.celeste-affair" },
-    { evidenceId: "audio-recording",    npcId: "celeste-ward",   discoveryId: "celeste-recordings",    textKey: "discovery.celeste-recordings" },
-    { evidenceId: "surveillance",       npcId: "celeste-ward",   discoveryId: "celeste-rooftop-witness", textKey: "discovery.celeste-rooftop-witness" },
-    /* Gideon Holt */
-    { evidenceId: "blackmail",          npcId: "gideon-holt",    discoveryId: "gideon-blackmail",      textKey: "discovery.gideon-blackmail" },
-    { evidenceId: "data-sales",         npcId: "gideon-holt",    discoveryId: "gideon-data-sales",     textKey: "discovery.gideon-data-sales" },
-    { evidenceId: "burned-notebook",    npcId: "gideon-holt",    discoveryId: "gideon-notebook",       textKey: "discovery.gideon-notebook" },
-    { evidenceId: "surveillance",       npcId: "gideon-holt",    discoveryId: "gideon-saw-noah",       textKey: "discovery.gideon-saw-noah" },
-    /* Dr. Mira Kline */
-    { evidenceId: "plagiarism",         npcId: "mira-kline",     discoveryId: "mira-plagiarism",       textKey: "discovery.mira-plagiarism" },
-    { evidenceId: "encrypted-schedule", npcId: "mira-kline",     discoveryId: "mira-meeting",          textKey: "discovery.mira-meeting" },
-    /* Eddie Voss */
-    { evidenceId: "key-trail",          npcId: "eddie-voss",     discoveryId: "eddie-key-loan",        textKey: "discovery.eddie-key-loan" },
-    { evidenceId: "key-trail",          npcId: "eddie-voss",     discoveryId: "eddie-gave-noah-key",   textKey: "discovery.eddie-gave-noah-key" },
-    /* Priya Shah */
-    { evidenceId: "surveillance",       npcId: "priya-shah",     discoveryId: "priya-saw-noah",        textKey: "discovery.priya-saw-noah" },
-    { evidenceId: "blackmail",          npcId: "priya-shah",     discoveryId: "priya-holt-argument",   textKey: "discovery.priya-holt-argument" },
-    { evidenceId: "plagiarism",         npcId: "priya-shah",     discoveryId: "priya-mira-tip",        textKey: "discovery.priya-mira-tip" },
-    /* Marcus Vale */
-    { evidenceId: "stage-timing",       npcId: "marcus-vale",    discoveryId: "marcus-noah-absence",   textKey: "discovery.marcus-noah-absence" },
-    { evidenceId: "stage-timing",       npcId: "marcus-vale",    discoveryId: "marcus-celeste-break",  textKey: "discovery.marcus-celeste-break" },
-  ];
+  /* Maps discovery IDs to their parent evidence category.
+     Mirrors DISCOVERY_CATALOG on the server. */
+  const DISCOVERY_EVIDENCE_MAP = {
+    "amelia-key-loan": "key-trail",       "amelia-breaker": "power-outage",
+    "amelia-hotel-sale": "hotel-sale",     "amelia-lockpick": "lockpick-marks",
+    "noah-embezzlement": "financial-misconduct", "noah-board-vote": "encrypted-schedule",
+    "noah-oil-cufflinks": "oil-cufflinks", "noah-key-access": "key-trail",
+    "noah-cctv-gap": "surveillance",
+    "celeste-affair": "secret-affair",     "celeste-recordings": "audio-recording",
+    "celeste-rooftop-witness": "surveillance",
+    "gideon-blackmail": "blackmail",       "gideon-data-sales": "data-sales",
+    "gideon-notebook": "burned-notebook",  "gideon-saw-noah": "surveillance",
+    "mira-plagiarism": "plagiarism",       "mira-meeting": "encrypted-schedule",
+    "eddie-key-loan": "key-trail",         "eddie-gave-noah-key": "key-trail",
+    "priya-saw-noah": "surveillance",      "priya-holt-argument": "blackmail",
+    "priya-mira-tip": "plagiarism",
+    "marcus-noah-absence": "stage-timing", "marcus-celeste-break": "stage-timing",
+  };
 
-  function detectDiscoveries(newEvidenceId, npcId) {
+  /**
+   * Process new discoveries from the server's discovery-level detection.
+   * Each discovery fires independently with an LLM-generated summary.
+   */
+  function detectNewDiscoveries(discoveryIds, npcId, discoverySummaries) {
     const newTexts = [];
 
-    for (const mapping of DISCOVERY_MAP) {
-      if (mapping.evidenceId !== newEvidenceId) continue;
-      if (mapping.npcId !== npcId) continue;
-      if (!discoveries[mapping.npcId]) discoveries[mapping.npcId] = [];
-      if (discoveries[mapping.npcId].find(d => d.id === mapping.discoveryId)) continue;
+    for (const did of discoveryIds) {
+      const evidenceId = DISCOVERY_EVIDENCE_MAP[did];
+      if (!evidenceId) continue;
+      if (!discoveries[npcId]) discoveries[npcId] = [];
+      if (discoveries[npcId].find(d => d.id === did)) continue;
 
-      discoveries[mapping.npcId].push({
-        id: mapping.discoveryId,
-        text: mapping.textKey,
-        evidenceId: mapping.evidenceId,
+      // Use LLM summary if available; fall back to pre-written i18n text
+      const summary = discoverySummaries[did];
+      const fallbackKey = "discovery." + did;
+      const displayText = summary || t(fallbackKey);
+
+      discoveries[npcId].push({
+        id: did,
+        text: summary || fallbackKey,  // Store literal summary or i18n key as fallback
+        evidenceId: evidenceId,
         timestamp: Date.now(),
         isNew: true,
       });
-      newTexts.push(t(mapping.textKey));
+      newTexts.push(displayText);
+      trackEvent("discovery", { session_id: gameId, evidence_id: evidenceId, npc_id: npcId, discovery_id: did });
     }
 
     if (newTexts.length > 0) {
@@ -3622,10 +3617,7 @@
           source: npcId,
         });
         found = true;
-        trackEvent("discovery", { session_id: gameId, evidence_id: id, npc_id: npcId });
       }
-
-      detectDiscoveries(id, npcId);
     }
 
     if (found) {
@@ -3645,11 +3637,12 @@
   /** Find collected discoveries linked to an evidence ID. */
   function getDiscoveriesForEvidence(evidenceId) {
     const results = [];
-    for (const mapping of DISCOVERY_MAP) {
-      if (mapping.evidenceId !== evidenceId) continue;
-      const npcDiscs = discoveries[mapping.npcId] || [];
-      const found = npcDiscs.find(d => d.id === mapping.discoveryId);
-      if (found) results.push({ ...found, npcId: mapping.npcId });
+    for (const [npcId, discs] of Object.entries(discoveries)) {
+      for (const d of discs) {
+        if (d.evidenceId === evidenceId) {
+          results.push({ ...d, npcId });
+        }
+      }
     }
     return results;
   }
@@ -3677,7 +3670,9 @@
     if (linkedDisc.length > 0) {
       html += `<div class="clue-discoveries">`;
       for (const d of linkedDisc) {
-        html += `<div class="clue-discovery-item">${escapeHtml(t(d.text))}</div>`;
+        // t() returns the key as-is when not found, so literal summaries pass through
+        const displayText = t(d.text);
+        html += `<div class="clue-discovery-item">${escapeHtml(displayText)}</div>`;
       }
       html += `</div>`;
     }

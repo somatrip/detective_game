@@ -236,21 +236,25 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     # Strip any stray tags the LLM may have produced out of habit
     clean_reply = _strip_stray_tags(raw_reply)
 
-    # ── Step 5: Detect evidence & expression (secondary LLM) ───────────
-    log.info("[chat] Step 5: detecting evidence & expression")
+    # ── Step 5: Detect discoveries & expression (secondary LLM) ────────
+    log.info("[chat] Step 5: detecting discoveries & expression")
     try:
         detection = await detect_evidence(
             npc_response=clean_reply,
             npc_id=request.npc_id,
-            already_collected=list(request.player_evidence_ids),
+            already_collected=list(request.player_discovery_ids),
             player_message=request.message,
+            language=request.language,
         )
     except Exception as exc:
         log.exception("[chat] Step 5 FAILED: detect_evidence")
         raise HTTPException(status_code=502, detail=f"Evidence detector error: {exc}") from exc
     evidence_ids: List[str] = detection["evidence_ids"]
+    discovery_ids: List[str] = detection["discovery_ids"]
+    discovery_summaries: dict = detection.get("discovery_summaries", {})
     expression: str = detection["expression"]
-    log.info("[chat] Step 5 result: evidence=%s expression=%s", evidence_ids, expression)
+    log.info("[chat] Step 5 result: discoveries=%s evidence=%s expression=%s",
+             discovery_ids, evidence_ids, expression)
 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
@@ -277,6 +281,8 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
         npc_id=request.npc_id,
         history=history,
         evidence_ids=evidence_ids,
+        discovery_ids=discovery_ids,
+        discovery_summaries=discovery_summaries,
         expression=expression,
         pressure=interrogation_result["pressure"],
         rapport=interrogation_result["rapport"],

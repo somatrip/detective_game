@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Literal, Sequence
+from typing import Dict, List, Literal, Sequence
 
 from pydantic import BaseModel, Field
 
@@ -43,6 +43,10 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Evidence IDs the player has collected so far.",
     )
+    player_discovery_ids: List[str] = Field(
+        default_factory=list,
+        description="Discovery IDs the player has already collected.",
+    )
     session_id: str | None = Field(
         default=None,
         description="Client-generated session UUID for gameplay tracking.",
@@ -57,7 +61,15 @@ class ChatResponse(BaseModel):
     history: List[ChatTurn]
     evidence_ids: List[str] = Field(
         default_factory=list,
-        description="Evidence IDs the NPC revealed in this reply.",
+        description="Evidence category IDs derived from discoveries revealed in this reply.",
+    )
+    discovery_ids: List[str] = Field(
+        default_factory=list,
+        description="Specific discovery IDs the NPC revealed in this reply.",
+    )
+    discovery_summaries: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Map from discovery_id to a faithful 1-sentence summary of what the NPC revealed.",
     )
     expression: str = Field(
         default="neutral",
