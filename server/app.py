@@ -196,6 +196,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
     system_messages: List[ChatMessage] = [
         {"role": "system", "content": WORLD_CONTEXT_PROMPT},
+    ]
+    if npc_profile.timeline:
+        system_messages.append({"role": "system", "content": npc_profile.timeline})
+    system_messages += [
         {"role": "system", "content": npc_profile.system_prompt},
         {"role": "system", "content": interrogation_prompt},
     ]
