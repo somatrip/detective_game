@@ -2,9 +2,8 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/health", "destination": "/api/index.py" },
-    { "source": "/portraits/(.*)", "destination": "/web/portraits/$1" },
+    { "source": "/cases/(.*)", "destination": "/web/cases/$1" },
     { "source": "/icons/(.*)", "destination": "/web/icons/$1" },
-    { "source": "/data/(.*)", "destination": "/web/data/$1" },
     { "source": "/i18n.js", "destination": "/web/i18n.js" },
     { "source": "/(.*)", "destination": "/web/index.html" }
   ]
