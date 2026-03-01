@@ -3599,7 +3599,7 @@
         // Distinguish network errors from server errors
         const isNetwork = err instanceof TypeError && err.message.includes("fetch");
         const displayMsg = isNetwork
-          ? "Cannot reach server — is it running on port 8000?"
+          ? "Cannot reach server — please try again."
           : err.message;
         console.error("[chat] Request failed:", err);
         const errDiv = document.createElement("div");

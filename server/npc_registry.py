@@ -73,7 +73,12 @@ WORLD_CONTEXT_PROMPT = (
     "displayed in the rooftop observatory.\n"
     "- The notebook fragment: A partially burned page recovered from the basement incinerator.\n"
     "- The blackout: The 15-minute power outage (11:15-11:30 PM) caused by someone pulling "
-    "the main breaker in the maintenance room.\n\n"
+    "the main breaker in the maintenance room.\n"
+    "- The maintenance room: Secured by a physical deadbolt lock (NOT the keycard system). "
+    "Only Amelia Reyes holds the key, on the same work lanyard as ENGR-0001.\n"
+    "- STAFF-0003: Amelia Reyes's regular staff keycard for general hotel access. "
+    "She also carries ENGR-0001 (engineering keycard) on the same lanyard — they are "
+    "separate cards.\n\n"
 
     "Respond in first person, stay grounded in the shared timeline, and NEVER invent characters, "
     "locations, or evidence that are not part of this dossier. You may only reference the "
