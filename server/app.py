@@ -14,12 +14,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import AsyncOpenAI
 
+from .cases import get_active_case, load_case
 from .config import settings
 from .interrogation import build_interrogation_context, process_turn
 from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import create_llm_client
 from .llm.base import ChatMessage, LLMClient
-from .npc_registry import WORLD_CONTEXT_PROMPT, get_npc_profile, list_npcs
+from .npc_registry import get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
 from .auth_routes import router as auth_router, state_router
 from .tracking_routes import router as tracking_router, log_chat_event
@@ -33,7 +34,14 @@ log = logging.getLogger(__name__)
 
 _WEB_DIR = pathlib.Path(__file__).resolve().parent.parent / "web"
 
-app = FastAPI(title="Echoes in the Atrium Backend", version="0.1.0")
+app = FastAPI(title="Detective Game Backend", version="0.1.0")
+
+# ── Load the active case at startup ───────────────────────────────────────
+
+@app.on_event("startup")
+async def _load_case() -> None:
+    case = load_case(settings.case_id)
+    log.info("Loaded case '%s' (%s)", case.case_id, case.title)
 
 
 @app.exception_handler(Exception)
@@ -196,7 +204,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     # ── Step 4: Generate NPC response (main LLM) ───────────────────────
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
     system_messages: List[ChatMessage] = [
-        {"role": "system", "content": WORLD_CONTEXT_PROMPT},
+        {"role": "system", "content": get_active_case().world_context_prompt},
     ]
     if npc_profile.timeline:
         system_messages.append({"role": "system", "content": npc_profile.timeline})

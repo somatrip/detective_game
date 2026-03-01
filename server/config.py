@@ -62,6 +62,12 @@ class Settings(BaseSettings):
         description="Cheaper Anthropic model for turn classification and evidence detection.",
     )
 
+    # ── Case ──────────────────────────────────────────────────────────────
+    case_id: str = Field(
+        default="echoes_in_the_atrium",
+        description="ID of the detective case to load at startup.",
+    )
+
     # ── Supabase ──────────────────────────────────────────────────────────
     supabase_url: str | None = Field(
         default=None,

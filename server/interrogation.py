@@ -78,18 +78,6 @@ ARCHETYPES: Dict[str, ArchetypeProfile] = {
     ),
 }
 
-#: Maps each NPC to their archetype.
-NPC_ARCHETYPE_MAP: Dict[str, str] = {
-    "lila-chen":     "professional_fixer",
-    "amelia-reyes":  "professional_fixer",
-    "noah-sterling": "proud_executive",
-    "celeste-ward":  "anxious_insider",
-    "matthias-holt": "professional_fixer",
-    "mira-kline":    "proud_executive",
-    "eddie-voss":    "anxious_insider",
-    "priya-shah":    "professional_fixer",
-    "matthew-vale":  "anxious_insider",
-}
 
 # ---------------------------------------------------------------------------
 # Base deltas and multipliers
@@ -226,7 +214,8 @@ def process_turn(
         pressure, rapport, pressure_band, rapport_band,
         archetype_id, delta_pressure, delta_rapport, peak_pressure
     """
-    archetype_id = NPC_ARCHETYPE_MAP.get(npc_id, "professional_fixer")
+    from .cases import get_active_case
+    archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES[archetype_id]
 
     delta_p, delta_r = compute_deltas(tactic_type, evidence_strength, archetype)
@@ -320,7 +309,8 @@ def build_interrogation_context(
     """Build the system-prompt paragraph injected per turn."""
     p_band = pressure_band(pressure_val)
     r_band = rapport_band(rapport_val)
-    archetype_id = NPC_ARCHETYPE_MAP.get(npc_id, "professional_fixer")
+    from .cases import get_active_case
+    archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES[archetype_id]
 
     lines = [
@@ -364,6 +354,5 @@ __all__ = [
     "build_interrogation_context",
     "pressure_band",
     "rapport_band",
-    "NPC_ARCHETYPE_MAP",
     "ARCHETYPES",
 ]

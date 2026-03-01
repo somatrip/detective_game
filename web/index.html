@@ -2044,14 +2044,7 @@
             </h3>
           </button>
           <div class="caseboard-briefing-body" id="cb-briefing-body">
-            <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of the Panopticon surveillance startup — found dead in the hotel's rooftop observatory.</p>
-            <p data-i18n="intro.time_of_death" data-i18n-html><strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.</p>
-            <p data-i18n="intro.body_discovered" data-i18n-html><strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.</p>
-            <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
-            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> The murder weapon &mdash; an antique telescope mount &mdash; was found smashed beside the body. Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>&lsquo;Matt&rsquo;</em> is legible. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
-            <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
-            <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. She is your trusted partner.</p>
-            <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
+            <!-- Briefing paragraphs are generated dynamically from CASE.briefingKeys -->
           </div>
         </div>
         <div class="caseboard-section">
@@ -2311,6 +2304,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="i18n.js?v=13"></script>
+<script src="cases/echoes-in-atrium/case.js"></script>
+<script src="cases/echoes-in-atrium/i18n-en.js"></script>
+<script src="cases/echoes-in-atrium/i18n-sr.js"></script>
 <script>
 /* ================================================================
    ECHOES IN THE ATRIUM — Game Frontend
@@ -2318,13 +2314,22 @@
 (() => {
   "use strict";
 
+  const CASE = window.CASE;
+  const NPC_META = CASE.npcMeta;
+  const EVIDENCE_CATALOG = CASE.evidenceCatalog;
+  const DISCOVERY_EVIDENCE_MAP = CASE.discoveryEvidenceMap;
+  const EVIDENCE_GROUPS = CASE.evidenceGroups;
+  const STARTING_EVIDENCE = CASE.startingEvidence;
+  const CANONICAL_EVIDENCE = CASE.canonicalEvidence;
+  const PARTNER_NPC_ID = CASE.partnerNpcId;
+  const CULPRIT_ID = CASE.culpritNpcId;
+
   // Create toast container dynamically (avoids HTML parser issues)
   const _toastContainer = document.createElement("div");
   _toastContainer.id = "discovery-toast-container";
   document.body.appendChild(_toastContainer);
 
   const API_BASE = window.location.origin;
-  const CULPRIT_ID = "noah-sterling";
 
   /* ══════════════════════════════════════════════════════════════
      AUTH & CLOUD SAVE MODULE
@@ -2878,24 +2883,11 @@
      END AUTH MODULE
      ══════════════════════════════════════════════════════════════ */
 
-  /* ── NPC metadata (initials & order; roles come from i18n) ── */
-  const NPC_META = {
-    "lila-chen":     { initials: "LC", order: 0 },
-    "amelia-reyes":  { initials: "AR", order: 1 },
-    "noah-sterling": { initials: "NS", order: 2 },
-    "celeste-ward":  { initials: "CW", order: 3 },
-    "matthias-holt": { initials: "MH", order: 4 },
-    "mira-kline":    { initials: "MK", order: 5 },
-    "eddie-voss":    { initials: "EV", order: 6 },
-    "priya-shah":    { initials: "PS", order: 7 },
-    "matthew-vale":  { initials: "MV", order: 8 },
-  };
-
   const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
   let currentExpression = {};  // npcId → last known expression
 
   function portraitUrl(npcId, expression = "neutral") {
-    return `portraits/${npcId}/${expression}.webp`;
+    return `${CASE.portraitBasePath}/${npcId}/${expression}.webp`;
   }
 
   /** Build an <img> element for a portrait, falling back to initials on error. */
@@ -2933,9 +2925,9 @@
     const iconR  = document.getElementById("gauge-rapport-icon");
     if (!gaugeP || !gaugeR) return;
 
-    // Lila: hide gauges, show hint button; suspects: show gauges, hide hint
+    // Partner: hide gauges, show hint button; suspects: show gauges, hide hint
     const hintBtn = document.getElementById("lila-hint-btn");
-    if (npcId === "lila-chen") {
+    if (npcId === PARTNER_NPC_ID) {
       gaugeP.style.display = "none";
       gaugeR.style.display = "none";
       if (hintBtn) hintBtn.classList.add("visible");
@@ -3001,12 +2993,6 @@
       body: JSON.stringify(payload),
     }).catch(() => {});  // fire-and-forget
   }
-
-  /* ── Canonical evidence for endgame trigger ────────── */
-  const CANONICAL_EVIDENCE = [
-    "burned-notebook", "keycard-logs", "key-trail",
-    "financial-misconduct", "encrypted-schedule", "surveillance",
-  ];
 
   /* ── Voice State ─────────────────────────────────── */
   let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
@@ -3091,6 +3077,7 @@
   /** Build a plain object from current game state (used for both localStorage and cloud). */
   function buildStateObject() {
     return {
+      caseId: CASE.id,
       conversations,
       evidence,
       activeNpcId,
@@ -3114,6 +3101,8 @@
   /** Apply a state object (from cloud or localStorage) to the running game variables. */
   function applyStateObject(s) {
     if (!s) return;
+    // Skip state from a different case
+    if (s.caseId && s.caseId !== CASE.id) return;
     if (s.conversations) conversations = s.conversations;
     if (s.evidence) evidence = s.evidence;
     if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
@@ -3201,7 +3190,7 @@
   async function clearState() {
     resetLocalState();
     localStorage.setItem("echoes_game_id", gameId);
-    trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
+    trackEvent("session", { session_id: gameId, case_id: CASE.id, language: window.currentLang || "en" });
     if (authUser) {
       try { await cloudDeleteState(); }
       catch (err) { console.error("[cloud] Failed to delete:", err); }
@@ -3228,11 +3217,6 @@
   }
 
   /* ── Initialize ─────────────────────────────────────────── */
-  const STARTING_EVIDENCE = [
-    { id: "burned-notebook",  textKey: "evidence.burned-notebook_desc" },
-    { id: "keycard-logs",     textKey: "evidence.security_systems" },
-  ];
-
   function seedStartingEvidence() {
     let added = false;
     for (const se of STARTING_EVIDENCE) {
@@ -3271,7 +3255,7 @@
     // a false-positive "new game" analytics event.
     const isNewGame = !conversations || Object.keys(conversations).length === 0;
     if (isNewGame) {
-      trackEvent("session", { session_id: gameId, language: window.currentLang || "en" });
+      trackEvent("session", { session_id: gameId, case_id: CASE.id, language: window.currentLang || "en" });
     }
     try {
       const res = await fetch(`${API_BASE}/api/npcs`);
@@ -3295,9 +3279,19 @@
     renderNpcGrid();
     renderEvidence();
 
+    // Populate briefing paragraphs from case data
+    const briefingBody = $("#cb-briefing-body");
+    briefingBody.innerHTML = "";
+    for (const key of CASE.briefingKeys) {
+      const p = document.createElement("p");
+      p.setAttribute("data-i18n", key);
+      p.setAttribute("data-i18n-html", "");
+      p.innerHTML = t(key);
+      briefingBody.appendChild(p);
+    }
+
     // Restore briefing open/closed state
     const briefingToggle = $("#cb-briefing-toggle");
-    const briefingBody = $("#cb-briefing-body");
     briefingToggle.setAttribute("aria-expanded", String(briefingOpen));
     if (briefingOpen) briefingBody.classList.add("open");
     else briefingBody.classList.remove("open");
@@ -3341,7 +3335,7 @@
       const meta = NPC_META[npc.npc_id] || { initials: "?" };
       const card = document.createElement("div");
       card.className = "npc-card";
-      if (npc.npc_id === "lila-chen") card.classList.add("npc-card-partner");
+      if (npc.npc_id === PARTNER_NPC_ID) card.classList.add("npc-card-partner");
       if (conversations[npc.npc_id]?.length) card.classList.add("has-talked");
       card.dataset.npcId = npc.npc_id;
 
@@ -3433,19 +3427,19 @@
 
     // Trigger chat-phase tutorial if pending
     if (typeof chatTutorialPending !== "undefined" && chatTutorialPending) {
-      if (npcId === "lila-chen") {
-        // Lila has no gauges/info — show hint btn + input tutorial instead
+      if (npcId === PARTNER_NPC_ID) {
+        // Partner has no gauges/info — show hint btn + input tutorial instead
         // Keep chatTutorialPending alive so gauges/info tutorial fires for suspects
         setTimeout(() => startTutorial("lila_chat"), 600);
       } else {
         chatTutorialPending = false;
-        // If Lila's chat already showed the input bar, only show gauges + info
+        // If partner's chat already showed the input bar, only show gauges + info
         const lilaAlreadySeen = localStorage.getItem(LILA_HINT_STORAGE_KEY);
         setTimeout(() => startTutorial(lilaAlreadySeen ? "chat_short" : "chat"), 600);
       }
     }
-    // Lila hint button tutorial — show once on first Lila chat visit
-    else if (npcId === "lila-chen"
+    // Partner hint button tutorial — show once on first partner chat visit
+    else if (npcId === PARTNER_NPC_ID
              && typeof LILA_HINT_STORAGE_KEY !== "undefined"
              && !localStorage.getItem(LILA_HINT_STORAGE_KEY)) {
       setTimeout(() => startTutorial("lila"), 600);
@@ -3635,7 +3629,7 @@
       detectNewDiscoveries(data.discovery_ids || [], activeNpcId, data.discovery_summaries || {});
 
       // Show one-time subpoena toast when a suspect mentions it
-      if (activeNpcId !== "lila-chen" && !subpoenaToastShown &&
+      if (activeNpcId !== PARTNER_NPC_ID && !subpoenaToastShown &&
           /subpoena|court order|lawyer|not at liberty/i.test(data.reply)) {
         subpoenaToastShown = true;
         showDiscoveryToast(t("toast.subpoena"));
@@ -3690,57 +3684,10 @@
   }
 
   /* ── Evidence Detection ─────────────────────────────────── */
-  const EVIDENCE_CATALOG = {
-    "burned-notebook":      { label: "Burned Notebook Fragment" },
-    "keycard-logs":         { label: "Keycard Access Logs" },
-    "key-trail":            { label: "Maintenance Key Trail" },
-    "power-outage":         { label: "Deliberate Power Sabotage" },
-    "encrypted-schedule":   { label: "Encrypted Schedule" },
-    "financial-misconduct": { label: "Financial Misconduct" },
-    "surveillance":         { label: "CCTV Footage Gaps" },
-    "secret-affair":        { label: "Secret Affair" },
-    "audio-recording":      { label: "Audio Recording" },
-    "nda-ip":               { label: "NDA / IP Theft" },
-    "blackmail":            { label: "Blackmail Evidence" },
-    "data-sales":           { label: "Illegal Data Sales" },
-    "plagiarism":           { label: "Plagiarized Research" },
-    "lockpick-marks":       { label: "Lockpick Marks" },
-    "hotel-sale":           { label: "Hotel Sale Plan" },
-    "stage-timing":         { label: "Stage Timing Gaps" },
-  };
-
-  /* Maps discovery IDs to their parent evidence category.
-     Mirrors DISCOVERY_CATALOG on the server. */
-  const DISCOVERY_EVIDENCE_MAP = {
-    "amelia-key-loan": "key-trail",       "amelia-breaker": "power-outage",
-    "amelia-hotel-sale": "hotel-sale",     "amelia-lockpick": "lockpick-marks",
-    "noah-embezzlement": "financial-misconduct", "noah-board-vote": "encrypted-schedule",
-    "noah-key-access": "key-trail",
-    "noah-cctv-gap": "surveillance",
-    "celeste-affair": "secret-affair",     "celeste-recordings": "audio-recording",
-    "celeste-rooftop-witness": "surveillance",
-    "matthias-blackmail": "blackmail",       "matthias-data-sales": "data-sales",
-    "matthias-saw-noah": "surveillance",
-    "matthias-noah-financial": "financial-misconduct",
-    "mira-plagiarism": "plagiarism",       "mira-meeting": "encrypted-schedule",
-    "eddie-key-loan": "key-trail",         "eddie-gave-noah-key": "key-trail",
-    "priya-saw-noah": "surveillance",      "priya-holt-argument": "blackmail",
-    "priya-mira-tip": "plagiarism",        "priya-board-vote": "encrypted-schedule",
-    "matthew-noah-absence": "stage-timing", "matthew-celeste-break": "stage-timing",
-  };
-
-  /* Noah-specific discovery sets for arrest grading */
-  const NOAH_MOTIVE_DISCOVERIES = ["noah-embezzlement", "noah-board-vote", "priya-board-vote", "matthias-noah-financial"];
-  const NOAH_OPPORTUNITY_DISCOVERIES = [
-    "noah-key-access", "noah-cctv-gap", "eddie-gave-noah-key",
-    "celeste-rooftop-witness", "matthias-saw-noah", "priya-saw-noah",
-    "matthew-noah-absence",
-  ];
-
   function gradeArrest() {
     const found = Object.values(discoveries).flat().map(d => d.id);
-    const hasMotive = NOAH_MOTIVE_DISCOVERIES.some(d => found.includes(d));
-    const hasOpportunity = NOAH_OPPORTUNITY_DISCOVERIES.some(d => found.includes(d));
+    const hasMotive = CASE.culpritMotiveDiscoveries.some(d => found.includes(d));
+    const hasOpportunity = CASE.culpritOpportunityDiscoveries.some(d => found.includes(d));
     if (hasMotive && hasOpportunity) return "slam_dunk";
     if (hasMotive || hasOpportunity) return "plea_deal";
     return "released";
@@ -3772,7 +3719,7 @@
         isNew: true,
       });
       newTexts.push(displayText);
-      trackEvent("discovery", { session_id: gameId, evidence_id: evidenceId, npc_id: npcId, discovery_id: did });
+      trackEvent("discovery", { session_id: gameId, case_id: CASE.id, evidence_id: evidenceId, npc_id: npcId, discovery_id: did });
     }
 
     if (newTexts.length > 0) {
@@ -3872,8 +3819,8 @@
         evidence.push({
           id: id,
           label: t("evidence." + id + "_label") || meta.label,
-          text: t(npcId === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by", { name: npcName }),
-          textKey: npcId === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by",
+          text: t(npcId === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by", { name: npcName }),
+          textKey: npcId === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by",
           source: npcId,
         });
         found = true;
@@ -3886,14 +3833,6 @@
   }
 
   /* ── Render Evidence (Case Board) ────────────────────────── */
-  const EVIDENCE_GROUPS = {
-    physical:    ["lockpick-marks"],
-    documentary: ["burned-notebook", "encrypted-schedule", "nda-ip"],
-    testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale"],
-    access:      ["keycard-logs", "key-trail", "power-outage", "stage-timing"],
-    motive:      ["financial-misconduct", "blackmail", "data-sales", "surveillance"],
-  };
-
   /** Find collected discoveries linked to an evidence ID. */
   function getDiscoveriesForEvidence(evidenceId) {
     const results = [];
@@ -3917,7 +3856,7 @@
     if (e.textKey) {
       if (e.textKey === "evidence.mentioned_by" || e.textKey === "evidence.mentioned_by_partner") {
         const npcName = npcs.find(n => n.npc_id === e.source)?.display_name?.split(" — ")[0] || e.source;
-        const key = e.source === "lila-chen" ? "evidence.mentioned_by_partner" : "evidence.mentioned_by";
+        const key = e.source === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by";
         text = t(key, { name: npcName }) || text;
       } else {
         text = t(e.textKey) || text;
@@ -4037,7 +3976,7 @@
     confirmAccuse.disabled = true;
     suspectGrid.innerHTML = "";
 
-    const suspects = npcs.filter(n => n.npc_id !== "lila-chen");
+    const suspects = npcs.filter(n => n.npc_id !== PARTNER_NPC_ID);
     for (const s of suspects) {
       const btn = document.createElement("div");
       btn.className = "suspect-option";
@@ -4077,6 +4016,7 @@
       outcomeCard.className = "outcome-card " + grade.replace(/_/g, "-");
       trackEvent("arrest", {
         session_id: gameId,
+        case_id: CASE.id,
         target_npc_id: target,
         correct: true,
         grade,
@@ -4093,6 +4033,7 @@
       outcomeCard.className = "outcome-card wrong";
       trackEvent("arrest", {
         session_id: gameId,
+        case_id: CASE.id,
         target_npc_id: target,
         correct: false,
         grade: "wrong",
@@ -4243,16 +4184,10 @@
 
   sendBtn.addEventListener("click", () => sendMessage());
 
-  // Lila hint button — sends detailed prompt but shows a casual message in chat
-  const HINT_DISPLAY_KEYS = [
-    "chat.hint_display.0", "chat.hint_display.1", "chat.hint_display.2",
-    "chat.hint_display.3", "chat.hint_display.4", "chat.hint_display.5",
-    "chat.hint_display.6", "chat.hint_display.7", "chat.hint_display.8",
-    "chat.hint_display.9",
-  ];
+  // Partner hint button — sends detailed prompt but shows a casual message in chat
   document.getElementById("lila-hint-btn").addEventListener("click", () => {
-    if (sending || activeNpcId !== "lila-chen") return;
-    const displayKey = HINT_DISPLAY_KEYS[Math.floor(Math.random() * HINT_DISPLAY_KEYS.length)];
+    if (sending || activeNpcId !== PARTNER_NPC_ID) return;
+    const displayKey = CASE.hintDisplayKeys[Math.floor(Math.random() * CASE.hintDisplayKeys.length)];
     sendMessage(t("chat.hint_prompt"), t(displayKey));
   });
 
@@ -4356,7 +4291,7 @@
     }
     keycardBody.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(120,220,100,0.4);font-family:var(--font-mono);font-size:0.75rem;">' + t("keycard.loading") + '</div>';
     try {
-      const resp = await fetch("data/keycard_logs.json");
+      const resp = await fetch(CASE.keycardLogsPath);
       keycardLogsCache = await resp.json();
       renderKeycardLogs(keycardLogsCache);
     } catch (err) {
@@ -4676,14 +4611,14 @@
     { selector: '.manila-tab[data-hub-tab="caseboard"]', text: "tutorial.step_caseboard", arrow: "top" },
     { selector: '#cb-briefing-toggle', text: "tutorial.step_briefing", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top", clickToAdvance: true },
-    { selector: '.npc-card[data-npc-id="lila-chen"]', text: "tutorial.step_partner", arrow: "top", beforeShow() {
+    { selector: `.npc-card[data-npc-id="${PARTNER_NPC_ID}"]`, text: "tutorial.step_partner", arrow: "top", beforeShow() {
       // Ensure suspects tab is active (user just clicked it in the previous step)
       document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
       document.querySelector('.manila-tab[data-hub-tab="suspects"]').classList.add("active");
       document.getElementById("hub-suspects").classList.add("active");
     }},
-    { selector: '.npc-card:not([data-npc-id="lila-chen"])', text: "tutorial.step_npc_card", arrow: "top" },
+    { selector: `.npc-card:not([data-npc-id="${PARTNER_NPC_ID}"])`, text: "tutorial.step_npc_card", arrow: "top" },
   ];
 
   // Chat-phase steps (shown after entering chat for the first time)

@@ -1,4 +1,4 @@
-"""Per-NPC timelines injected into LLM system prompts.
+"""Per-NPC timelines for *Echoes in the Atrium*.
 
 Each constant is a first-person timeline that tells an NPC exactly what they
 did, saw, and are hiding on the night of the gala.  These are injected as a
