@@ -1066,6 +1066,20 @@
       30% { opacity: 1; transform: scale(1.1); }
     }
 
+    /* NPC bio intro (shown before first message) */
+    .chat-npc-bio {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      color: var(--noir-text-dim);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      font-family: var(--font-body-serif);
+      text-align: center;
+      border-bottom: 1px solid rgba(212,160,80,0.10);
+      animation: fadeIn 0.4s ease;
+    }
+
     /* Conversation starters */
     .chat-starters {
       display: flex;
@@ -3452,6 +3466,17 @@
     const history = conversations[activeNpcId] || [];
 
     if (history.length === 0) {
+      // NPC bio blurb (hidden once the player sends a message)
+      const bioKey = `dossier.${activeNpcId}.bio`;
+      const bioText = t(bioKey);
+      if (bioText !== bioKey) {
+        const bio = document.createElement("div");
+        bio.className = "chat-npc-bio";
+        bio.id = "chat-npc-bio";
+        bio.textContent = bioText;
+        chatMessages.appendChild(bio);
+      }
+
       const hint = document.createElement("div");
       hint.id = "chat-empty-hint";
       hint.style.cssText = "text-align:center; color:var(--text-faint); font-size:0.85rem; padding:2rem; font-style:italic;";
@@ -3480,7 +3505,8 @@
     for (let i = 0; i < history.length; i++) {
       appendMessageBubble(history[i].role, history[i].content, i);
     }
-    scrollToBottom();
+    if (history.length > 0) scrollToBottom();
+    else chatMessages.scrollTop = 0;
   }
 
   // Strip system tags (EXPRESSION, EVIDENCE and their Serbian variants) from display text
@@ -3558,7 +3584,9 @@
 
     if (!conversations[activeNpcId]) conversations[activeNpcId] = [];
 
-    // Remove empty-state hint and starters
+    // Remove empty-state bio, hint and starters
+    const bio = document.getElementById("chat-npc-bio");
+    if (bio) bio.remove();
     const hint = document.getElementById("chat-empty-hint");
     if (hint) hint.remove();
     const starters = chatMessages.querySelector(".chat-starters");
