@@ -160,6 +160,18 @@ HOTEL_LAYOUT = (
     "was seen near this elevator by Priya Shah before the blackout.\n\n"
 
     "SECURITY & SURVEILLANCE:\n"
+    "  - ROOFTOP ACCESS ROSTER: Outside of open reception hours, rooftop "
+    "observatory keycard access is limited to four people:\n"
+    "    1. Julian Mercer (hotel owner / VIP card)\n"
+    "    2. Gideon Holt (security director / staff master card)\n"
+    "    3. Noah Sterling (co-founder / VIP card) — Noah has LEGITIMATE "
+    "rooftop access via his own VIP card, but on the night of the murder "
+    "he deliberately used Amelia's engineering keycard (ENGR-0001) instead "
+    "to avoid his name appearing in the keycard logs.  This shows "
+    "premeditation.\n"
+    "    4. Amelia Reyes (head engineer / engineering keycard ENGR-0001) — "
+    "the engineering keycard also grants access to the service elevator, "
+    "freight elevator, and rooftop stairwell.\n"
     "  - CCTV cameras cover the lobby, ballroom entrances, elevator "
     "lobbies on each floor, the rooftop stairwell door, and the "
     "command center corridor.  Cameras do NOT cover: the interior of "
@@ -574,7 +586,8 @@ TIMELINE_NOAH_ACTUAL = (
     "~11:05 PM: You slip away from the backstage area.  Marcus Vale notes your "
     "absence on his cue sheet.\n"
     "11:09 PM: You use the Freight Elevator to descend, swiping Amelia's "
-    "engineering keycard (ENGR-0001) instead of your own VIP card.  Priya Shah "
+    "engineering keycard (ENGR-0001) instead of your own VIP card — which DOES "
+    "have rooftop access — to keep your name out of the keycard logs.  Priya Shah "
     "sees you near the elevator.  Gideon Holt spots you on the B1 elevator "
     "lobby camera entering the service elevator lobby.\n"
     "11:13 PM: You swipe ENGR-0001 at the Service Elevator at B1.  You ride "
@@ -618,7 +631,9 @@ TIMELINE_NOAH_ACTUAL = (
     "  3. Keycard logs showing Amelia's engineering keycard (ENGR-0001) used at "
     "the freight elevator (11:09 PM), service elevator at B1 (11:13 PM), and "
     "exiting the utility corridor (11:31 PM) — but Amelia was elsewhere, so "
-    "someone else had her keycard.  The chain of custody leads to you.\n"
+    "someone else had her keycard.  The chain of custody leads to you.  "
+    "Crucially, you have your own VIP card with rooftop access — the fact that "
+    "you used Amelia's card instead demonstrates premeditation.\n"
     "  4. The burned notebook fragment in the incinerator.\n"
     "  5. Celeste Ward's eyewitness sighting of you descending the atrium "
     "stairwell during the blackout.\n"
@@ -671,7 +686,9 @@ NOAH_COVER_STORY = (
     "  LIE 3: 'I never obtained any maintenance keys or keycards.'\n"
     "    TRUTH: You pressured Eddie Voss into giving you Amelia's maintenance-"
     "room key and engineering keycard at the VIP Bar around 10:40 PM.  Eddie "
-    "can confirm this if reassured.\n\n"
+    "can confirm this if reassured.  You chose to use Amelia's card instead "
+    "of your own VIP card (which also has rooftop access) specifically to "
+    "avoid leaving a trail — proof of premeditation.\n\n"
 
     "  LIE 4: 'Mercer and I were on great terms.  His death is a huge loss.'\n"
     "    TRUTH: Mercer discovered your embezzlement and planned a surprise "
@@ -713,7 +730,9 @@ TIMELINE_CELESTE = (
     "second set.  You have a brief private exchange.  He seems tense but "
     "reassures you that he is still working on freeing you from your management "
     "contract.  He promises to have it done by next week.  You are relieved but "
-    "worried about him.\n"
+    "worried about him.  During this conversation (and possibly earlier private "
+    "moments), Mercer made admissions about Panopticon's illegal surveillance "
+    "tactics that you recorded on your phone.\n"
     "~10:00-11:15 PM: You continue performing in the speakeasy with short breaks.\n"
     "11:15 PM (BLACKOUT): You are mid-song when the lights go out.  You stop "
     "singing.  The audience murmurs.  Emergency lighting kicks in dimly.\n"
@@ -801,6 +820,18 @@ TIMELINE_GIDEON = (
     "  - Your confrontation with Mercer at 10:01 PM on the rooftop.\n"
     "  - That you saw Noah Sterling on the B1 elevator lobby camera entering "
     "the service elevator lobby before the outage.\n\n"
+
+    "SECURITY ACCESS KNOWLEDGE (operational fact — you will share this when asked):\n"
+    "  As Security Director, you manage the hotel's keycard access system.  "
+    "Rooftop observatory access outside of open reception hours is restricted to:\n"
+    "    1. Julian Mercer (owner, VIP card)\n"
+    "    2. Yourself (security director, staff master card)\n"
+    "    3. Noah Sterling (co-founder, VIP card)\n"
+    "    4. Amelia Reyes (head engineer, engineering keycard ENGR-0001)\n"
+    "  The engineering keycard (ENGR-0001) also grants access to the service "
+    "elevator, freight elevator, and rooftop stairwell.  It is a separate card "
+    "from Noah's VIP card and would show as 'A. Reyes / ENGR-0001' in the logs "
+    "rather than Noah's name.\n\n"
 
     "You will only reveal these secrets under specific conditions described in "
     "your character prompt."
@@ -1113,6 +1144,87 @@ CROSS_REFERENCES = (
 
 
 # ---------------------------------------------------------------------------
+# GAME MECHANICS REFERENCE
+# ---------------------------------------------------------------------------
+# This section documents gameplay systems that interact with the narrative.
+# It is a reference for developers — these strings are NOT injected into
+# NPC prompts.
+
+GAME_MECHANICS = (
+    "GAME MECHANICS REFERENCE\n"
+    "========================\n\n"
+
+    "1. DISCOVERY SYSTEM\n"
+    "-------------------\n"
+    "A secondary LLM classifier (server/llm/classifier.py) analyzes each NPC "
+    "reply to detect when a suspect reveals a specific piece of information.  "
+    "Each 'discovery' maps to a parent evidence category and a specific NPC.  "
+    "Discoveries are the atomic facts the player uncovers through interrogation.\n\n"
+
+    "There are 26 discoveries across 8 NPCs:\n"
+    "  Amelia Reyes: amelia-key-loan, amelia-breaker, amelia-hotel-sale, "
+    "amelia-lockpick\n"
+    "  Noah Sterling: noah-embezzlement, noah-board-vote, noah-oil-cufflinks, "
+    "noah-key-access, noah-cctv-gap\n"
+    "  Celeste Ward: celeste-affair, celeste-recordings, celeste-rooftop-witness\n"
+    "  Gideon Holt: gideon-blackmail, gideon-data-sales, gideon-notebook, "
+    "gideon-saw-noah\n"
+    "  Dr. Mira Kline: mira-plagiarism, mira-meeting\n"
+    "  Eddie Voss: eddie-key-loan, eddie-gave-noah-key\n"
+    "  Priya Shah: priya-saw-noah, priya-holt-argument, priya-mira-tip\n"
+    "  Marcus Vale: marcus-noah-absence, marcus-celeste-break\n\n"
+
+    "2. ARREST GRADING SYSTEM\n"
+    "------------------------\n"
+    "When the player arrests Noah Sterling (the correct killer), the outcome "
+    "is graded based on evidence quality — not just 'right' or 'wrong'.\n\n"
+
+    "  MOTIVE discoveries (WHY Noah killed):\n"
+    "    - noah-embezzlement: Noah embezzled funds, Mercer found out\n"
+    "    - noah-board-vote: Mercer planned a board vote to oust Noah\n\n"
+
+    "  OPPORTUNITY discoveries (HOW / Noah at the scene):\n"
+    "    - noah-key-access: Noah obtained Amelia's keycard via Eddie\n"
+    "    - noah-cctv-gap: CCTV/witness sightings near freight elevator\n"
+    "    - eddie-gave-noah-key: Eddie confirms handing over the keycard\n"
+    "    - celeste-rooftop-witness: Celeste saw Noah on the stairwell\n"
+    "    - gideon-saw-noah: Gideon saw Noah on B1 camera\n"
+    "    - priya-saw-noah: Priya saw Noah near freight elevator\n"
+    "    - marcus-noah-absence: Marcus's cue sheet shows Noah was gone 30 min\n\n"
+
+    "  Three outcome tiers (correct arrest only):\n"
+    "    SLAM DUNK (motive + opportunity): Airtight case, full conviction, "
+    "Sterling put away for a long time.\n"
+    "    PLEA DEAL (motive OR opportunity): Right person but only partial "
+    "evidence, reduced sentence.\n"
+    "    RELEASED (neither): Right instinct but cannot prove it, suspect "
+    "walks free.\n\n"
+
+    "  Arresting the wrong suspect always yields a WRONG SUSPECT outcome.\n\n"
+
+    "3. PHYSICAL EVIDENCE REFUSAL\n"
+    "----------------------------\n"
+    "All suspects will refuse to physically hand over items, documents, "
+    "recordings, devices, or personal belongings when asked by the detective.  "
+    "They reference needing a subpoena or court order, varying the wording "
+    "naturally.  This applies to all physical items (notebooks, phones, "
+    "keycards, cufflinks, etc.).\n\n"
+
+    "IMPORTANT DISTINCTION: Suspects CAN and SHOULD talk about what they know, "
+    "saw, or heard.  Verbal testimony is always permitted.  The restriction is "
+    "ONLY about physically handing over items.\n\n"
+
+    "When a suspect first refuses and mentions a subpoena, the game shows a "
+    "one-time toast notification explaining that subpoenas take time and "
+    "encouraging the player to keep investigating through interrogation.\n\n"
+
+    "Detective Lila Chen, if asked about subpoenas, will explain that they "
+    "take time to process and suggest the player push forward with "
+    "interrogations while paperwork is handled."
+)
+
+
+# ---------------------------------------------------------------------------
 # All exports
 # ---------------------------------------------------------------------------
 
@@ -1130,4 +1242,5 @@ __all__ = [
     "TIMELINE_MARCUS",
     "TIMELINE_LILA",
     "CROSS_REFERENCES",
+    "GAME_MECHANICS",
 ]
