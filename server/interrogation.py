@@ -84,11 +84,11 @@ NPC_ARCHETYPE_MAP: Dict[str, str] = {
     "amelia-reyes":  "professional_fixer",
     "noah-sterling": "proud_executive",
     "celeste-ward":  "anxious_insider",
-    "gideon-holt":   "professional_fixer",
+    "matthias-holt": "professional_fixer",
     "mira-kline":    "proud_executive",
     "eddie-voss":    "anxious_insider",
     "priya-shah":    "professional_fixer",
-    "marcus-vale":   "anxious_insider",
+    "matthew-vale":  "anxious_insider",
 }
 
 # ---------------------------------------------------------------------------

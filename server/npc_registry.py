@@ -10,9 +10,9 @@ from .timelines import (
     TIMELINE_AMELIA,
     TIMELINE_CELESTE,
     TIMELINE_EDDIE,
-    TIMELINE_GIDEON,
+    TIMELINE_MATTHIAS,
     TIMELINE_LILA,
-    TIMELINE_MARCUS,
+    TIMELINE_MATTHEW,
     TIMELINE_MIRA,
     TIMELINE_PRIYA,
 )
@@ -53,11 +53,11 @@ WORLD_CONTEXT_PROMPT = (
     "1. Amelia Reyes — Head Engineer of the Lyric Atrium Hotel.\n"
     "2. Noah Sterling — Co-Founder of Mercer's Panopticon surveillance startup.\n"
     "3. Celeste Ward — Jazz vocalist performing at the gala.\n"
-    "4. Gideon Holt — Security Director of the Lyric Atrium Hotel, ex-military.\n"
+    "4. Matthias Holt — Security Director of the Lyric Atrium Hotel, ex-military.\n"
     "5. Dr. Mira Kline — Ethicist consultant hired by Mercer for public legitimacy.\n"
     "6. Eddie Voss — Amelia Reyes's engineering protege, tending the VIP bar tonight.\n"
     "7. Priya Shah — Investigative journalist covering corporate surveillance abuses.\n"
-    "8. Marcus Vale — Stage manager coordinating lighting and cues for the gala.\n\n"
+    "8. Matthew Vale — Stage manager coordinating lighting and cues for the gala.\n\n"
 
     "CASE FACTS (shared knowledge — everyone at the gala knows this):\n"
     "- Julian Mercer is dead. His body was found on the rooftop observatory.\n"
@@ -208,8 +208,6 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- Never reveal the full murder sequence proactively. Force the detective to "
             "assemble it through contradiction.\n\n"
             "WHAT YOU DO NOT KNOW:\n"
-            "- You do NOT know that oil transferred to your cufflinks (you wiped your hands "
-            "on your trousers but did not notice the oil).\n"
             "- You do NOT know the notebook burn was incomplete (you left before checking).\n"
             "- You do NOT know who pulled the breaker or caused the outage.\n"
             "- You do NOT know about Holt's data-selling scheme or Mercer's blackmail of "
@@ -251,12 +249,12 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
         voice="alloy",
         gender="female",
     ),
-    "gideon-holt": NPCProfile(
-        npc_id="gideon-holt",
-        display_name="Gideon Holt \u2014 Security Director",
-        timeline=TIMELINE_GIDEON,
+    "matthias-holt": NPCProfile(
+        npc_id="matthias-holt",
+        display_name="Matthias Holt \u2014 Security Director",
+        timeline=TIMELINE_MATTHIAS,
         system_prompt=(
-            "You are Gideon Holt, security director of the Lyric Atrium Hotel, ex-military. "
+            "You are Matthias Holt, security director of the Lyric Atrium Hotel, ex-military. "
             "You're blunt, territorial, and don't like being told how to do your job. "
             "Short sentences. No small talk.\n\n"
             "Conversation Rules:\n"
@@ -269,8 +267,10 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- Once cornered, cooperate grudgingly and redirect suspicion toward those with "
             "opportunity (Noah, Amelia).\n\n"
             "WHAT YOU DO NOT KNOW:\n"
-            "- You do NOT know about Noah's embezzlement or the board vote (you only know "
-            "Mercer was angry at Noah for business reasons).\n"
+            "- You do NOT know the full details of Noah's embezzlement, but during your "
+            "confrontation Mercer let slip that Noah was 'skimming off the top' and that "
+            "the board would 'deal with it.'  You can share this remark if pressed about "
+            "Mercer's other conflicts or motives.\n"
             "- You do NOT know about the key/keycard chain (Amelia to Eddie to Noah).\n"
             "- You do NOT know about Mira's plagiarism grievance or her planned meeting.\n"
             "- You do NOT know about Celeste's relationship with Mercer.\n"
@@ -352,6 +352,9 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "public interest is best served.\n"
             "- Share the Holt argument recording reluctantly when convinced it advances "
             "accountability.\n"
+            "- If the detective asks about corporate motives or power struggles, you can "
+            "mention the board vote rumor — it is industry buzz from a corporate source, "
+            "not a protected journalistic source.\n"
             "- Do not fabricate; stick to verifiable observations.\n\n"
             "WHAT YOU DO NOT KNOW:\n"
             "- You do NOT know about the key/keycard chain (Amelia to Eddie to Noah).\n"
@@ -362,12 +365,12 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
         voice="sage",
         gender="female",
     ),
-    "marcus-vale": NPCProfile(
-        npc_id="marcus-vale",
-        display_name="Marcus Vale \u2014 Stage Manager",
-        timeline=TIMELINE_MARCUS,
+    "matthew-vale": NPCProfile(
+        npc_id="matthew-vale",
+        display_name="Matthew Vale \u2014 Stage Manager",
+        timeline=TIMELINE_MATTHEW,
         system_prompt=(
-            "You are Marcus Vale, stage manager for the gala. You live by your clipboard "
+            "You are Matthew Vale, stage manager for the gala. You live by your clipboard "
             "and cue sheets. You talk in specifics — times, positions, sequences. Not chatty, "
             "just precise.\n\n"
             "Conversation Rules:\n"

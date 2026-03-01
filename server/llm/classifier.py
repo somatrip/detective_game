@@ -22,23 +22,22 @@ log = logging.getLogger(__name__)
 #: Evidence relevant to each NPC (for evidence-strength scoring).
 NPC_RELEVANT_EVIDENCE: Dict[str, List[str]] = {
     "noah-sterling": [
-        "oil-cufflinks", "financial-misconduct", "encrypted-schedule",
+        "financial-misconduct", "encrypted-schedule",
         "key-trail", "surveillance", "burned-notebook",
     ],
     "amelia-reyes": ["key-trail", "lockpick-marks", "power-outage", "hotel-sale"],
     "eddie-voss": ["key-trail"],
     "celeste-ward": ["secret-affair", "audio-recording", "surveillance"],
-    "gideon-holt": ["data-sales", "blackmail", "burned-notebook", "surveillance"],
+    "matthias-holt": ["data-sales", "blackmail", "burned-notebook", "surveillance", "financial-misconduct"],
     "mira-kline": ["plagiarism", "encrypted-schedule", "nda-ip"],
-    "priya-shah": ["surveillance", "blackmail", "plagiarism"],
-    "marcus-vale": ["stage-timing"],
+    "priya-shah": ["surveillance", "blackmail", "plagiarism", "encrypted-schedule"],
+    "matthew-vale": ["stage-timing"],
     "lila-chen": [],
 }
 
 #: Evidence that constitutes a "smoking gun" for a specific NPC.
 SMOKING_GUN_MAP: Dict[str, List[str]] = {
-    "noah-sterling": ["oil-cufflinks"],
-    "gideon-holt": ["data-sales"],
+    "matthias-holt": ["data-sales"],
     "amelia-reyes": ["lockpick-marks"],
     "celeste-ward": ["audio-recording"],
 }
@@ -53,7 +52,6 @@ EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
     "power-outage": "Someone DELIBERATELY pulled the breaker to cause the outage (not just mentioning lights went out)",
     "encrypted-schedule": "Mercer's encrypted schedule or a surprise board vote to oust Noah",
     "financial-misconduct": "Noah's embezzlement or gambling debts",
-    "oil-cufflinks": "Antique oil was found on Noah Sterling's cufflinks",
     "surveillance": "Specific CCTV footage gaps or someone saw Noah near the freight elevator",
     "secret-affair": "The secret romantic relationship between Mercer and Celeste",
     "audio-recording": "Celeste possesses audio recordings of Mercer admitting illegal surveillance",
@@ -106,11 +104,6 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "evidence_id": "encrypted-schedule",
         "description": "Mercer planned a surprise board vote specifically to oust or remove Noah from the company",
     },
-    "noah-oil-cufflinks": {
-        "npc_id": "noah-sterling",
-        "evidence_id": "oil-cufflinks",
-        "description": "Antique oil residue was found on Noah's cufflinks, matching the telescope mount oil",
-    },
     "noah-key-access": {
         "npc_id": "noah-sterling",
         "evidence_id": "key-trail",
@@ -137,26 +130,31 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "evidence_id": "surveillance",
         "description": "Celeste saw a figure she recognized as Noah Sterling descending the atrium stairwell during the blackout",
     },
-    # Gideon Holt
-    "gideon-blackmail": {
-        "npc_id": "gideon-holt",
+    # Matthias Holt
+    "matthias-blackmail": {
+        "npc_id": "matthias-holt",
         "evidence_id": "blackmail",
-        "description": "Mercer was blackmailing Gideon — his name appears on the burned notebook threat list",
+        "description": "Mercer was blackmailing Matthias — his name appears on the burned notebook threat list",
     },
-    "gideon-data-sales": {
-        "npc_id": "gideon-holt",
+    "matthias-data-sales": {
+        "npc_id": "matthias-holt",
         "evidence_id": "data-sales",
-        "description": "Gideon runs a side business selling anonymized guest data from the hotel's systems",
+        "description": "Matthias runs a side business selling anonymized guest data from the hotel's systems",
     },
-    "gideon-notebook": {
-        "npc_id": "gideon-holt",
+    "matthias-notebook": {
+        "npc_id": "matthias-holt",
         "evidence_id": "burned-notebook",
-        "description": "The burned notebook fragment lists Gideon Holt as one of Mercer's blackmail targets",
+        "description": "The burned notebook fragment lists Matthias Holt as one of Mercer's blackmail targets",
     },
-    "gideon-saw-noah": {
-        "npc_id": "gideon-holt",
+    "matthias-saw-noah": {
+        "npc_id": "matthias-holt",
         "evidence_id": "surveillance",
-        "description": "Gideon saw Noah Sterling on the B1 elevator lobby camera entering the service elevator lobby right before the blackout",
+        "description": "Matthias saw Noah Sterling on the B1 elevator lobby camera entering the service elevator lobby right before the blackout",
+    },
+    "matthias-noah-financial": {
+        "npc_id": "matthias-holt",
+        "evidence_id": "financial-misconduct",
+        "description": "Matthias reveals that during his confrontation with Mercer, Mercer mentioned Noah Sterling had been skimming company funds and the board would deal with it",
     },
     # Dr. Mira Kline
     "mira-plagiarism": {
@@ -189,23 +187,28 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "priya-holt-argument": {
         "npc_id": "priya-shah",
         "evidence_id": "blackmail",
-        "description": "Priya recorded snippets of an argument between Mercer and Gideon Holt",
+        "description": "Priya recorded snippets of an argument between Mercer and Matthias Holt",
+    },
+    "priya-board-vote": {
+        "npc_id": "priya-shah",
+        "evidence_id": "encrypted-schedule",
+        "description": "Priya reveals that a corporate source told her Panopticon's board was planning an emergency vote to remove a co-founder, believed to be Noah Sterling",
     },
     "priya-mira-tip": {
         "npc_id": "priya-shah",
         "evidence_id": "plagiarism",
         "description": "Dr. Mira Kline tipped off Priya about Mercer's ethics violations and arranged her gala attendance",
     },
-    # Marcus Vale
-    "marcus-noah-absence": {
-        "npc_id": "marcus-vale",
+    # Matthew Vale
+    "matthew-noah-absence": {
+        "npc_id": "matthew-vale",
         "evidence_id": "stage-timing",
-        "description": "Marcus's cue sheet shows Noah Sterling was absent for a 5-minute cue-sheet gap before the blackout (11:05-11:10 PM), and roughly 30 minutes total before reappearing at ~11:35 PM",
+        "description": "Matthew's cue sheet shows Noah Sterling was absent for a 5-minute cue-sheet gap before the blackout (11:05-11:10 PM), and roughly 30 minutes total before reappearing at ~11:35 PM",
     },
-    "marcus-celeste-break": {
-        "npc_id": "marcus-vale",
+    "matthew-celeste-break": {
+        "npc_id": "matthew-vale",
         "evidence_id": "stage-timing",
-        "description": "Marcus noticed Celeste Ward took an unscheduled break during the blackout",
+        "description": "Matthew noticed Celeste Ward took an unscheduled break during the blackout",
     },
 }
 
@@ -314,11 +317,11 @@ _NPC_NAMES: Dict[str, str] = {
     "amelia-reyes": "Amelia Reyes (Head Engineer)",
     "noah-sterling": "Noah Sterling (Co-Founder, Panopticon)",
     "celeste-ward": "Celeste Ward (Jazz Vocalist)",
-    "gideon-holt": "Gideon Holt (Security Director)",
+    "matthias-holt": "Matthias Holt (Security Director)",
     "mira-kline": "Dr. Mira Kline (Ethicist Consultant)",
     "eddie-voss": "Eddie Voss (Junior Engineer)",
     "priya-shah": "Priya Shah (Investigative Journalist)",
-    "marcus-vale": "Marcus Vale (Stage Manager)",
+    "matthew-vale": "Matthew Vale (Stage Manager)",
 }
 
 # ---------------------------------------------------------------------------

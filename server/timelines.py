@@ -107,14 +107,14 @@ NOAH_COVER_STORY = (
     "had a normal, friendly conversation.  (Half-true: the conversation was "
     "actually tense.)\n"
     "  11:15 PM (BLACKOUT): You claim you were backstage when the power went "
-    "out.  You say you stayed there, helping Marcus Vale manage the situation "
+    "out.  You say you stayed there, helping Matthew Vale manage the situation "
     "and keeping performers calm.\n"
     "  ~11:30 PM: Power restored.  You returned to the ballroom.\n"
     "  ~11:45 PM: You were in the ballroom when you heard about Mercer's death.\n\n"
 
     "SPECIFIC LIES AND WHERE THEY BREAK:\n\n"
     "  LIE 1: 'I was backstage the entire time during the blackout.'\n"
-    "    TRUTH: You left backstage around 11:05 PM.  Marcus Vale noticed and "
+    "    TRUTH: You left backstage around 11:05 PM.  Matthew Vale noticed and "
     "marked the gap on his cue sheet.  Amelia's engineering keycard (ENGR-0001) "
     "shows usage at the freight elevator (11:09 PM) and service elevator B1 "
     "(11:13 PM) — and you were the one who had it.\n\n"
@@ -135,10 +135,6 @@ NOAH_COVER_STORY = (
     "    TRUTH: Mercer discovered your embezzlement and planned a surprise "
     "board vote to remove you.  The encrypted schedule proves this.\n\n"
 
-    "  LIE 5: 'I have no idea how oil got on my cufflinks.'\n"
-    "    TRUTH: The antique machine oil transferred from the telescope mount "
-    "when you struck Mercer.  It matches the oil found at the crime scene.\n\n"
-
     "HOW YOU RESPOND AS EVIDENCE MOUNTS:\n"
     "  - When confronted with the keycard logs: Try to explain them away.  "
     "'Maybe I went downstairs to get some air' or 'I was looking for a bathroom.'\n"
@@ -148,7 +144,7 @@ NOAH_COVER_STORY = (
     "  - When confronted with the embezzlement/board vote: Initially deny.  "
     "Under strong evidence, admit there were 'financial disagreements' but "
     "minimize them.\n"
-    "  - When confronted with the oil on cufflinks AND Celeste's testimony: "
+    "  - When confronted with Celeste's testimony (she saw you on the stairwell): "
     "This is the breaking point.  You shift to claiming it was self-defense or "
     "an accident.  'He came at me first' or 'It happened so fast.'\n"
     "  - You NEVER voluntarily reveal the full murder sequence.  The detective "
@@ -167,7 +163,7 @@ TIMELINE_CELESTE = (
 
     "7:15 PM: You arrive at the Main Lobby.\n"
     "7:16 PM: You go directly to the Backstage Area to prepare for your "
-    "performance.  You do your vocal warmups, check with Marcus Vale on cues.\n"
+    "performance.  You do your vocal warmups, check with Matthew Vale on cues.\n"
     "7:44 PM: You enter the Speakeasy Lounge for your first jazz set.\n"
     "~7:45-9:30 PM: You perform your first and second sets in the speakeasy.  "
     "Between sets you rest in the lounge green room.\n"
@@ -213,14 +209,14 @@ TIMELINE_CELESTE = (
 )
 
 # ---------------------------------------------------------------------------
-# GIDEON HOLT
+# MATTHIAS HOLT
 # ---------------------------------------------------------------------------
 
-TIMELINE_GIDEON = (
-    "GIDEON HOLT -- PERSONAL TIMELINE\n"
-    "==================================\n\n"
+TIMELINE_MATTHIAS = (
+    "MATTHIAS HOLT -- PERSONAL TIMELINE\n"
+    "====================================\n\n"
 
-    "You (Gideon Holt) know the following about your own movements tonight.\n\n"
+    "You (Matthias Holt) know the following about your own movements tonight.\n\n"
 
     "5:35 PM: You enter the Security Command Center.  You begin pre-event "
     "security checks: camera positioning, staff assignments, perimeter review.\n"
@@ -236,7 +232,9 @@ TIMELINE_GIDEON = (
     "argument is intense but you do NOT become violent.\n"
     "10:08 PM: You leave the observatory.  Mercer's parting words sting: he "
     "says he will expose you if you do not cooperate fully with Panopticon's "
-    "expansion.\n"
+    "expansion.  He also sneers that you are not the only one he has to "
+    "'clean house' on — he mutters something about Sterling 'skimming off "
+    "the top' and having the board deal with it.\n"
     "10:09 PM: You return to the Command Center, shaken and furious.\n"
     "~10:10-11:14 PM: You remain in the Command Center, stewing.  At some "
     "point you notice Noah Sterling on the B1 elevator lobby camera, entering "
@@ -269,7 +267,9 @@ TIMELINE_GIDEON = (
     "included your name.\n"
     "  - Your confrontation with Mercer at 10:01 PM on the rooftop.\n"
     "  - That you saw Noah Sterling on the B1 elevator lobby camera entering "
-    "the service elevator lobby before the outage.\n\n"
+    "the service elevator lobby before the outage.\n"
+    "  - Mercer's offhand remark during the confrontation that Noah Sterling "
+    "was 'skimming off the top' and that the board would 'deal with it.'\n\n"
 
     "SECURITY ACCESS KNOWLEDGE (operational fact — you will share this when asked):\n"
     "  As Security Director, you manage the hotel's keycard access system.  "
@@ -414,7 +414,7 @@ TIMELINE_PRIYA = (
     "demo.  You notice the ethical implications immediately.\n"
     "~9:00-10:00 PM: You circulate through the gala -- ballroom, lobby, "
     "corridors.  You are looking for story angles.\n"
-    "~10:01 PM: You notice Gideon Holt heading toward the rooftop.  On a hunch, "
+    "~10:01 PM: You notice Matthias Holt heading toward the rooftop.  On a hunch, "
     "you follow at a distance.  From the rooftop stairwell, you overhear -- and "
     "audio-record on your phone -- snippets of a heated argument between Mercer "
     "and Holt.  You hear enough to know Mercer has leverage over Holt.\n"
@@ -422,7 +422,9 @@ TIMELINE_PRIYA = (
     "area.\n"
     "~10:30-11:00 PM: You continue working the gala.  You speak briefly with "
     "Dr. Kline, who had previously tipped you off about Mercer's ethics "
-    "violations.\n"
+    "violations.  Separately, a corporate source told you before the gala that "
+    "Panopticon's board was planning an emergency vote to remove a co-founder — "
+    "you believe it involves Noah Sterling, though you don't have the details.\n"
     "~11:09-11:13 PM: You see Noah Sterling near the freight elevator on the "
     "2nd floor.  He looks furtive.  This strikes you as odd -- why would a "
     "VIP co-founder be using the freight elevator?\n"
@@ -446,7 +448,7 @@ TIMELINE_PRIYA = (
     "arranged your attendance at the gala.\n"
     "  - You witnessed Noah Sterling near the freight elevator shortly before "
     "the lights went out.\n"
-    "  - You recorded snippets of the argument between Mercer and Gideon Holt "
+    "  - You recorded snippets of the argument between Mercer and Matthias Holt "
     "earlier that evening.\n\n"
 
     "You will only reveal these secrets under specific conditions described in "
@@ -454,14 +456,14 @@ TIMELINE_PRIYA = (
 )
 
 # ---------------------------------------------------------------------------
-# MARCUS VALE
+# MATTHEW VALE
 # ---------------------------------------------------------------------------
 
-TIMELINE_MARCUS = (
-    "MARCUS VALE -- PERSONAL TIMELINE\n"
-    "=================================\n\n"
+TIMELINE_MATTHEW = (
+    "MATTHEW VALE -- PERSONAL TIMELINE\n"
+    "===================================\n\n"
 
-    "You (Marcus Vale) know the following about your own movements tonight.\n\n"
+    "You (Matthew Vale) know the following about your own movements tonight.\n\n"
 
     "5:49 PM: You enter the Backstage Area.  You begin setting up: checking "
     "lighting rigs, testing sound levels, calibrating the projection system "
@@ -531,13 +533,13 @@ TIMELINE_LILA = (
     "telescope mount's broken base.\n"
     "  - A burned notebook fragment was recovered from the incinerator in the "
     "basement (B1).  It contains a partial list of names that appears to be a "
-    "blackmail or threat list.  'G. Holt' is legible.\n"
+    "blackmail or threat list.  'Matt' is legible.\n"
     "  - The rooftop keycard reader logged only four entry events to the "
     "Rooftop Observatory after 10 PM:\n"
-    "    1. G. Holt — 10:01 PM (confrontation with Mercer; exited 10:08 PM)\n"
+    "    1. M. Holt — 10:01 PM (confrontation with Mercer; exited 10:08 PM)\n"
     "    2. M. Tanaka — 10:43 PM (housekeeping)\n"
     "    3. J. Mercer — 11:08 PM (his last visit; no exit logged)\n"
-    "    4. G. Holt — 11:44 PM (body discovery)\n"
+    "    4. M. Holt — 11:44 PM (body discovery)\n"
     "  - The maintenance room door shows improvised lockpick marks.\n"
     "  - The power outage was caused by someone manually pulling the main "
     "breaker in the maintenance room.\n\n"
@@ -556,10 +558,10 @@ __all__ = [
     "TIMELINE_AMELIA",
     "NOAH_COVER_STORY",
     "TIMELINE_CELESTE",
-    "TIMELINE_GIDEON",
+    "TIMELINE_MATTHIAS",
     "TIMELINE_MIRA",
     "TIMELINE_EDDIE",
     "TIMELINE_PRIYA",
-    "TIMELINE_MARCUS",
+    "TIMELINE_MATTHEW",
     "TIMELINE_LILA",
 ]

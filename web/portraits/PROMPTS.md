@@ -292,13 +292,13 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 
 ---
 
-## 5. Gideon Holt (`gideon-holt/`)
+## 5. Matthias Holt (`matthias-holt/`)
 
 ### neutral
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition showing head, neck, shoulders, and upper chest.
 
-Character: Gideon Holt — Security Director, former Army intelligence officer. White man, late 40s. Military bearing with rigid posture, square shoulders, and a thick neck. Rugged, weathered face: deep-set blue eyes under heavy brows, a strong nose that has been broken once, squared jaw with permanent five o'clock shadow. Short-cropped gray-streaked dark hair in a high-and-tight military cut. A thin scar on his right cheekbone.
+Character: Matthias Holt — Security Director, former Army intelligence officer. White man, late 40s. Military bearing with rigid posture, square shoulders, and a thick neck. Rugged, weathered face: deep-set blue eyes under heavy brows, a strong nose that has been broken once, squared jaw with permanent five o'clock shadow. Short-cropped gray-streaked dark hair in a high-and-tight military cut. A thin scar on his right cheekbone.
 
 Wearing a black tactical-adjacent suit fitted for movement. Black dress shirt buttoned to the top with no tie. An earpiece in his right ear for security communications. A security credential badge on a retractable clip. Matte black military-style watch. Everything is subdued, functional, deliberately un-flashy.
 
@@ -311,7 +311,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Gideon Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
+Character: Matthias Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
 
 Expression: GUARDED — Almost identical to neutral — this is a man trained to not show tells. The only change: his eyes fix on a single point and stop scanning. His breathing becomes controlled and measured. The jaw tightens almost imperceptibly. The deliberate stillness IS the tell. A trained operative maintaining composure under pressure.
 
@@ -322,7 +322,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Gideon Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
+Character: Matthias Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
 
 Expression: DISTRESSED — The military mask cracks with visible effort. A tightening around the eyes, a vein visible in his temple. He swallows hard. His distress looks like suppressed rage mixed with the calculation of a cornered animal. Not weakness — barely-contained alarm behind rigid discipline.
 
@@ -333,7 +333,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Gideon Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
+Character: Matthias Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
 
 Expression: ANGRY — Controlled menace. He leans forward at the shoulders, chin drops, eyes look up from under his heavy brow — the "you're testing me" look. Jaw muscles visibly clench. He does not explode — he pressurizes. The threat is implied, not performed. Military-grade intimidation.
 
@@ -344,7 +344,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Gideon Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
+Character: Matthias Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
 
 Expression: CONTEMPLATIVE — Rare and telling. His eyes soften slightly, gaze going distant. The rigid posture eases just barely. The soldier remembering — perhaps duty, perhaps loyalty, perhaps regret. A quiet moment of humanity beneath the armored exterior.
 
@@ -355,7 +355,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Gideon Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
+Character: Matthias Holt — Security Director. White man, late 40s. Military bearing, rugged weathered face, deep-set blue eyes, heavy brows, broken nose, squared jaw, five o'clock shadow. Gray-streaked high-and-tight hair. Scar on right cheekbone. Black tactical suit, black shirt buttoned to top, earpiece, security badge.
 
 Expression: SMIRKING — A grim, humorless twitch of the mouth. Not amusement — contempt. "I've faced worse than you, detective." His smirk is a challenge, a display of dominance from someone who has operated in far more dangerous environments. Eyes hard and knowing.
 
@@ -580,13 +580,13 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 
 ---
 
-## 9. Marcus Vale (`marcus-vale/`)
+## 9. Matthew Vale (`matthew-vale/`)
 
 ### neutral
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition showing head, neck, shoulders, and upper chest.
 
-Character: Marcus Vale — a freelance stage manager. Black man, mid-30s. Athletic build with squared shoulders. Close-cropped fade haircut, neatly shaped. Warm brown skin, round face with a broad forehead. Expressive dark brown eyes that move quickly, tracking multiple things at once. Clean-shaven with strong eyebrows. His face is naturally warm and open when not stressed — but he's always stressed tonight. A slight sheen of sweat on his forehead.
+Character: Matthew Vale — a freelance stage manager. Black man, mid-30s. Athletic build with squared shoulders. Close-cropped fade haircut, neatly shaped. Warm brown skin, round face with a broad forehead. Expressive dark brown eyes that move quickly, tracking multiple things at once. Clean-shaven with strong eyebrows. His face is naturally warm and open when not stressed — but he's always stressed tonight. A slight sheen of sweat on his forehead.
 
 Wearing all black stage crew attire: a fitted black button-up shirt with the top button open, black slacks. A black utility belt visible at the waist with a radio and a multi-tool. A headset hanging around his neck — not on his ears, the show is over. A tablet stylus tucked behind his right ear.
 
@@ -599,7 +599,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Marcus Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. Forehead sweat. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
+Character: Matthew Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. Forehead sweat. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
 
 Expression: GUARDED — Physical tension radiates. Shoulders rise toward his ears, jaw locks, eyes fix straight forward. One hand grips the headset around his neck like a lifeline. He is terrified of being caught for what he's done but desperately trying to hide it behind "I'm just the tech guy." Rigid and barely holding it together.
 
@@ -610,7 +610,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Marcus Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. Forehead sweat more visible. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
+Character: Matthew Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. Forehead sweat more visible. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
 
 Expression: DISTRESSED — Open, undisguised stress. Brow deeply creased, eyes wide with alarm, sweat visible on his forehead and temples. He looks like a man watching a disaster unfold that he caused. One hand at his temple or rubbing the back of his neck. The facade of calm has completely collapsed.
 
@@ -621,7 +621,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Marcus Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
+Character: Matthew Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
 
 Expression: ANGRY — Frustrated outburst. His mouth opens, brows slam down, head shakes in disbelief. "I'm just the stage manager!" The anger of someone being held responsible for something far bigger than their role. He feels used, manipulated, and cornered. His anger is defensive — a scared man lashing out.
 
@@ -632,7 +632,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Marcus Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
+Character: Matthew Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
 
 Expression: CONTEMPLATIVE — Exhausted honesty. His face relaxes from its perpetual tension for the first time, eyes soften, the furrow in his brow eases. He looks tired — genuinely, deeply tired. This is the expression that surfaces when he decides to cooperate, the relief of no longer having to keep up the front. Vulnerable and human.
 
@@ -643,7 +643,7 @@ Dramatic chiaroscuro lighting: cool blue-white key light from upper-left, warm a
 ```
 Digital painting portrait, western graphic novel style, painterly brushwork, semi-realistic. Bust-up composition.
 
-Character: Marcus Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
+Character: Matthew Vale — stage manager. Black man, mid-30s. Athletic, squared shoulders. Close-cropped fade. Warm brown skin, round face, broad forehead. Dark brown eyes. All-black outfit, utility belt with radio, headset around neck, stylus behind ear.
 
 Expression: SMIRKING — Dry, self-deprecating. A tired half-smile with one eyebrow slightly raised. "Yeah, I know how that sounds." Not witty like a comedian — more resigned irony. The humor of a man who is completely in over his head and has finally found the absurdity in his situation.
 

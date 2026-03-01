@@ -2012,9 +2012,9 @@
           <div class="caseboard-briefing-body" id="cb-briefing-body">
             <p data-i18n="intro.victim" data-i18n-html><strong>Victim:</strong> Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of the Panopticon surveillance startup — found dead in the hotel's rooftop observatory.</p>
             <p data-i18n="intro.time_of_death" data-i18n-html><strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.</p>
-            <p data-i18n="intro.body_discovered" data-i18n-html><strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Gideon Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.</p>
+            <p data-i18n="intro.body_discovered" data-i18n-html><strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.</p>
             <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
-            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> and traces of <em>antique machine oil</em> near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
+            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator &mdash; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>&lsquo;Matt&rsquo;</em> is legible. Traces of <em>antique machine oil</em> were found near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
             <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
             <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
             <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
@@ -2843,11 +2843,11 @@
     "amelia-reyes":  { initials: "AR", order: 1 },
     "noah-sterling": { initials: "NS", order: 2 },
     "celeste-ward":  { initials: "CW", order: 3 },
-    "gideon-holt":   { initials: "GH", order: 4 },
+    "matthias-holt": { initials: "MH", order: 4 },
     "mira-kline":    { initials: "MK", order: 5 },
     "eddie-voss":    { initials: "EV", order: 6 },
     "priya-shah":    { initials: "PS", order: 7 },
-    "marcus-vale":   { initials: "MV", order: 8 },
+    "matthew-vale":  { initials: "MV", order: 8 },
   };
 
   const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
@@ -2962,7 +2962,7 @@
   /* ── Canonical evidence for endgame trigger ────────── */
   const CANONICAL_EVIDENCE = [
     "oil-trace", "burned-notebook", "keycard-logs", "key-trail",
-    "oil-cufflinks", "financial-misconduct", "encrypted-schedule", "surveillance",
+    "financial-misconduct", "encrypted-schedule", "surveillance",
   ];
 
   /* ── Voice State ─────────────────────────────────── */
@@ -3627,7 +3627,6 @@
     "power-outage":         { label: "Deliberate Power Sabotage" },
     "encrypted-schedule":   { label: "Encrypted Schedule" },
     "financial-misconduct": { label: "Financial Misconduct" },
-    "oil-cufflinks":        { label: "Oil on Cufflinks" },
     "surveillance":         { label: "CCTV Footage Gaps" },
     "secret-affair":        { label: "Secret Affair" },
     "audio-recording":      { label: "Audio Recording" },
@@ -3646,25 +3645,26 @@
     "amelia-key-loan": "key-trail",       "amelia-breaker": "power-outage",
     "amelia-hotel-sale": "hotel-sale",     "amelia-lockpick": "lockpick-marks",
     "noah-embezzlement": "financial-misconduct", "noah-board-vote": "encrypted-schedule",
-    "noah-oil-cufflinks": "oil-cufflinks", "noah-key-access": "key-trail",
+    "noah-key-access": "key-trail",
     "noah-cctv-gap": "surveillance",
     "celeste-affair": "secret-affair",     "celeste-recordings": "audio-recording",
     "celeste-rooftop-witness": "surveillance",
-    "gideon-blackmail": "blackmail",       "gideon-data-sales": "data-sales",
-    "gideon-notebook": "burned-notebook",  "gideon-saw-noah": "surveillance",
+    "matthias-blackmail": "blackmail",       "matthias-data-sales": "data-sales",
+    "matthias-notebook": "burned-notebook",  "matthias-saw-noah": "surveillance",
+    "matthias-noah-financial": "financial-misconduct",
     "mira-plagiarism": "plagiarism",       "mira-meeting": "encrypted-schedule",
     "eddie-key-loan": "key-trail",         "eddie-gave-noah-key": "key-trail",
     "priya-saw-noah": "surveillance",      "priya-holt-argument": "blackmail",
-    "priya-mira-tip": "plagiarism",
-    "marcus-noah-absence": "stage-timing", "marcus-celeste-break": "stage-timing",
+    "priya-mira-tip": "plagiarism",        "priya-board-vote": "encrypted-schedule",
+    "matthew-noah-absence": "stage-timing", "matthew-celeste-break": "stage-timing",
   };
 
   /* Noah-specific discovery sets for arrest grading */
-  const NOAH_MOTIVE_DISCOVERIES = ["noah-embezzlement", "noah-board-vote"];
+  const NOAH_MOTIVE_DISCOVERIES = ["noah-embezzlement", "noah-board-vote", "priya-board-vote", "matthias-noah-financial"];
   const NOAH_OPPORTUNITY_DISCOVERIES = [
     "noah-key-access", "noah-cctv-gap", "eddie-gave-noah-key",
-    "celeste-rooftop-witness", "gideon-saw-noah", "priya-saw-noah",
-    "marcus-noah-absence",
+    "celeste-rooftop-witness", "matthias-saw-noah", "priya-saw-noah",
+    "matthew-noah-absence",
   ];
 
   function gradeArrest() {
@@ -3808,7 +3808,7 @@
 
   /* ── Render Evidence (Case Board) ────────────────────────── */
   const EVIDENCE_GROUPS = {
-    physical:    ["oil-trace", "oil-cufflinks", "lockpick-marks"],
+    physical:    ["oil-trace", "lockpick-marks"],
     documentary: ["burned-notebook", "encrypted-schedule", "nda-ip"],
     testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale"],
     access:      ["keycard-logs", "key-trail", "power-outage", "stage-timing"],
