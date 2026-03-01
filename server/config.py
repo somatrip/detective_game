@@ -33,8 +33,8 @@ class Settings(BaseSettings):
         description="Chat model name to use for OpenAI completions.",
     )
     openai_tts_model: str = Field(
-        default="tts-1",
-        description="TTS model for voice synthesis ('tts-1' or 'tts-1-hd').",
+        default="gpt-4o-mini-tts",
+        description="TTS model for voice synthesis.",
     )
     openai_tts_voice: str = Field(
         default="alloy",

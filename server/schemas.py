@@ -116,6 +116,7 @@ class SpeakRequest(BaseModel):
 
     text: str = Field(..., description="Text to convert to speech.", min_length=1, max_length=4096)
     voice: str = Field(default="alloy", description="OpenAI TTS voice identifier.")
+    instructions: str = Field(default="", description="Voice style instructions for gpt-4o-mini-tts.")
 
 
 __all__ = ["ChatTurn", "ChatRequest", "ChatResponse", "SpeakRequest"]

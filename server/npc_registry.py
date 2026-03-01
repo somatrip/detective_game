@@ -129,6 +129,7 @@ class NPCProfile:
     system_prompt: str
     timeline: str = ""  # Story-bible timeline injected as a separate system message
     voice: str = "alloy"  # OpenAI TTS voice identifier
+    voice_instruction: str = ""  # gpt-4o-mini-tts voice styling instruction
     gender: str = "male"  # "male" or "female" — used for gendered language prompts
 
 
@@ -160,6 +161,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "supporting evidence or if the story has progressed to the endgame confession phase."
         ),
         voice="nova",
+        voice_instruction="Calm, professional female detective. Measured pace, clear and authoritative but warm.",
         gender="female",
     ),
     "amelia-reyes": NPCProfile(
@@ -187,6 +189,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about Mira's plagiarism grievance."
         ),
         voice="shimmer",
+        voice_instruction="Tough, practical woman in her 50s. Working-class directness, slightly impatient. No-nonsense.",
         gender="female",
     ),
     "noah-sterling": NPCProfile(
@@ -216,7 +219,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "with Mercer.\n"
             "- You do NOT know about Celeste's recordings of Mercer."
         ),
-        voice="onyx",
+        voice="ash",
+        voice_instruction="Smooth, charismatic male in his 30s. Confident and casual, like a startup CEO on a podcast. Slightly too polished.",
     ),
     "celeste-ward": NPCProfile(
         npc_id="celeste-ward",
@@ -246,7 +250,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about the telescope mount or how Mercer died (only that he "
             "is dead)."
         ),
-        voice="alloy",
+        voice="coral",
+        voice_instruction="Sultry female jazz vocalist. Speaks slowly with quiet intensity, poetic pauses. Low register, intimate.",
         gender="female",
     ),
     "matthias-holt": NPCProfile(
@@ -276,7 +281,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about Celeste's relationship with Mercer.\n"
             "- You do NOT know who pulled the breaker."
         ),
-        voice="echo",
+        voice="onyx",
+        voice_instruction="Deep, gruff, authoritative male. Ex-military. Clipped sentences, gravelly tone. Speaks like he's giving orders.",
     ),
     "mira-kline": NPCProfile(
         npc_id="mira-kline",
@@ -304,7 +310,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about Celeste's relationship with Mercer.\n"
             "- You do NOT know how Mercer died or about the telescope mount."
         ),
-        voice="coral",
+        voice="sage",
+        voice_instruction="Precise, measured academic woman. Cool and deliberate. Chooses words carefully, slight intellectual edge.",
         gender="female",
     ),
     "eddie-voss": NPCProfile(
@@ -332,7 +339,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about Mira's plagiarism grievance.\n"
             "- You do NOT know about Celeste's relationship with Mercer."
         ),
-        voice="fable",
+        voice="echo",
+        voice_instruction="Young, nervous male. Speaks too fast, stumbles over words. Jittery energy, eager to please.",
     ),
     "priya-shah": NPCProfile(
         npc_id="priya-shah",
@@ -362,7 +370,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know about Eddie's involvement with the key handoff.\n"
             "- You do NOT know how Mercer died or about the telescope mount."
         ),
-        voice="sage",
+        voice="alloy",
+        voice_instruction="Sharp, confident female journalist. Quick delivery, skeptical tone. Thinks fast and talks fast.",
         gender="female",
     ),
     "matthew-vale": NPCProfile(
@@ -388,7 +397,8 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "- You do NOT know how Mercer died or about the telescope mount.\n"
             "- You do NOT know where Noah went during his absence (only that he left)."
         ),
-        voice="ash",
+        voice="fable",
+        voice_instruction="Calm, detail-oriented male stage manager. Precise diction, methodical delivery. Dry and factual.",
     ),
 }
 

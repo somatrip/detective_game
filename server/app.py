@@ -118,6 +118,7 @@ async def list_available_npcs():
                 "npc_id": profile.npc_id,
                 "display_name": profile.display_name,
                 "voice": profile.voice,
+                "voice_instruction": profile.voice_instruction,
             }
             for profile in registry.values()
         ]
@@ -339,17 +340,24 @@ async def speak(request: SpeakRequest):
 
     client = _get_openai_client()
 
-    allowed_voices = {"alloy", "echo", "fable", "onyx", "nova", "shimmer"}
+    allowed_voices = {
+        "alloy", "ash", "ballad", "coral", "echo", "fable",
+        "onyx", "nova", "sage", "shimmer", "verse",
+    }
     voice = request.voice if request.voice in allowed_voices else "alloy"
     text = request.text[:4096]
 
+    tts_kwargs: dict = {
+        "model": settings.openai_tts_model,
+        "voice": voice,
+        "input": text,
+        "response_format": "mp3",
+    }
+    if request.instructions:
+        tts_kwargs["instructions"] = request.instructions
+
     try:
-        response = await client.audio.speech.create(
-            model=settings.openai_tts_model,
-            voice=voice,
-            input=text,
-            response_format="mp3",
-        )
+        response = await client.audio.speech.create(**tts_kwargs)
         return StreamingResponse(
             response.iter_bytes(),
             media_type="audio/mpeg",

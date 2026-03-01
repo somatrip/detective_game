@@ -2974,6 +2974,7 @@
   let audioCache = new Map();
   let currentAudio = null;
   let npcVoices = {};
+  let npcVoiceInstructions = {};
   let voiceMode = false;
   let chatAbortController = null;
   let ttsAbortController = null;
@@ -3223,6 +3224,7 @@
       });
       for (const npc of npcs) {
         if (npc.voice) npcVoices[npc.npc_id] = npc.voice;
+        if (npc.voice_instruction) npcVoiceInstructions[npc.npc_id] = npc.voice_instruction;
       }
     } catch {
       npcs = Object.entries(NPC_META).map(([id, m]) => ({
@@ -4310,13 +4312,14 @@
     }
 
     const voice = npcVoices[npcId] || "alloy";
+    const instructions = npcVoiceInstructions[npcId] || "";
     ttsAbortController = new AbortController();
     showCancelBtn();
     try {
       const res = await fetch(`${API_BASE}/api/speak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voice }),
+        body: JSON.stringify({ text, voice, instructions }),
         signal: ttsAbortController.signal,
       });
       if (!res.ok) throw new Error(`TTS failed: HTTP ${res.status}`);
