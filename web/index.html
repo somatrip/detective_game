@@ -1450,7 +1450,9 @@
       font-size: 1.8rem; font-weight: 700;
       margin-bottom: 0.5rem;
     }
-    .outcome-card.correct h2 { color: var(--success); }
+    .outcome-card.slam-dunk h2 { color: var(--success); }
+    .outcome-card.plea-deal h2 { color: var(--gold); }
+    .outcome-card.released h2 { color: var(--danger); }
     .outcome-card.wrong h2 { color: var(--danger); }
     .outcome-card .outcome-text {
       font-size: 0.95rem;
@@ -2943,6 +2945,7 @@
   let caseReadyPromptShown = false;
   let sending = false;
   let accusationTarget = null;
+  let subpoenaToastShown = false;
 
   /* ── Gameplay tracking ─────────────────────────────────── */
   let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
@@ -3119,6 +3122,7 @@
     discoveries = {};
     npcInterrogation = {};
     caseReadyPromptShown = false;
+    subpoenaToastShown = false;
     briefingOpen = true;
     activeNpcId = null;
     gameId = crypto.randomUUID();
@@ -3559,6 +3563,13 @@
       detectEvidence(data.evidence_ids || [], activeNpcId);
       detectNewDiscoveries(data.discovery_ids || [], activeNpcId, data.discovery_summaries || {});
 
+      // Show one-time subpoena toast when a suspect mentions it
+      if (activeNpcId !== "lila-chen" && !subpoenaToastShown &&
+          /subpoena|court order|lawyer|not at liberty/i.test(data.reply)) {
+        subpoenaToastShown = true;
+        showDiscoveryToast(t("toast.subpoena"));
+      }
+
       // Update expression
       if (data.expression) {
         setHeaderExpression(activeNpcId, data.expression);
@@ -3647,6 +3658,23 @@
     "priya-mira-tip": "plagiarism",
     "marcus-noah-absence": "stage-timing", "marcus-celeste-break": "stage-timing",
   };
+
+  /* Noah-specific discovery sets for arrest grading */
+  const NOAH_MOTIVE_DISCOVERIES = ["noah-embezzlement", "noah-board-vote"];
+  const NOAH_OPPORTUNITY_DISCOVERIES = [
+    "noah-key-access", "noah-cctv-gap", "eddie-gave-noah-key",
+    "celeste-rooftop-witness", "gideon-saw-noah", "priya-saw-noah",
+    "marcus-noah-absence",
+  ];
+
+  function gradeArrest() {
+    const found = Object.values(discoveries).flat().map(d => d.id);
+    const hasMotive = NOAH_MOTIVE_DISCOVERIES.some(d => found.includes(d));
+    const hasOpportunity = NOAH_OPPORTUNITY_DISCOVERIES.some(d => found.includes(d));
+    if (hasMotive && hasOpportunity) return "slam_dunk";
+    if (hasMotive || hasOpportunity) return "plea_deal";
+    return "released";
+  }
 
   /**
    * Process new discoveries from the server's discovery-level detection.
@@ -3963,24 +3991,35 @@
     const correct = target === CULPRIT_ID;
     const accusedName = npcs.find(n => n.npc_id === target)?.display_name?.split(" — ")[0] || target;
 
-    outcomeCard.className = "outcome-card " + (correct ? "correct" : "wrong");
-
     const interviewCount = Object.keys(conversations).filter(k => conversations[k].length > 0).length;
-    trackEvent("accusation", {
-      session_id: gameId,
-      target_npc_id: target,
-      correct,
-      evidence_count: evidence.length,
-      interview_count: interviewCount,
-    });
+
     if (correct) {
-      outcomeTitle.textContent = t("outcome.correct_title");
-      outcomeText.innerHTML = t("outcome.correct_text", {
+      const grade = gradeArrest();
+      outcomeCard.className = "outcome-card " + grade.replace(/_/g, "-");
+      trackEvent("arrest", {
+        session_id: gameId,
+        target_npc_id: target,
+        correct: true,
+        grade,
+        evidence_count: evidence.length,
+        interview_count: interviewCount,
+      });
+      outcomeTitle.textContent = t("outcome." + grade + "_title");
+      outcomeText.innerHTML = t("outcome." + grade + "_text", {
         name: escapeHtml(accusedName),
         evidenceCount: evidence.length,
         interviewCount: interviewCount,
       });
     } else {
+      outcomeCard.className = "outcome-card wrong";
+      trackEvent("arrest", {
+        session_id: gameId,
+        target_npc_id: target,
+        correct: false,
+        grade: "wrong",
+        evidence_count: evidence.length,
+        interview_count: interviewCount,
+      });
       outcomeTitle.textContent = t("outcome.wrong_title");
       outcomeText.innerHTML = t("outcome.wrong_text", { name: escapeHtml(accusedName) });
     }

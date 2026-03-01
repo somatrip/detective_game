@@ -37,7 +37,7 @@ window.I18N = {
     "chat.hint_display.9": "Talk me through it — what have we learned so far?",
     "chat.dossier_heading": "Dossier",
     "sidebar.header": "Persons of Interest",
-    "sidebar.accuse": "Make an Accusation",
+    "sidebar.accuse": "Make an Arrest",
     "chat.status_available": "Available for questioning",
     "chat.status_responding": "Responding\u2026",
     "chat.placeholder": "Select a person of interest to begin interrogation.",
@@ -48,6 +48,7 @@ window.I18N = {
     "chat.badge_title": "Interviewed",
     "chat.discovery_label": "Discovery",
     "toast.new_discovery": "New Discovery",
+    "toast.subpoena": "Subpoenas take time to process. Keep investigating \u2014 what witnesses tell you about evidence is just as valuable as the physical item.",
 
     // Evidence panel
     "evidence.tab": "Evidence and Discoveries",
@@ -80,17 +81,21 @@ window.I18N = {
     "evidence.hotel-sale_label": "Hotel Sale Plan",
     "evidence.stage-timing_label": "Stage Timing Gaps",
 
-    // Accusation modal
-    "accuse.title": "Formal Accusation",
-    "accuse.description": "This is irreversible. Select the person you believe committed the murder and present your case. Choose carefully \u2014 an incorrect accusation will damage your investigation.",
+    // Arrest modal
+    "accuse.title": "Formal Arrest",
+    "accuse.description": "This is irreversible. Select the person you believe committed the murder. Choose carefully \u2014 an incorrect arrest will end your investigation.",
     "accuse.cancel": "Cancel",
-    "accuse.confirm": "Confirm Accusation",
+    "accuse.confirm": "Confirm Arrest",
 
     // Outcome screen
-    "outcome.correct_title": "Case Solved",
+    "outcome.slam_dunk_title": "Case Closed \u2014 Killer Behind Bars",
+    "outcome.slam_dunk_text": "<p>Your arrest of <strong>{name}</strong> is airtight.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. He pressured Eddie Voss into handing over the maintenance-room key and engineering keycard, then used them during the blackout to reach the rooftop observatory and bludgeon Mercer with the antique telescope mount.</p><p>With clear motive and undeniable proof he was at the scene, the prosecution secures a full conviction. Sterling is put away for a long time.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
+    "outcome.plea_deal_title": "Plea Deal \u2014 Short Sentence",
+    "outcome.plea_deal_text": "<p>You arrested the right person \u2014 <strong>{name}</strong> killed Julian Mercer.</p><p>But your case only established part of the picture. Without both a clear motive and evidence placing him at the scene, the prosecution offered a plea deal. Sterling accepts a reduced sentence.</p><p>You got the right suspect, but you\u2019re left with the sense you could have done more.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
+    "outcome.released_title": "Suspect Released \u2014 Insufficient Evidence",
+    "outcome.released_text": "<p>You arrested <strong>{name}</strong>, and your instinct was correct \u2014 he is the killer.</p><p>But without evidence establishing a clear motive or placing him at the scene, the prosecution cannot hold him. Sterling is released and quickly covers his tracks. The case goes cold.</p><p>You believe you found the killer, but you just can\u2019t prove it.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
     "outcome.wrong_title": "Wrong Suspect",
-    "outcome.correct_text": "<p>Your accusation of <strong>{name}</strong> is correct.</p><p>Noah Sterling murdered Julian Mercer to prevent his embezzlement from being exposed and to seize control of the Panopticon startup. He pressured Eddie Voss into handing over the maintenance-room key and engineering keycard earlier that evening, then used them during the blackout to access the rooftop observatory and bludgeon Mercer with the antique telescope mount.</p><p>The antique oil on his cufflinks, the key and keycard trail through Eddie Voss, Celeste's eyewitness testimony, and the encrypted board vote schedule all sealed the case.</p><p style=\"margin-top:1rem; color:var(--gold);\">Evidence collected: {evidenceCount} items &bull; Suspects interviewed: {interviewCount}</p>",
-    "outcome.wrong_text": "<p>You accused <strong>{name}</strong>, but they are not the killer.</p><p>The real murderer slips away as internal affairs questions your judgment. The case goes cold.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Keep investigating \u2014 look for contradictions in alibis, follow the physical evidence, and trace the maintenance-room key and engineering keycard.</p>",
+    "outcome.wrong_text": "<p>You arrested <strong>{name}</strong>, but they are not the killer.</p><p>The real murderer slips away as internal affairs questions your judgment. The case goes cold.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Keep investigating \u2014 look for contradictions in alibis, follow the physical evidence, and trace the maintenance-room key and engineering keycard.</p>",
     "outcome.restart": "New Investigation",
 
     // NPC roles
@@ -211,11 +216,11 @@ window.I18N = {
 
     // Endgame
     "endgame.title": "All Critical Evidence Gathered",
-    "endgame.description": "You have gathered all the key evidence needed to build a case. Review your evidence, make an accusation, or continue investigating for additional details.",
+    "endgame.description": "You have gathered all the key evidence needed to build a case. Review your evidence, make an arrest, or continue investigating for additional details.",
     "endgame.review": "Review Evidence",
-    "endgame.accuse": "Make Accusation",
+    "endgame.accuse": "Make Arrest",
     "endgame.continue": "Keep Investigating",
-    "endgame.accuse_cta": "Ready to Make Your Accusation?",
+    "endgame.accuse_cta": "Ready to Make Your Arrest?",
 
     // Evidence groups
     "evidence.group_physical": "Physical Evidence",
@@ -325,7 +330,7 @@ window.I18N = {
     "chat.hint_display.9": "Pričaj mi — šta smo do sada saznali?",
     "chat.dossier_heading": "Dosije",
     "sidebar.header": "Osumnji\u010deni",
-    "sidebar.accuse": "Podnesi Optu\u017enicu",
+    "sidebar.accuse": "Izvr\u0161i Hap\u0161enje",
     "chat.status_available": "Dostupan za ispitivanje",
     "chat.status_responding": "Odgovara\u2026",
     "chat.placeholder": "Izaberite osumnji\u010denog da po\u010dnete ispitivanje.",
@@ -336,6 +341,7 @@ window.I18N = {
     "chat.badge_title": "Ispitan/a",
     "chat.discovery_label": "Otkri\u0107e",
     "toast.new_discovery": "Novo Otkriće",
+    "toast.subpoena": "Sudski nalozi zahtevaju vreme. Nastavite istragu \u2014 ono \u0161to vam svedoci ka\u017eu o dokazima jednako je vredno kao i sam fizi\u010dki predmet.",
 
     // Evidence panel
     "evidence.tab": "Dokazi i otkri\u0107a",
@@ -368,17 +374,21 @@ window.I18N = {
     "evidence.hotel-sale_label": "Plan Prodaje Hotela",
     "evidence.stage-timing_label": "Praznine u Rasporedu Scene",
 
-    // Accusation modal
-    "accuse.title": "Zvani\u010dna Optu\u017enica",
-    "accuse.description": "Ovo je nepovratno. Izaberite osobu za koju verujete da je po\u010dinila ubistvo. Birajte pa\u017eljivo \u2014 pogre\u0161na optu\u017enica \u0107e o\u0161tetiti va\u0161u istragu.",
+    // Arrest modal
+    "accuse.title": "Zvani\u010dno Hap\u0161enje",
+    "accuse.description": "Ovo je nepovratno. Izaberite osobu za koju verujete da je po\u010dinila ubistvo. Birajte pa\u017eljivo \u2014 pogre\u0161no hap\u0161enje \u0107e zavr\u0161iti va\u0161u istragu.",
     "accuse.cancel": "Otka\u017ei",
-    "accuse.confirm": "Potvrdi Optu\u017enicu",
+    "accuse.confirm": "Potvrdi Hap\u0161enje",
 
     // Outcome screen
-    "outcome.correct_title": "Slu\u010daj Re\u0161en",
+    "outcome.slam_dunk_title": "Slu\u010daj Zatvoren \u2014 Ubica Iza Re\u0161etaka",
+    "outcome.slam_dunk_text": "<p>Va\u0161e hap\u0161enje <strong>{name}</strong> je nepobitno.</p><p>Noa Sterling je ubio D\u017eulijana Mersera da spre\u010di otkrivanje pronevere i preuzme kontrolu nad startapom Panopticon. Pritiskao je Edija Vosa da mu preda klju\u010d za odr\u017eavanje, a zatim ga iskoristio tokom nestanka struje da pristupi opservatoriji na krovu i ubije Mersera anti\u010dkim postoljem teleskopa.</p><p>Sa jasnim motivom i nepobitnim dokazom prisustva na mestu zlo\u010dina, tu\u017eila\u0161tvo osigurava punu osudu. Sterling odlazi na dugogodi\u0161nju robiju.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
+    "outcome.plea_deal_title": "Nagodba \u2014 Kratka Kazna",
+    "outcome.plea_deal_text": "<p>Uhapsili ste pravu osobu \u2014 <strong>{name}</strong> je ubio D\u017eulijana Mersera.</p><p>Me\u0111utim, va\u0161 slu\u010daj je utvrdio samo deo slike. Bez jasnog motiva i dokaza o prilici, tu\u017eila\u0161tvo je ponudilo nagodbu. Sterling prihvata smanjenu kaznu.</p><p>Pravi osumnji\u010deni, ali ostaje vam ose\u0107aj da ste mogli vi\u0161e.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
+    "outcome.released_title": "Osumnji\u010deni Pu\u0161ten \u2014 Nedovoljno Dokaza",
+    "outcome.released_text": "<p>Uhapsili ste <strong>{name}</strong>, i va\u0161 instinkt je bio ta\u010dan \u2014 on je ubica.</p><p>Ali bez dokaza koji utvr\u0111uju jasan motiv ili ga stavljaju na mesto zlo\u010dina, tu\u017eila\u0161tvo ga ne mo\u017ee zadr\u017eati. Sterling je pu\u0161ten i prikriva tragove. Slu\u010daj se gasi.</p><p>Verujete da ste na\u0161li ubicu, ali jednostavno ne mo\u017eete to da doka\u017eete.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
     "outcome.wrong_title": "Pogre\u0161an Osumnji\u010deni",
-    "outcome.correct_text": "<p>Va\u0161a optu\u017enica protiv <strong>{name}</strong> je ta\u010dna.</p><p>Noa Sterling je ubio D\u017eulijana Mersera da spre\u010di otkrivanje pronevere i preuzme kontrolu nad startapom Panopticon. Pritiskao je Edija Vosa da mu preda klju\u010d za odr\u017eavanje ranije te ve\u010deri, a zatim ga iskoristio tokom nestanka struje da pristupi opservatoriji na krovu i ubije Mersera anti\u010dkim postoljem teleskopa.</p><p>Anti\u010dko ulje na njegovim dugmadima za man\u017eetne, trag klju\u010da preko Edija Vosa, svedo\u010denje Selest kao o\u010devica i \u0161ifrovani raspored glasanja uprave \u2014 sve je zape\u010datilo slu\u010daj.</p><p style=\"margin-top:1rem; color:var(--gold);\">Prikupljeni dokazi: {evidenceCount} &bull; Ispitani osumnji\u010deni: {interviewCount}</p>",
-    "outcome.wrong_text": "<p>Optu\u017eili ste <strong>{name}</strong>, ali ta osoba nije ubica.</p><p>Pravi ubica izmi\u010de dok unutra\u0161nja kontrola dovodi u pitanje va\u0161 sud. Slu\u010daj se gasi.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Nastavite istragu \u2014 tra\u017eite kontradikcije u alibijima, pratite fizi\u010dke dokaze i trag klju\u010da za odr\u017eavanje.</p>",
+    "outcome.wrong_text": "<p>Uhapsili ste <strong>{name}</strong>, ali ta osoba nije ubica.</p><p>Pravi ubica izmi\u010de dok unutra\u0161nja kontrola dovodi u pitanje va\u0161 sud. Slu\u010daj se gasi.</p><p style=\"margin-top:1rem; color:var(--text-faint);\">Nastavite istragu \u2014 tra\u017eite kontradikcije u alibijima, pratite fizi\u010dke dokaze i trag klju\u010da za odr\u017eavanje.</p>",
     "outcome.restart": "Nova Istraga",
 
     // NPC roles
@@ -499,11 +509,11 @@ window.I18N = {
 
     // Endgame
     "endgame.title": "Svi Klju\u010dni Dokazi Prikupljeni",
-    "endgame.description": "Prikupili ste sve klju\u010dne dokaze potrebne za izgradnju slu\u010daja. Pregledajte dokaze, podnesite optu\u017enicu ili nastavite istragu za dodatne detalje.",
+    "endgame.description": "Prikupili ste sve klju\u010dne dokaze potrebne za izgradnju slu\u010daja. Pregledajte dokaze, izvr\u0161ite hap\u0161enje ili nastavite istragu za dodatne detalje.",
     "endgame.review": "Pregledaj Dokaze",
-    "endgame.accuse": "Podnesi Optu\u017enicu",
+    "endgame.accuse": "Izvr\u0161i Hap\u0161enje",
     "endgame.continue": "Nastavi Istragu",
-    "endgame.accuse_cta": "Spremni za Optu\u017enicu?",
+    "endgame.accuse_cta": "Spremni za Hap\u0161enje?",
 
     // Evidence groups
     "evidence.group_physical": "Fizi\u010dki Dokazi",
