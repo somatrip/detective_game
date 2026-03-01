@@ -299,6 +299,37 @@
     .hub-panel { display: none; }
     .hub-panel.active { display: block; }
 
+    /* ── Notes Panel ──────────────────────────────────────── */
+    .notes-container {
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      height: calc(100vh - 140px);
+      display: flex;
+      flex-direction: column;
+    }
+    .player-notes-textarea {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .player-notes-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .player-notes-textarea::placeholder {
+      color: var(--text-faint);
+      font-style: italic;
+    }
+
     /* ── NPC Grid (5 + 4 staggered rows) ───────────────────── */
     .npc-grid-container {
       padding: 1.25rem 2rem 0;
@@ -1987,6 +2018,9 @@
     <button class="manila-tab" data-hub-tab="caseboard">
       <span class="manila-tab-label" data-i18n="hub.tab_caseboard">Case Board</span>
     </button>
+    <button class="manila-tab" data-hub-tab="notes">
+      <span class="manila-tab-label" data-i18n="hub.tab_notes">Notes</span>
+    </button>
     <div class="manila-tabs-spacer"></div>
     <button class="manila-tab manila-tab-icon" id="hub-settings-tab" title="Settings">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2025,6 +2059,13 @@
           <div id="cb-evidence-empty" class="empty-state" data-i18n="evidence.empty">No evidence collected yet. Interrogate suspects to uncover clues.</div>
           <div id="cb-evidence-list"></div>
         </div>
+      </div>
+    </div>
+    <div class="hub-panel" id="hub-notes">
+      <div class="notes-container">
+        <textarea id="player-notes" class="player-notes-textarea"
+          placeholder="Type your investigation notes here..."
+          data-i18n-placeholder="notes.placeholder"></textarea>
       </div>
     </div>
   </div>
@@ -2942,6 +2983,8 @@
   let evidence = [];
   let discoveries = {};
   let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, rapport_band }
+  let discoveryMessageIndices = {};  // npc_id → [messageIndex, ...] — tracks which messages revealed discoveries
+  let playerNotes = "";
   let caseReadyPromptShown = false;
   let sending = false;
   let accusationTarget = null;
@@ -3053,6 +3096,8 @@
       activeNpcId,
       discoveries,
       npcInterrogation,
+      discoveryMessageIndices,
+      playerNotes,
       caseReadyPromptShown,
       briefingOpen,
       // Also persist tutorial / UI flags for full cloud restore
@@ -3074,6 +3119,12 @@
     if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
     if (s.discoveries) discoveries = s.discoveries;
     if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
+    if (s.discoveryMessageIndices) discoveryMessageIndices = s.discoveryMessageIndices;
+    if (s.playerNotes !== undefined) {
+      playerNotes = s.playerNotes;
+      const notesEl = document.getElementById("player-notes");
+      if (notesEl) notesEl.value = playerNotes;
+    }
     if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
     if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
     // Restore tutorial flags
@@ -3109,6 +3160,12 @@
       if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
       if (s.discoveries) discoveries = s.discoveries;
       if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
+      if (s.discoveryMessageIndices) discoveryMessageIndices = s.discoveryMessageIndices;
+      if (s.playerNotes !== undefined) {
+        playerNotes = s.playerNotes;
+        const notesEl = document.getElementById("player-notes");
+        if (notesEl) notesEl.value = playerNotes;
+      }
       if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
       if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
       if (s.gameId) { gameId = s.gameId; localStorage.setItem("echoes_game_id", gameId); }
@@ -3122,6 +3179,8 @@
     evidence = [];
     discoveries = {};
     npcInterrogation = {};
+    discoveryMessageIndices = {};
+    playerNotes = "";
     caseReadyPromptShown = false;
     subpoenaToastShown = false;
     briefingOpen = true;
@@ -3471,6 +3530,17 @@
       });
     }
 
+    // Restore discovery icon if this message had one
+    if (role === "assistant" && activeNpcId && messageIndex !== undefined
+        && (discoveryMessageIndices[activeNpcId] || []).includes(messageIndex)) {
+      div.classList.add("msg-has-discovery");
+      const icon = document.createElement("span");
+      icon.className = "msg-discovery-icon";
+      icon.title = t("toast.new_discovery");
+      icon.textContent = "!";
+      div.appendChild(icon);
+    }
+
     chatMessages.appendChild(div);
   }
 
@@ -3724,6 +3794,15 @@
     icon.textContent = "!";
     last.appendChild(icon);
     last.classList.add("msg-has-discovery");
+    // Persist discovery index so icons survive re-renders and reloads
+    if (activeNpcId) {
+      const convLen = (conversations[activeNpcId] || []).length;
+      const idx = convLen - 1;
+      if (!discoveryMessageIndices[activeNpcId]) discoveryMessageIndices[activeNpcId] = [];
+      if (!discoveryMessageIndices[activeNpcId].includes(idx)) {
+        discoveryMessageIndices[activeNpcId].push(idx);
+      }
+    }
   }
 
   let unseenDiscoveryCount = 0;
@@ -4105,6 +4184,16 @@
       if (tab.dataset.hubTab === "caseboard") clearCaseBoardBadges();
     });
   });
+
+  // Notes textarea — auto-save on input
+  const notesTextarea = document.getElementById("player-notes");
+  if (notesTextarea) {
+    notesTextarea.value = playerNotes;
+    notesTextarea.addEventListener("input", () => {
+      playerNotes = notesTextarea.value;
+      saveState();
+    });
+  }
 
   // Chat settings tab
   $("#chat-settings-tab").addEventListener("click", openSettings);

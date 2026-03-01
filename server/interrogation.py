@@ -185,6 +185,11 @@ def apply_update(
     (peak_pressure < 75) and the current turn is not applying pressure
     (delta_p <= 0).  This makes pressure bleed away quickly if the
     player backs off before truly breaking the NPC.
+
+    Rapport erodes faster when the NPC is under pressure — the factor
+    scales linearly from 1× (calm, pressure 0) to 3× (cornered,
+    pressure 100).  This forces the player to choose between pushing
+    hard and maintaining trust.
     """
     was_cornered = peak_pressure >= 75
     if not was_cornered and delta_p <= 0:
@@ -192,8 +197,12 @@ def apply_update(
     else:
         effective_decay = archetype.pressure_decay
 
+    # Rapport erodes faster under pressure (1× at 0 → 3× at 100)
+    pressure_rapport_factor = 1.0 + (current_pressure / 100.0) * 2.0
+    effective_rapport_decay = archetype.rapport_decay * pressure_rapport_factor
+
     p = current_pressure - effective_decay + delta_p
-    r = current_rapport - archetype.rapport_decay + delta_r
+    r = current_rapport - effective_rapport_decay + delta_r
     new_p = max(0, min(100, round(p)))
     new_r = max(0, min(100, round(r)))
     return new_p, new_r, max(peak_pressure, new_p)

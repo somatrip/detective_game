@@ -20,6 +20,8 @@ window.I18N = {
     // Hub screen
     "hub.tab_suspects": "Persons of Interest",
     "hub.tab_caseboard": "Case Board",
+    "hub.tab_notes": "Notes",
+    "notes.placeholder": "Type your investigation notes here...",
     "chat.back_to_hub": "Case Files",
     "chat.nav_suspects": "Persons of Interest",
     "chat.nav_caseboard": "Case Board",
@@ -312,6 +314,8 @@ window.I18N = {
     // Hub screen
     "hub.tab_suspects": "Osumnji\u010deni",
     "hub.tab_caseboard": "Tabla Slu\u010daja",
+    "hub.tab_notes": "Bele\u0161ke",
+    "notes.placeholder": "Unesite bele\u0161ke o istrazi ovde...",
     "chat.back_to_hub": "Dosijei",
     "chat.nav_suspects": "Osumnjičeni",
     "chat.nav_caseboard": "Tabla Slučaja",
