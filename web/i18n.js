@@ -59,6 +59,7 @@ window.I18N = {
     "evidence.mentioned_by": "Mentioned by {name} during interrogation.",
     "evidence.mentioned_by_partner": "Shared by {name} during case briefing.",
     "evidence.crime_scene": "Recovered from the crime scene by forensics.",
+    "evidence.burned-notebook_desc": "Recovered from the basement incinerator. Contains a partial list of names — appears to be a blackmail or threat list. The name 'Matt' is legible.",
     "evidence.security_systems": "Obtained from hotel security systems.",
 
     // Evidence labels (for i18n support in evidence catalog)
@@ -350,6 +351,7 @@ window.I18N = {
     "evidence.mentioned_by": "Pomenuo/la {name} tokom ispitivanja.",
     "evidence.mentioned_by_partner": "Podeljeno od {name} tokom brifinga o slučaju.",
     "evidence.crime_scene": "Prona\u0111eno na mestu zlo\u010dina od strane forenzi\u010dara.",
+    "evidence.burned-notebook_desc": "Prona\u0111eno u podrumskom spalioniku. Sadr\u017ei delimi\u010dnu listu imena \u2014 izgleda kao lista za ucenu ili pretnje. Ime \u2018Matt\u2019 je \u010ditljivo.",
     "evidence.security_systems": "Dobijeno iz hotelskih sigurnosnih sistema.",
 
     // Evidence labels
