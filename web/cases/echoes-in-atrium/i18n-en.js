@@ -54,6 +54,7 @@
     "evidence.lockpick-marks_label": "Lockpick Marks",
     "evidence.hotel-sale_label": "Hotel Sale Plan",
     "evidence.stage-timing_label": "Stage Timing Gaps",
+    "evidence.conspiracy_label": "Blackout Conspiracy",
 
     // ── Evidence groups ──
     "evidence.group_physical": "Physical Evidence",
@@ -64,7 +65,7 @@
 
     // ── Discovery texts ──
     "discovery.amelia-key-loan": "Amelia admits she lent her maintenance-room key and engineering keycard to Eddie Voss earlier that evening to retrieve a misplaced toolkit.",
-    "discovery.amelia-breaker": "Amelia deliberately pulled the breaker to search Mercer\u2019s suite for proof that he planned to sell the hotel.",
+    "discovery.amelia-breaker": "Amelia deliberately pulled the breaker so a co-conspirator could search Mercer\u2019s suite for proof of the hotel sale.",
     "discovery.amelia-hotel-sale": "Amelia learned that Mercer intended to sell the Lyric Atrium Hotel to a developer, threatening the hotel\u2019s heritage.",
     "discovery.amelia-lockpick": "Lockpick marks on the maintenance room door suggest someone without the key forced entry \u2014 Amelia\u2019s key was already with Eddie.",
     "discovery.noah-embezzlement": "Financial records reveal Noah Sterling embezzled company funds to cover gambling debts. Mercer found out.",
@@ -80,6 +81,9 @@
     "discovery.matthias-noah-financial": "Matthias reveals that during his confrontation with Mercer, Mercer mentioned Noah had been skimming company funds and the board would deal with it.",
     "discovery.mira-plagiarism": "Mercer plagiarized Dr. Kline\u2019s research for the Panopticon ethics framework. She planned to expose him publicly.",
     "discovery.mira-meeting": "Mira scheduled a private meeting with Mercer at 11:30 PM to demand a public admission. Mercer never showed \u2014 he was already dead.",
+    "discovery.mira-suite-search": "Mira searched Suite 701 during the blackout to find proof of Mercer\u2019s plagiarism and hotel sale plans \u2014 placing her in the victim\u2019s suite during the murder window.",
+    "discovery.amelia-conspiracy-admission": "Amelia admits the full conspiracy \u2014 she pulled the breaker while Mira searched Suite 701 for documents proving Mercer\u2019s plagiarism and the hotel sale.",
+    "discovery.mira-conspiracy-admission": "Mira admits the full conspiracy \u2014 she searched Suite 701 during the blackout while Amelia held the breaker at B1, both seeking proof of Mercer\u2019s corruption.",
     "discovery.eddie-key-loan": "Eddie Voss borrowed Amelia\u2019s maintenance-room key and engineering keycard to retrieve a toolkit and forgot to return them immediately.",
     "discovery.eddie-gave-noah-key": "Noah Sterling pressured Eddie into handing over the maintenance-room key and engineering keycard at the VIP bar earlier that evening, promising favors.",
     "discovery.priya-saw-noah": "Priya witnessed Noah Sterling near the freight elevator shortly before the lights went out.",
@@ -88,6 +92,7 @@
     "discovery.priya-mira-tip": "Dr. Mira Kline tipped off Priya about Mercer\u2019s ethics violations and arranged her attendance at the gala.",
     "discovery.matthew-noah-absence": "Matthew\u2019s cue sheet shows Noah Sterling was absent for a 5-minute gap before the blackout, and roughly 30 minutes total before reappearing.",
     "discovery.matthew-celeste-break": "Matthew noticed Celeste Ward took an unscheduled break during the blackout, suggesting she saw something.",
+    "discovery.matthew-amelia-direction": "Matthew\u2019s stage log records Amelia entering the ballroom from the B1 service stairwell at ~11:32 PM \u2014 she came from the basement, not the 7th floor. She never went to Suite 701.",
 
     // ── Dossier labels ──
     "dossier.discoveries_heading": "Discoveries",

@@ -54,6 +54,7 @@
     "evidence.lockpick-marks_label": "Tragovi Obijanja",
     "evidence.hotel-sale_label": "Plan Prodaje Hotela",
     "evidence.stage-timing_label": "Praznine u Rasporedu Scene",
+    "evidence.conspiracy_label": "Zavera Tokom Nestanka Struje",
 
     // ── Evidence groups ──
     "evidence.group_physical": "Fizi\u010dki Dokazi",
@@ -64,7 +65,7 @@
 
     // ── Discovery texts ──
     "discovery.amelia-key-loan": "Amelija priznaje da je pozajmila klju\u010d za odr\u017eavanje Ediju Vosu ranije te ve\u010deri da bi preuzeo zaboravljeni alat.",
-    "discovery.amelia-breaker": "Amelija je namerno iskop\u010dala osigura\u010d da pretra\u017ei Merserov apartman u potrazi za dokazima da planira prodaju hotela.",
+    "discovery.amelia-breaker": "Amelija je namerno iskop\u010dala osigura\u010d kako bi saučesnica mogla da pretraži Merserov apartman u potrazi za dokazima o prodaji hotela.",
     "discovery.amelia-hotel-sale": "Amelija je saznala da Merser namerava da proda hotel Lyric Atrium investitoru, \u0161to bi ugrozilo nasle\u0111e hotela.",
     "discovery.amelia-lockpick": "Tragovi obijanja na vratima prostorije za odr\u017eavanje ukazuju da je neko bez klju\u010da nasilno u\u0161ao \u2014 Amelijin klju\u010d je ve\u0107 bio kod Edija.",
     "discovery.noah-embezzlement": "Finansijski izve\u0161taji otkrivaju da je Noa Sterling pronevero sredstva kompanije da pokrije kockarske dugove. Merser je to otkrio.",
@@ -80,6 +81,9 @@
     "discovery.matthias-noah-financial": "Matijas otkriva da je tokom konfrontacije sa Merserom, Merser pomenuo da je Noa skidao novac sa ra\u010duna kompanije i da \u0107e se uprava time pozabaviti.",
     "discovery.mira-plagiarism": "Merser je plagirao istra\u017eivanje Dr Klajn za eti\u010dki okvir Panopticona. Ona je planirala da ga javno razotkrije.",
     "discovery.mira-meeting": "Mira je zakazala privatni sastanak sa Merserom u 23:30 da zahteva javno priznanje. Merser se nije pojavio \u2014 ve\u0107 je bio mrtav.",
+    "discovery.mira-suite-search": "Mira je pretra\u017eila Apartman 701 tokom nestanka struje u potrazi za dokazima o Merserovom plagijatu i planovima prodaje hotela \u2014 \u0161to je stavlja u \u017ertvin apartman tokom perioda ubistva.",
+    "discovery.amelia-conspiracy-admission": "Amelija priznaje punu zaveru \u2014 ona je iskop\u010dala osigura\u010d dok je Mira pretra\u017eivala Apartman 701 u potrazi za dokazima o Merserovom plagijatu i prodaji hotela.",
+    "discovery.mira-conspiracy-admission": "Mira priznaje punu zaveru \u2014 pretra\u017eivala je Apartman 701 tokom nestanka struje dok je Amelija dr\u017eala osigura\u010d na nivou B1, obe u potrazi za dokazima o Merserovoj korupciji.",
     "discovery.eddie-key-loan": "Edi Vos je pozajmio Amelijin klju\u010d za odr\u017eavanje da preuzme alat i zaboravio da ga odmah vrati.",
     "discovery.eddie-gave-noah-key": "Noa Sterling je pritiskao Edija da mu preda klju\u010d za odr\u017eavanje na VIP baru ranije te ve\u010deri, obe\u0107avaju\u0107i usluge.",
     "discovery.priya-saw-noah": "Prija je videla Nou Sterlinga blizu teretnog lifta neposredno pre nego \u0161to je nestalo struje.",
@@ -88,6 +92,7 @@
     "discovery.priya-mira-tip": "Dr Mira Klajn je obavestila Priju o Merserovim eti\u010dkim prekr\u0161ajima i organizovala njeno prisustvo na gali.",
     "discovery.matthew-noah-absence": "Metjuov raspored signala pokazuje da se Noa Sterling udaljio na pribli\u017eno pet minuta tokom nestanka struje.",
     "discovery.matthew-celeste-break": "Metju je primetio da je Selest Vord imala nezakazanu pauzu tokom nestanka struje, \u0161to ukazuje da je ne\u0161to videla.",
+    "discovery.matthew-amelia-direction": "Metjuov dnevnik bele\u017ei da je Amelija u\u0161la u balsku salu kroz vrata servisnog stepeni\u0161ta sa nivoa B1 u ~23:32 \u2014 do\u0161la je iz podruma, ne sa sedmog sprata. Nikada nije bila u Apartmanu 701.",
 
     // ── Dossier labels ──
     "dossier.discoveries_heading": "Otkri\u0107a",

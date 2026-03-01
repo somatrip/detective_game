@@ -48,6 +48,7 @@
       "lockpick-marks":       { label: "Lockpick Marks" },
       "hotel-sale":           { label: "Hotel Sale Plan" },
       "stage-timing":         { label: "Stage Timing Gaps" },
+      "conspiracy":           { label: "Blackout Conspiracy" },
     },
 
     /* ── Discovery -> evidence mapping (mirrors server DISCOVERY_CATALOG) */
@@ -69,6 +70,9 @@
       "matthias-noah-financial":  "financial-misconduct",
       "mira-plagiarism":          "plagiarism",
       "mira-meeting":             "encrypted-schedule",
+      "mira-suite-search":        "conspiracy",
+      "amelia-conspiracy-admission": "conspiracy",
+      "mira-conspiracy-admission":   "conspiracy",
       "eddie-key-loan":           "key-trail",
       "eddie-gave-noah-key":      "key-trail",
       "priya-saw-noah":           "surveillance",
@@ -77,13 +81,14 @@
       "priya-board-vote":         "encrypted-schedule",
       "matthew-noah-absence":     "stage-timing",
       "matthew-celeste-break":    "stage-timing",
+      "matthew-amelia-direction": "conspiracy",
     },
 
     /* ── Evidence grouping for the case board ──────────────── */
     evidenceGroups: {
       physical:    ["lockpick-marks"],
       documentary: ["burned-notebook", "encrypted-schedule", "nda-ip"],
-      testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale"],
+      testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale", "conspiracy"],
       access:      ["keycard-logs", "key-trail", "power-outage", "stage-timing"],
       motive:      ["financial-misconduct", "blackmail", "data-sales", "surveillance"],
     },

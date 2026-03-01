@@ -14,13 +14,13 @@ NPC_RELEVANT_EVIDENCE: Dict[str, List[str]] = {
         "financial-misconduct", "encrypted-schedule",
         "key-trail", "surveillance", "burned-notebook",
     ],
-    "amelia-reyes": ["key-trail", "lockpick-marks", "power-outage", "hotel-sale"],
+    "amelia-reyes": ["key-trail", "lockpick-marks", "power-outage", "hotel-sale", "conspiracy"],
     "eddie-voss": ["key-trail"],
     "celeste-ward": ["secret-affair", "audio-recording", "surveillance"],
     "matthias-holt": ["data-sales", "blackmail", "burned-notebook", "surveillance", "financial-misconduct"],
-    "mira-kline": ["plagiarism", "encrypted-schedule", "nda-ip"],
+    "mira-kline": ["plagiarism", "encrypted-schedule", "nda-ip", "conspiracy"],
     "priya-shah": ["surveillance", "blackmail", "plagiarism", "encrypted-schedule"],
-    "matthew-vale": ["stage-timing"],
+    "matthew-vale": ["stage-timing", "conspiracy"],
     "lila-chen": [],
 }
 
@@ -29,6 +29,7 @@ SMOKING_GUN_MAP: Dict[str, List[str]] = {
     "matthias-holt": ["data-sales"],
     "amelia-reyes": ["lockpick-marks"],
     "celeste-ward": ["audio-recording"],
+    "mira-kline": ["conspiracy"],
 }
 
 #: Full evidence catalog with descriptions (used by classify_player_turn
@@ -50,6 +51,7 @@ EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
     "lockpick-marks": "Lockpick marks on the maintenance room door",
     "hotel-sale": "Mercer planned to sell the Lyric Atrium Hotel to a developer",
     "stage-timing": "Lighting console logs or cue sheet gaps showing someone's absence",
+    "conspiracy": "Amelia and Mira conspired together — Amelia pulled the breaker while Mira searched Suite 701 during the blackout",
 }
 
 # ---------------------------------------------------------------------------
@@ -69,7 +71,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "amelia-breaker": {
         "npc_id": "amelia-reyes",
         "evidence_id": "power-outage",
-        "description": "Amelia deliberately pulled the breaker to cause the power outage and search Mercer's suite",
+        "description": "Amelia deliberately pulled the breaker to cause the power outage so a co-conspirator could search Mercer's suite",
     },
     "amelia-hotel-sale": {
         "npc_id": "amelia-reyes",
@@ -150,6 +152,21 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "evidence_id": "encrypted-schedule",
         "description": "Mira scheduled a private meeting with Mercer at 11:30 PM to demand a public admission",
     },
+    "mira-suite-search": {
+        "npc_id": "mira-kline",
+        "evidence_id": "conspiracy",
+        "description": "Mira searched Suite 701 during the blackout to find proof of Mercer's plagiarism and hotel sale plans",
+    },
+    "amelia-conspiracy-admission": {
+        "npc_id": "amelia-reyes",
+        "evidence_id": "conspiracy",
+        "description": "Amelia admits the full conspiracy — she pulled the breaker while Mira searched Suite 701",
+    },
+    "mira-conspiracy-admission": {
+        "npc_id": "mira-kline",
+        "evidence_id": "conspiracy",
+        "description": "Mira admits the full conspiracy — she searched Suite 701 while Amelia held the breaker",
+    },
     # Eddie Voss
     "eddie-key-loan": {
         "npc_id": "eddie-voss",
@@ -192,5 +209,10 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "npc_id": "matthew-vale",
         "evidence_id": "stage-timing",
         "description": "Matthew noticed Celeste Ward took an unscheduled break during the blackout",
+    },
+    "matthew-amelia-direction": {
+        "npc_id": "matthew-vale",
+        "evidence_id": "conspiracy",
+        "description": "Matthew's running stage log records Amelia Reyes entering the Grand Ballroom from the B1 service stairwell door at ~11:32 PM — proving she came from the basement, not the 7th floor",
     },
 }
