@@ -2014,9 +2014,9 @@
             <p data-i18n="intro.time_of_death" data-i18n-html><strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.</p>
             <p data-i18n="intro.body_discovered" data-i18n-html><strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.</p>
             <p data-i18n="intro.circumstances" data-i18n-html><strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.</p>
-            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator &mdash; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>&lsquo;Matt&rsquo;</em> is legible. Traces of <em>antique machine oil</em> were found near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
+            <p data-i18n="intro.starting_evidence" data-i18n-html><strong>Initial Evidence:</strong> The murder weapon &mdash; an antique telescope mount &mdash; was found smashed beside the body. Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>&lsquo;Matt&rsquo;</em> is legible. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.</p>
             <p data-i18n="intro.your_role" data-i18n-html><strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.</p>
-            <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.</p>
+            <p data-i18n="intro.your_partner" data-i18n-html><strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. She is your trusted partner.</p>
             <p style="margin-top:1rem; color: var(--gold);" data-i18n="intro.tip" data-i18n-html><strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.</p>
           </div>
         </div>
@@ -2961,7 +2961,7 @@
 
   /* ── Canonical evidence for endgame trigger ────────── */
   const CANONICAL_EVIDENCE = [
-    "oil-trace", "burned-notebook", "keycard-logs", "key-trail",
+    "burned-notebook", "keycard-logs", "key-trail",
     "financial-misconduct", "encrypted-schedule", "surveillance",
   ];
 
@@ -3169,7 +3169,6 @@
 
   /* ── Initialize ─────────────────────────────────────────── */
   const STARTING_EVIDENCE = [
-    { id: "oil-trace",       textKey: "evidence.crime_scene" },
     { id: "burned-notebook",  textKey: "evidence.crime_scene" },
     { id: "keycard-logs",     textKey: "evidence.security_systems" },
   ];
@@ -3620,7 +3619,6 @@
 
   /* ── Evidence Detection ─────────────────────────────────── */
   const EVIDENCE_CATALOG = {
-    "oil-trace":            { label: "Antique Oil Trace" },
     "burned-notebook":      { label: "Burned Notebook Fragment" },
     "keycard-logs":         { label: "Keycard Access Logs" },
     "key-trail":            { label: "Maintenance Key Trail" },
@@ -3650,7 +3648,7 @@
     "celeste-affair": "secret-affair",     "celeste-recordings": "audio-recording",
     "celeste-rooftop-witness": "surveillance",
     "matthias-blackmail": "blackmail",       "matthias-data-sales": "data-sales",
-    "matthias-notebook": "burned-notebook",  "matthias-saw-noah": "surveillance",
+    "matthias-saw-noah": "surveillance",
     "matthias-noah-financial": "financial-misconduct",
     "mira-plagiarism": "plagiarism",       "mira-meeting": "encrypted-schedule",
     "eddie-key-loan": "key-trail",         "eddie-gave-noah-key": "key-trail",
@@ -3808,7 +3806,7 @@
 
   /* ── Render Evidence (Case Board) ────────────────────────── */
   const EVIDENCE_GROUPS = {
-    physical:    ["oil-trace", "lockpick-marks"],
+    physical:    ["lockpick-marks"],
     documentary: ["burned-notebook", "encrypted-schedule", "nda-ip"],
     testimony:   ["secret-affair", "audio-recording", "plagiarism", "hotel-sale"],
     access:      ["keycard-logs", "key-trail", "power-outage", "stage-timing"],

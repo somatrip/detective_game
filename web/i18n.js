@@ -12,9 +12,9 @@ window.I18N = {
     "intro.time_of_death": "<strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.",
     "intro.body_discovered": "<strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.",
     "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM — the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
-    "intro.starting_evidence": "<strong>Initial Evidence:</strong> Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator \u2014 it contains a partial list of names that appears to be a blackmail or threat list. The name <em>'Matt'</em> is legible. Traces of <em>antique machine oil</em> were found near the body. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
+    "intro.starting_evidence": "<strong>Initial Evidence:</strong> The murder weapon \u2014 an antique telescope mount \u2014 was found smashed beside the body. Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>'Matt'</em> is legible. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
     "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
-    "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. Start with her for an overview of the case.",
+    "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. She is your trusted partner.",
     "intro.tip": "<strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
 
     // Hub screen
@@ -62,7 +62,6 @@ window.I18N = {
     "evidence.security_systems": "Obtained from hotel security systems.",
 
     // Evidence labels (for i18n support in evidence catalog)
-    "evidence.oil-trace_label": "Antique Oil Trace",
     "evidence.burned-notebook_label": "Burned Notebook Fragment",
     "evidence.keycard-logs_label": "Keycard Access Logs",
     "evidence.key-trail_label": "Maintenance Key Trail",
@@ -151,7 +150,6 @@ window.I18N = {
     "discovery.celeste-rooftop-witness": "Celeste saw a figure \u2014 recognizable as Noah Sterling \u2014 descending the atrium stairwell during the blackout.",
     "discovery.matthias-blackmail": "Mercer was blackmailing Matthias \u2014 his name appears on the burned notebook fragment's threat list.",
     "discovery.matthias-data-sales": "Matthias has been running a side business selling anonymized guest data from the hotel's systems.",
-    "discovery.matthias-notebook": "The burned notebook fragment lists Matthias Holt as one of Mercer's blackmail targets.",
     "discovery.matthias-saw-noah": "Matthias saw Noah Sterling on the B1 elevator lobby camera entering the service elevator lobby right before the blackout began.",
     "discovery.matthias-noah-financial": "Matthias reveals that during his confrontation with Mercer, Mercer mentioned Noah had been skimming company funds and the board would deal with it.",
     "discovery.mira-plagiarism": "Mercer plagiarized Dr. Kline's research for the Panopticon ethics framework. She planned to expose him publicly.",
@@ -305,7 +303,7 @@ window.I18N = {
     "intro.time_of_death": "<strong>Procenjeno vreme smrti:</strong> Izme\u0111u 23:15 i 23:30 (tokom nestanka struje). \u017drtva je ubijena anti\u010dkim postolem teleskopa.",
     "intro.body_discovered": "<strong>Telo prona\u0111eno:</strong> Pribli\u017eno u 23:44, od strane direktora obezbe\u0111enja Matijasa Holta u opservatoriji na krovu, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih.",
     "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije.",
-    "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> u podrumskom spalioniku \u2014 sadr\u017ei delimi\u010dnu listu imena koja izgleda kao lista za ucenu ili pretnje. Ime <em>\u2018Matt\u2019</em> je \u010ditljivo. Tragovi <em>anti\u010dkog ma\u0161inskog ulja</em> su prona\u0111eni pored tela. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
+    "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Oru\u017eje ubistva \u2014 anti\u010dko postolje teleskopa \u2014 prona\u0111eno je razbijeno pored tela. Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> u podrumskom spalioniku; sadr\u017ei delimi\u010dnu listu imena koja izgleda kao lista za ucenu ili pretnje. Ime <em>\u2018Matt\u2019</em> je \u010ditljivo. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
     "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte osam osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
     "intro.your_partner": "<strong>Va\u0161 partner:</strong> Detektiv Lila \u010cen \u0107e vam pomo\u0107i sa takti\u010dkim savetima i pravnim smernicama. Po\u010dnite sa njom za pregled slu\u010daja.",
     "intro.tip": "<strong>Savet:</strong> Likovi \u0107e pa\u017eeljivo \u010duvati svoje tajne. Predstavite dokaze i izgradite pritisak da probijete njihovu odbranu. Obratite pa\u017enju na kontradikcije izme\u0111u svedo\u010denja.",
@@ -355,7 +353,6 @@ window.I18N = {
     "evidence.security_systems": "Dobijeno iz hotelskih sigurnosnih sistema.",
 
     // Evidence labels
-    "evidence.oil-trace_label": "Trag Anti\u010dkog Ulja",
     "evidence.burned-notebook_label": "Spaljen Fragment Bele\u017enice",
     "evidence.keycard-logs_label": "Evidencija Pristupnih Kartica",
     "evidence.key-trail_label": "Trag Klju\u010da za Odr\u017eavanje",
@@ -444,7 +441,6 @@ window.I18N = {
     "discovery.celeste-rooftop-witness": "Selest je videla figuru \u2014 prepoznatljivu kao Noa Sterling \u2014 kako silazi niz stepeni\u0161te atrijuma tokom nestanka struje.",
     "discovery.matthias-blackmail": "Merser je ucenjivao Matijasa \u2014 njegovo ime se nalazi na listi pretnji iz spaljenog fragmenta bele\u017enice.",
     "discovery.matthias-data-sales": "Matijas vodi sporedni posao prodaje anonimizovanih podataka gostiju iz hotelskih sistema.",
-    "discovery.matthias-notebook": "Spaljeni fragment bele\u017enice navodi Matijasa Holta kao jednu od Merserovih meta za ucenu.",
     "discovery.matthias-saw-noah": "Matijas je video Nou Sterlinga kako se \u0161unja ka hodnicima za odr\u017eavanje neposredno pre nestanka struje.",
     "discovery.matthias-noah-financial": "Matijas otkriva da je tokom konfrontacije sa Merserom, Merser pomenuo da je Noa skidao novac sa ra\u010duna kompanije i da \u0107e se uprava time pozabaviti.",
     "discovery.mira-plagiarism": "Merser je plagirao istra\u017eivanje Dr Klajn za eti\u010dki okvir Panopticona. Ona je planirala da ga javno razotkrije.",

@@ -529,8 +529,6 @@ TIMELINE_LILA = (
     "  - Julian Mercer's body is on the observatory floor near the window wall.\n"
     "  - The antique telescope mount (Victorian-era, brass and iron, ~8 kg) is "
     "the murder weapon.  It is smashed and lying beside the body.\n"
-    "  - Traces of antique machine oil are found near the body and on the "
-    "telescope mount's broken base.\n"
     "  - A burned notebook fragment was recovered from the incinerator in the "
     "basement (B1).  It contains a partial list of names that appears to be a "
     "blackmail or threat list.  'Matt' is legible.\n"
@@ -545,11 +543,10 @@ TIMELINE_LILA = (
     "breaker in the maintenance room.\n\n"
 
     "INITIAL EVIDENCE IN YOUR POSSESSION:\n"
-    "  1. Antique oil trace (from crime scene)\n"
-    "  2. Burned notebook fragment (from incinerator)\n"
-    "  3. Keycard access logs (from hotel security)\n\n"
+    "  1. Burned notebook fragment (from incinerator)\n"
+    "  2. Keycard access logs (from hotel security)\n\n"
 
-    "You share these three pieces of evidence with the lead detective at the "
+    "You share these two pieces of evidence with the lead detective at the "
     "start of the investigation."
 )
 

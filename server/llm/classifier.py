@@ -45,7 +45,6 @@ SMOKING_GUN_MAP: Dict[str, List[str]] = {
 #: Full evidence catalog with descriptions (still used by classify_player_turn
 #: for evidence-strength scoring).
 EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
-    "oil-trace": "Antique oil traces found at the crime scene or on the telescope mount",
     "burned-notebook": "A burned notebook fragment or threat list found in the incinerator",
     "keycard-logs": "Rooftop keycard access logs showing only four entry events after 10 PM: Holt (10:01), Tanaka (10:43), Mercer (11:08), Holt (11:44)",
     "key-trail": "The maintenance-room key and engineering keycard (ENGR-0001) were lent from Amelia to Eddie, then pressured from Eddie to Noah",
@@ -140,11 +139,6 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "npc_id": "matthias-holt",
         "evidence_id": "data-sales",
         "description": "Matthias runs a side business selling anonymized guest data from the hotel's systems",
-    },
-    "matthias-notebook": {
-        "npc_id": "matthias-holt",
-        "evidence_id": "burned-notebook",
-        "description": "The burned notebook fragment lists Matthias Holt as one of Mercer's blackmail targets",
     },
     "matthias-saw-noah": {
         "npc_id": "matthias-holt",

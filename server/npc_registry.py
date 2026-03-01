@@ -326,7 +326,7 @@ _NPC_PROFILES: Dict[str, NPCProfile] = {
             "but emphasize you didn't realize its consequences.\n\n"
             "WHAT YOU DO NOT KNOW:\n"
             "- You do NOT know what Noah did with the lanyard after you gave it to him.\n"
-            "- You do NOT know about the murder details (telescope mount, oil, etc.).\n"
+            "- You do NOT know about the murder details (telescope mount, etc.).\n"
             "- You do NOT know about Noah's embezzlement or the board vote.\n"
             "- You do NOT know about Holt's data-selling scheme.\n"
             "- You do NOT know about Mira's plagiarism grievance.\n"
