@@ -2012,14 +2012,14 @@
 <!-- ════════ Auth Prompt (shown after title card, before game) ════════ -->
 <div id="auth-prompt" class="hidden">
   <div class="auth-prompt-card">
-    <h2 class="auth-prompt-heading">Save Your Progress</h2>
-    <p class="auth-prompt-desc">Sign in to save your investigation to the cloud. Your progress will be safe across devices.</p>
+    <h2 class="auth-prompt-heading" data-i18n="auth.save_heading">Save Your Progress</h2>
+    <p class="auth-prompt-desc" data-i18n="auth.save_desc">Sign in to save your investigation to the cloud. Your progress will be safe across devices.</p>
     <div class="auth-prompt-buttons">
-      <button class="auth-prompt-btn primary" id="auth-prompt-signin">Sign In</button>
-      <button class="auth-prompt-btn primary" id="auth-prompt-signup">Create Account</button>
+      <button class="auth-prompt-btn primary" id="auth-prompt-signin" data-i18n="auth.signin">Sign In</button>
+      <button class="auth-prompt-btn primary" id="auth-prompt-signup" data-i18n="auth.signup">Create Account</button>
     </div>
-    <button class="auth-prompt-skip" id="auth-prompt-skip">Continue without account</button>
-    <p class="auth-prompt-warning">Progress will only be saved locally and may be lost.</p>
+    <button class="auth-prompt-skip" id="auth-prompt-skip" data-i18n="auth.skip">Continue without account</button>
+    <p class="auth-prompt-warning" data-i18n="auth.skip_warning">Progress will only be saved locally and may be lost.</p>
   </div>
 </div>
 
@@ -2036,7 +2036,7 @@
       <span class="manila-tab-label" data-i18n="hub.tab_notes">Notes</span>
     </button>
     <div class="manila-tabs-spacer"></div>
-    <button class="manila-tab manila-tab-icon" id="hub-settings-tab" title="Settings">
+    <button class="manila-tab manila-tab-icon" id="hub-settings-tab" title="Settings" data-i18n-title="a11y.settings">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -2088,14 +2088,14 @@
       <span class="manila-tab-label" data-i18n="chat.nav_caseboard">Case Board</span>
     </button>
     <div class="manila-tabs-spacer"></div>
-    <button class="manila-tab manila-tab-icon" id="audio-toggle" title="Toggle voice">
+    <button class="manila-tab manila-tab-icon" id="audio-toggle" title="Toggle voice" data-i18n-title="a11y.toggle_voice">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>
     </button>
-    <button class="manila-tab manila-tab-icon" id="chat-settings-tab" title="Settings">
+    <button class="manila-tab manila-tab-icon" id="chat-settings-tab" title="Settings" data-i18n-title="a11y.settings">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -2107,7 +2107,7 @@
     <div class="chat-portrait-panel" id="chat-portrait-panel">
       <div class="portrait-frame">
         <img id="chat-portrait-img" src="" alt="" />
-        <button class="portrait-info-btn" id="portrait-info-btn" aria-label="NPC Bio">
+        <button class="portrait-info-btn" id="portrait-info-btn" aria-label="Character Bio" data-i18n-aria="a11y.npc_bio">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -2152,7 +2152,7 @@
       </div>
 
       <div class="chat-input-bar active" id="chat-input-bar">
-        <button id="mic-btn" title="Record voice message">
+        <button id="mic-btn" title="Record voice message" data-i18n-title="voice.mic_title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -2167,7 +2167,7 @@
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
         </button>
-        <button id="cancel-btn" title="Cancel response">
+        <button id="cancel-btn" title="Cancel response" data-i18n-title="a11y.cancel_response">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="6" width="12" height="12" rx="2"></rect>
           </svg>
@@ -2207,11 +2207,11 @@
       </div>
       <div class="settings-row" id="settings-account-row">
         <button id="settings-account-btn" class="settings-cancel-btn" style="width:100%;">
-          <span id="settings-account-label">Sign In / Create Account</span>
+          <span id="settings-account-label" data-i18n="auth.signin_or_signup">Sign In / Create Account</span>
         </button>
       </div>
       <div class="settings-row" id="settings-logout-row" style="display:none;">
-        <button id="settings-logout-btn" class="settings-danger-btn" style="width:100%;">Sign Out</button>
+        <button id="settings-logout-btn" class="settings-danger-btn" data-i18n="auth.signout" style="width:100%;">Sign Out</button>
       </div>
       <div class="settings-row">
         <button id="settings-tutorial-btn" class="settings-cancel-btn" data-i18n="tutorial.replay" style="width:100%;">Replay Tutorial</button>
@@ -2234,34 +2234,34 @@
 <div id="auth-modal">
   <div class="auth-card">
     <div class="auth-header">
-      <h2 id="auth-modal-title">Sign In</h2>
+      <h2 id="auth-modal-title" data-i18n="auth.signin">Sign In</h2>
       <button id="auth-close" class="auth-close-btn">&times;</button>
     </div>
     <div class="auth-body">
       <!-- Logged-out view -->
       <div id="auth-forms">
         <div class="auth-tabs">
-          <button class="auth-tab-btn active" data-auth-tab="login">Sign In</button>
-          <button class="auth-tab-btn" data-auth-tab="signup">Create Account</button>
+          <button class="auth-tab-btn active" data-auth-tab="login" data-i18n="auth.signin">Sign In</button>
+          <button class="auth-tab-btn" data-auth-tab="signup" data-i18n="auth.signup">Create Account</button>
         </div>
         <div class="auth-error" id="auth-error"></div>
         <div class="auth-info" id="auth-info"></div>
         <div class="auth-field">
-          <label for="auth-email">Email</label>
+          <label for="auth-email" data-i18n="auth.email_label">Email</label>
           <input type="email" id="auth-email" placeholder="detective@example.com" autocomplete="email" />
         </div>
         <div class="auth-field">
-          <label for="auth-password">Password</label>
-          <input type="password" id="auth-password" placeholder="Min. 6 characters" autocomplete="current-password" />
+          <label for="auth-password" data-i18n="auth.password_label">Password</label>
+          <input type="password" id="auth-password" placeholder="Min. 6 characters" data-i18n-placeholder="auth.password_placeholder" autocomplete="current-password" />
         </div>
-        <button id="auth-submit" class="auth-submit-btn">Sign In</button>
+        <button id="auth-submit" class="auth-submit-btn" data-i18n="auth.signin">Sign In</button>
       </div>
       <!-- Logged-in view -->
       <div id="auth-logged-in" style="display:none;">
         <div class="auth-user-bar">
-          <span class="auth-status-pill cloud">CLOUD SAVE</span>
+          <span class="auth-status-pill cloud" data-i18n="auth.cloud_pill">CLOUD SAVE</span>
           <span class="auth-user-email" id="auth-user-email"></span>
-          <button id="auth-logout" class="auth-logout-btn">Sign Out</button>
+          <button id="auth-logout" class="auth-logout-btn" data-i18n="auth.signout">Sign Out</button>
         </div>
         <div class="cloud-save-indicator" id="cloud-save-indicator"></div>
       </div>
@@ -2554,7 +2554,7 @@
     const indicator = document.getElementById("cloud-save-indicator");
     try {
       if (indicator) {
-        indicator.textContent = "Saving to cloud...";
+        indicator.textContent = t("cloud.saving");
         indicator.className = "cloud-save-indicator saving";
       }
       const stateObj = buildStateObject();
@@ -2563,7 +2563,7 @@
       cloudSavePending = false;
       cloudSaveRetries = 0;
       if (indicator) {
-        indicator.textContent = "Saved to cloud";
+        indicator.textContent = t("cloud.saved");
         indicator.className = "cloud-save-indicator saved";
         setTimeout(() => { indicator.textContent = ""; }, 2000);
       }
@@ -2574,7 +2574,7 @@
       if (cloudSaveRetries <= MAX_CLOUD_RETRIES) {
         const backoff = Math.min(1000 * Math.pow(2, cloudSaveRetries), 15000);
         if (indicator) {
-          indicator.textContent = "Cloud save failed — retrying...";
+          indicator.textContent = t("cloud.retry");
           indicator.className = "cloud-save-indicator error";
         }
         cloudSaveTimer = setTimeout(() => flushCloudSave(), backoff);
@@ -2583,7 +2583,7 @@
         cloudSavePending = false;
         cloudSaveRetries = 0;
         if (indicator) {
-          indicator.textContent = "Cloud save failed";
+          indicator.textContent = t("cloud.failed");
           indicator.className = "cloud-save-indicator error";
         }
       }
@@ -2635,14 +2635,14 @@
       formsDiv.style.display = "none";
       loggedInDiv.style.display = "";
       emailSpan.textContent = authUser.email;
-      modalTitle.textContent = "Account";
+      modalTitle.textContent = t("auth.account");
       if (accountLabel) accountLabel.textContent = authUser.email;
       if (logoutRow) logoutRow.style.display = "";
     } else {
       formsDiv.style.display = "";
       loggedInDiv.style.display = "none";
-      modalTitle.textContent = "Sign In";
-      if (accountLabel) accountLabel.textContent = "Sign In / Create Account";
+      modalTitle.textContent = t("auth.signin");
+      if (accountLabel) accountLabel.textContent = t("auth.signin_or_signup");
       if (logoutRow) logoutRow.style.display = "none";
     }
   }
@@ -2679,8 +2679,8 @@
       btn.addEventListener("click", () => {
         currentTab = btn.dataset.authTab;
         tabBtns.forEach(b => b.classList.toggle("active", b.dataset.authTab === currentTab));
-        submitBtn.textContent = currentTab === "login" ? "Sign In" : "Create Account";
-        passInput.placeholder = currentTab === "signup" ? "Min. 6 characters" : "Password";
+        submitBtn.textContent = currentTab === "login" ? t("auth.signin") : t("auth.signup");
+        passInput.placeholder = currentTab === "signup" ? t("auth.password_placeholder") : t("auth.password_label");
         passInput.autocomplete = currentTab === "signup" ? "new-password" : "current-password";
         errorEl.textContent = "";
         infoEl.textContent = "";
@@ -2699,16 +2699,16 @@
       infoEl.textContent = "";
 
       if (!email || !password) {
-        errorEl.textContent = "Please enter email and password.";
+        errorEl.textContent = t("auth.error_empty");
         return;
       }
       if (currentTab === "signup" && password.length < 6) {
-        errorEl.textContent = "Password must be at least 6 characters.";
+        errorEl.textContent = t("auth.error_password_short");
         return;
       }
 
       submitBtn.disabled = true;
-      submitBtn.textContent = currentTab === "login" ? "Signing in..." : "Creating account...";
+      submitBtn.textContent = currentTab === "login" ? t("auth.signing_in") : t("auth.creating_account");
 
       try {
         let result;
@@ -2716,9 +2716,9 @@
           result = await authSignup(email, password);
           if (!result.access_token) {
             // Email confirmation required
-            infoEl.textContent = "Check your email to confirm your account, then sign in.";
+            infoEl.textContent = t("auth.confirm_email");
             submitBtn.disabled = false;
-            submitBtn.textContent = "Create Account";
+            submitBtn.textContent = t("auth.signup");
             return;
           }
         } else {
@@ -2751,7 +2751,7 @@
         errorEl.textContent = err.message;
       }
       submitBtn.disabled = false;
-      submitBtn.textContent = currentTab === "login" ? "Sign In" : "Create Account";
+      submitBtn.textContent = currentTab === "login" ? t("auth.signin") : t("auth.signup");
     });
 
     // Enter key submits
@@ -5004,7 +5004,7 @@
     const tabBtns = document.querySelectorAll("[data-auth-tab]");
     tabBtns.forEach(b => b.classList.toggle("active", b.dataset.authTab === tab));
     const submitBtn = document.getElementById("auth-submit");
-    if (submitBtn) submitBtn.textContent = tab === "signup" ? "Create Account" : "Sign In";
+    if (submitBtn) submitBtn.textContent = tab === "signup" ? t("auth.signup") : t("auth.signin");
     window.__authFromTitleCard = true;
     openAuthModal();
   }

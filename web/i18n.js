@@ -73,6 +73,36 @@ window.I18N = {
     "settings.restart_cancel": "Cancel",
     "settings.language": "Language",
 
+    // Auth & cloud save
+    "auth.save_heading": "Save Your Progress",
+    "auth.save_desc": "Sign in to save your investigation to the cloud. Your progress will be safe across devices.",
+    "auth.signin": "Sign In",
+    "auth.signup": "Create Account",
+    "auth.skip": "Continue without account",
+    "auth.skip_warning": "Progress will only be saved locally and may be lost.",
+    "auth.signout": "Sign Out",
+    "auth.account": "Account",
+    "auth.signin_or_signup": "Sign In / Create Account",
+    "auth.email_label": "Email",
+    "auth.password_label": "Password",
+    "auth.password_placeholder": "Min. 6 characters",
+    "auth.signing_in": "Signing in\u2026",
+    "auth.creating_account": "Creating account\u2026",
+    "auth.confirm_email": "Check your email to confirm your account, then sign in.",
+    "auth.error_empty": "Please enter email and password.",
+    "auth.error_password_short": "Password must be at least 6 characters.",
+    "auth.cloud_pill": "CLOUD SAVE",
+    "cloud.saving": "Saving to cloud\u2026",
+    "cloud.saved": "Saved to cloud",
+    "cloud.retry": "Cloud save failed \u2014 retrying\u2026",
+    "cloud.failed": "Cloud save failed",
+
+    // Accessibility / tooltips
+    "a11y.settings": "Settings",
+    "a11y.toggle_voice": "Toggle voice",
+    "a11y.npc_bio": "Character Bio",
+    "a11y.cancel_response": "Cancel response",
+
     // Tutorial coach marks
     "tutorial.step_caseboard": "This is your Case Board — review evidence and the case briefing here.",
     "tutorial.step_briefing": "Expand or collapse the Case Briefing here.",
@@ -160,6 +190,36 @@ window.I18N = {
     "settings.restart_cancel": "Otka\u017ei",
     "settings.language": "Jezik",
 
+    // Auth & cloud save
+    "auth.save_heading": "Sa\u010duvajte napredak",
+    "auth.save_desc": "Prijavite se da sa\u010duvate istragu u oblaku. Va\u0161 napredak \u0107e biti bezbedan na svim ure\u0111ajima.",
+    "auth.signin": "Prijavite se",
+    "auth.signup": "Napravite nalog",
+    "auth.skip": "Nastavite bez naloga",
+    "auth.skip_warning": "Napredak \u0107e biti sa\u010duvan samo lokalno i mo\u017ee biti izgubljen.",
+    "auth.signout": "Odjavite se",
+    "auth.account": "Nalog",
+    "auth.signin_or_signup": "Prijava / Novi nalog",
+    "auth.email_label": "Email",
+    "auth.password_label": "Lozinka",
+    "auth.password_placeholder": "Min. 6 karaktera",
+    "auth.signing_in": "Prijavljivanje\u2026",
+    "auth.creating_account": "Pravljenje naloga\u2026",
+    "auth.confirm_email": "Proverite email da potvrdite nalog, zatim se prijavite.",
+    "auth.error_empty": "Unesite email i lozinku.",
+    "auth.error_password_short": "Lozinka mora imati najmanje 6 karaktera.",
+    "auth.cloud_pill": "\u010cUVANJE U OBLAKU",
+    "cloud.saving": "\u010cuvanje u oblaku\u2026",
+    "cloud.saved": "Sa\u010duvano u oblaku",
+    "cloud.retry": "\u010cuvanje neuspe\u0161no \u2014 pokušavam ponovo\u2026",
+    "cloud.failed": "\u010cuvanje u oblaku neuspe\u0161no",
+
+    // Accessibility / tooltips
+    "a11y.settings": "Pode\u0161avanja",
+    "a11y.toggle_voice": "Uklju\u010di/isklju\u010di glas",
+    "a11y.npc_bio": "Biografija lika",
+    "a11y.cancel_response": "Otka\u017ei odgovor",
+
     // Tutorial coach marks
     "tutorial.step_caseboard": "Ovo je vaša Tabla Slučaja — pregledajte dokaze i brifing ovde.",
     "tutorial.step_briefing": "Otvorite ili zatvorite brifing o slučaju ovde.",
@@ -214,6 +274,14 @@ window.applyLanguage = function applyLanguage(lang) {
 
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
     el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    el.title = t(el.getAttribute("data-i18n-title"));
+  });
+
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+    el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
   });
 
   // Update language toggle active states
