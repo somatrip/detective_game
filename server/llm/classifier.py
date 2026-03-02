@@ -9,11 +9,29 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, List
+from functools import lru_cache
+from typing import Any, Dict, List, TypedDict
 
 from ..config import settings
 
 log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Typed return shapes
+# ---------------------------------------------------------------------------
+
+
+class ClassificationResult(TypedDict):
+    tactic_type: str
+    evidence_strength: str
+
+
+class DetectionResult(TypedDict):
+    discovery_ids: List[str]
+    evidence_ids: List[str]
+    expression: str
+    discovery_summaries: Dict[str, str]
+
 
 # ---------------------------------------------------------------------------
 # Valid classification values (engine constants — not case-specific)
@@ -115,21 +133,44 @@ _DETECT_EVIDENCE_USER = """Player's message: \"{player_message}\"
 
 NPC response: \"{response}\""""
 
+
 # ---------------------------------------------------------------------------
-# NPC display names for prompt context
+# NPC name resolution — derives from active case data (case-agnostic)
 # ---------------------------------------------------------------------------
 
-_NPC_NAMES: Dict[str, str] = {
-    "lila-chen": "Detective Lila Chen",
-    "amelia-reyes": "Amelia Reyes (Head Engineer)",
-    "noah-sterling": "Noah Sterling (Co-Founder, Panopticon)",
-    "celeste-ward": "Celeste Ward (Jazz Vocalist)",
-    "matthias-holt": "Matthias Holt (Security Director)",
-    "mira-kline": "Dr. Mira Kline (Ethicist Consultant)",
-    "eddie-voss": "Eddie Voss (Junior Engineer)",
-    "priya-shah": "Priya Shah (Investigative Journalist)",
-    "matthew-vale": "Matthew Vale (Stage Manager)",
-}
+def _get_npc_display_name(npc_id: str) -> str:
+    """Return a human-readable NPC display name from the active case data.
+
+    Falls back to the raw npc_id if the case is not loaded or the NPC
+    is not found (e.g. in tests).
+    """
+    try:
+        from ..cases import get_active_case
+        profile = get_active_case().npc_profiles.get(npc_id)
+        if profile is not None:
+            return profile.display_name
+    except RuntimeError:
+        pass  # Case not loaded yet
+    return npc_id
+
+
+# ---------------------------------------------------------------------------
+# Cached classifier clients (one per process lifetime)
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=1)
+def _get_openai_classifier():
+    """Return a cached AsyncOpenAI client for classifier calls."""
+    from openai import AsyncOpenAI
+    return AsyncOpenAI(api_key=settings.openai_api_key or "")
+
+
+@lru_cache(maxsize=1)
+def _get_anthropic_classifier():
+    """Return a cached AsyncAnthropic client for classifier calls."""
+    import anthropic
+    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key or "")
+
 
 # ---------------------------------------------------------------------------
 # Provider-specific LLM calls
@@ -137,9 +178,7 @@ _NPC_NAMES: Dict[str, str] = {
 
 async def _call_openai_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """Call OpenAI classifier model and parse JSON response."""
-    from openai import AsyncOpenAI
-
-    client = AsyncOpenAI(api_key=settings.openai_api_key or "")
+    client = _get_openai_classifier()
     response = await client.chat.completions.create(
         model=settings.openai_classifier_model,
         messages=[
@@ -156,9 +195,7 @@ async def _call_openai_json(system_prompt: str, user_prompt: str) -> Dict[str, A
 
 async def _call_anthropic_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """Call Anthropic classifier model and parse JSON response."""
-    import anthropic
-
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key or "")
+    client = _get_anthropic_classifier()
     response = await client.messages.create(
         model=settings.anthropic_classifier_model,
         max_tokens=512,
@@ -196,16 +233,16 @@ async def classify_player_turn(
     npc_id: str,
     player_evidence_ids: List[str],
     conversation_history: List[Dict[str, str]],
-) -> Dict[str, str]:
+) -> ClassificationResult:
     """Classify the player's interrogation tactic and evidence strength.
 
-    Returns ``{"tactic_type": "...", "evidence_strength": "..."}``.
+    Returns a ``ClassificationResult`` with tactic_type and evidence_strength.
     """
     from ..cases import get_active_case
     case = get_active_case()
     relevant = case.npc_relevant_evidence.get(npc_id, [])
     smoking = case.smoking_gun_map.get(npc_id, [])
-    npc_name = _NPC_NAMES.get(npc_id, npc_id)
+    npc_name = _get_npc_display_name(npc_id)
 
     system_prompt = _CLASSIFY_TURN_SYSTEM.format(
         npc_id=npc_id,
@@ -237,13 +274,15 @@ async def classify_player_turn(
     # Validate and default
     tactic = result.get("tactic_type", "open_ended")
     if tactic not in VALID_TACTIC_TYPES:
+        log.warning("Classifier returned invalid tactic_type '%s', defaulting to open_ended", tactic)
         tactic = "open_ended"
 
     strength = result.get("evidence_strength", "none")
     if strength not in VALID_EVIDENCE_STRENGTHS:
+        log.warning("Classifier returned invalid evidence_strength '%s', defaulting to none", strength)
         strength = "none"
 
-    return {"tactic_type": tactic, "evidence_strength": strength}
+    return ClassificationResult(tactic_type=tactic, evidence_strength=strength)
 
 
 async def detect_evidence(
@@ -252,7 +291,7 @@ async def detect_evidence(
     already_collected: List[str],
     player_message: str = "",
     language: str = "en",
-) -> Dict[str, Any]:
+) -> DetectionResult:
     """Detect discoveries revealed and expression in the NPC's response.
 
     Uses discovery-level detection: checks against individual discovery
@@ -265,12 +304,12 @@ async def detect_evidence(
     language : str
         Language code for generating discovery summaries ('en' or 'sr').
 
-    Returns ``{"discovery_ids": [...], "evidence_ids": [...],
-               "expression": "...", "discovery_summaries": {...}}``.
+    Returns a ``DetectionResult`` with discovery_ids, evidence_ids,
+    expression, and discovery_summaries.
     """
     from ..cases import get_active_case
     case = get_active_case()
-    npc_name = _NPC_NAMES.get(npc_id, npc_id)
+    npc_name = _get_npc_display_name(npc_id)
     language_name = _LANGUAGE_NAMES.get(language, "English")
 
     # Filter discovery catalog to current NPC
@@ -280,12 +319,12 @@ async def detect_evidence(
     }
 
     if not npc_discoveries:
-        return {
-            "discovery_ids": [],
-            "evidence_ids": [],
-            "expression": "neutral",
-            "discovery_summaries": {},
-        }
+        return DetectionResult(
+            discovery_ids=[],
+            evidence_ids=[],
+            expression="neutral",
+            discovery_summaries={},
+        )
 
     catalog_lines = []
     for did, info in npc_discoveries.items():
@@ -342,12 +381,13 @@ async def detect_evidence(
     if expression not in VALID_EXPRESSIONS:
         expression = "neutral"
 
-    return {
-        "discovery_ids": valid_ids,
-        "evidence_ids": evidence_ids,
-        "expression": expression,
-        "discovery_summaries": discovery_summaries,
-    }
+    return DetectionResult(
+        discovery_ids=valid_ids,
+        evidence_ids=evidence_ids,
+        expression=expression,
+        discovery_summaries=discovery_summaries,
+    )
 
 
-__all__ = ["classify_player_turn", "detect_evidence"]
+__all__ = ["classify_player_turn", "detect_evidence",
+           "ClassificationResult", "DetectionResult"]

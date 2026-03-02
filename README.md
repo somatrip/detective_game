@@ -10,7 +10,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # 2. Install dependencies
-pip install -r server/requirements.txt
+pip install -r requirements.txt
 
 # 3. Configure an LLM provider (pick one)
 export ECHO_LLM_PROVIDER=anthropic   # or openai, or local

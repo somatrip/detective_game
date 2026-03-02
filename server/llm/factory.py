@@ -1,7 +1,11 @@
-"""LLM provider factory to keep the backend implementation swappable."""
+"""LLM provider factory to keep the backend implementation swappable.
+
+Clients are cached as singletons — one instance per process lifetime.
+"""
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Callable, Dict
 
 from ..config import settings
@@ -24,9 +28,13 @@ _PROVIDER_BUILDERS: Dict[str, Callable[[], LLMClient]] = {
 }
 
 
-def create_llm_client() -> LLMClient:
-    """Instantiate an LLM client based on the configured provider name."""
+@lru_cache(maxsize=1)
+def get_llm_client() -> LLMClient:
+    """Return a cached LLM client for the configured provider.
 
+    The client is instantiated once and reused for all subsequent requests,
+    avoiding the overhead of creating new HTTP connection pools per turn.
+    """
     provider = settings.llm_provider.lower()
     try:
         builder = _PROVIDER_BUILDERS[provider]
@@ -35,4 +43,8 @@ def create_llm_client() -> LLMClient:
     return builder()
 
 
-__all__ = ["create_llm_client"]
+# Keep legacy alias for any external callers
+create_llm_client = get_llm_client
+
+
+__all__ = ["get_llm_client", "create_llm_client"]

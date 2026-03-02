@@ -8,7 +8,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, Tuple, TypedDict
+
+
+# ---------------------------------------------------------------------------
+# Typed return shape
+# ---------------------------------------------------------------------------
+
+class TurnResult(TypedDict):
+    pressure: int
+    rapport: int
+    pressure_band: str
+    rapport_band: str
+    archetype_id: str
+    delta_pressure: int
+    delta_rapport: int
+    peak_pressure: int
 
 
 # ---------------------------------------------------------------------------
@@ -16,17 +31,17 @@ from typing import Dict, Tuple
 # ---------------------------------------------------------------------------
 
 class PressureBand(str, Enum):
-    CALM = "calm"          # 0–24
-    TENSE = "tense"        # 25–49
-    SHAKEN = "shaken"      # 50–74
-    CORNERED = "cornered"  # 75–100
+    CALM = "calm"          # 0-24
+    TENSE = "tense"        # 25-49
+    SHAKEN = "shaken"      # 50-74
+    CORNERED = "cornered"  # 75-100
 
 
 class RapportBand(str, Enum):
-    COLD = "cold"          # 0–24
-    NEUTRAL = "neutral"    # 25–49
-    OPEN = "open"          # 50–74
-    TRUSTING = "trusting"  # 75–100
+    COLD = "cold"          # 0-24
+    NEUTRAL = "neutral"    # 25-49
+    OPEN = "open"          # 50-74
+    TRUSTING = "trusting"  # 75-100
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +180,7 @@ def apply_update(
     archetype: ArchetypeProfile,
     peak_pressure: int = 0,
 ) -> Tuple[int, int, int]:
-    """Apply deltas (with decay) and clamp to 0–100.
+    """Apply deltas (with decay) and clamp to 0-100.
 
     Returns ``(new_pressure, new_rapport, new_peak_pressure)``.
 
@@ -174,8 +189,8 @@ def apply_update(
     (delta_p <= 0).  This makes pressure bleed away quickly if the
     player backs off before truly breaking the NPC.
 
-    Rapport erodes faster when the NPC is under pressure — the factor
-    scales linearly from 1× (calm, pressure 0) to 3× (cornered,
+    Rapport erodes faster when the NPC is under pressure -- the factor
+    scales linearly from 1x (calm, pressure 0) to 3x (cornered,
     pressure 100).  This forces the player to choose between pushing
     hard and maintaining trust.
     """
@@ -185,7 +200,7 @@ def apply_update(
     else:
         effective_decay = archetype.pressure_decay
 
-    # Rapport erodes faster under pressure (1× at 0 → 3× at 100)
+    # Rapport erodes faster under pressure (1x at 0 -> 3x at 100)
     pressure_rapport_factor = 1.0 + (current_pressure / 100.0) * 2.0
     effective_rapport_decay = archetype.rapport_decay * pressure_rapport_factor
 
@@ -207,16 +222,23 @@ def process_turn(
     current_pressure: int,
     current_rapport: int,
     peak_pressure: int = 0,
-) -> dict:
+    archetype_id: str | None = None,
+) -> TurnResult:
     """Process one interrogation turn and return updated state.
 
-    Returns a dict with keys:
-        pressure, rapport, pressure_band, rapport_band,
-        archetype_id, delta_pressure, delta_rapport, peak_pressure
+    Parameters
+    ----------
+    archetype_id : str | None
+        Archetype to use.  When provided, the function is fully self-contained
+        (no import of case data).  When ``None``, falls back to looking up the
+        active case — retained for backward compatibility but discouraged.
     """
-    from .cases import get_active_case
-    archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
-    archetype = ARCHETYPES[archetype_id]
+    if archetype_id is None:
+        from .cases import get_active_case
+        archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
+    archetype = ARCHETYPES.get(archetype_id)
+    if archetype is None:
+        archetype = ARCHETYPES["professional_fixer"]
 
     delta_p, delta_r = compute_deltas(tactic_type, evidence_strength, archetype)
     new_p, new_r, new_peak = apply_update(
@@ -224,20 +246,20 @@ def process_turn(
         peak_pressure=peak_pressure,
     )
 
-    return {
-        "pressure": new_p,
-        "rapport": new_r,
-        "pressure_band": pressure_band(new_p).value,
-        "rapport_band": rapport_band(new_r).value,
-        "archetype_id": archetype_id,
-        "delta_pressure": delta_p,
-        "delta_rapport": delta_r,
-        "peak_pressure": new_peak,
-    }
+    return TurnResult(
+        pressure=new_p,
+        rapport=new_r,
+        pressure_band=pressure_band(new_p).value,
+        rapport_band=rapport_band(new_r).value,
+        archetype_id=archetype_id,
+        delta_pressure=delta_p,
+        delta_rapport=delta_r,
+        peak_pressure=new_peak,
+    )
 
 
 # ---------------------------------------------------------------------------
-# Prompt builder — injected into the main LLM context each turn
+# Prompt builder -- injected into the main LLM context each turn
 # ---------------------------------------------------------------------------
 
 _BAND_GUIDANCE: Dict[str, str] = {
@@ -255,7 +277,7 @@ _RAPPORT_GUIDANCE: Dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# Rapport-driven helpfulness — controls how proactively NPCs share non-self-
+# Rapport-driven helpfulness -- controls how proactively NPCs share non-self-
 # incriminating information at higher rapport levels.
 # ---------------------------------------------------------------------------
 
@@ -305,13 +327,22 @@ def build_interrogation_context(
     rapport_val: int,
     tactic_type: str,
     evidence_strength: str,
+    archetype_id: str | None = None,
 ) -> str:
-    """Build the system-prompt paragraph injected per turn."""
+    """Build the system-prompt paragraph injected per turn.
+
+    Parameters
+    ----------
+    archetype_id : str | None
+        When provided, avoids the internal case-data lookup.
+    """
     p_band = pressure_band(pressure_val)
     r_band = rapport_band(rapport_val)
-    from .cases import get_active_case
-    archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
-    archetype = ARCHETYPES[archetype_id]
+
+    if archetype_id is None:
+        from .cases import get_active_case
+        archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
+    archetype = ARCHETYPES.get(archetype_id, ARCHETYPES["professional_fixer"])
 
     lines = [
         "INTERROGATION STATE (internal — do NOT mention these mechanics to the detective):",
@@ -354,5 +385,6 @@ __all__ = [
     "build_interrogation_context",
     "pressure_band",
     "rapport_band",
+    "TurnResult",
     "ARCHETYPES",
 ]

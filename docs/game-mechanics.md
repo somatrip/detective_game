@@ -702,7 +702,7 @@ The project deploys to Vercel as a Python serverless function:
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r server/requirements.txt
+pip install -r requirements.txt
 cp .env.example .env  # Add your API keys
 uvicorn server.app:app --port 8000 --reload
 # Open http://localhost:8000

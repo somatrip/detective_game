@@ -6,6 +6,7 @@ import io
 import logging
 import pathlib
 import re
+from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -18,7 +19,7 @@ from .cases import get_active_case, load_case
 from .config import settings
 from .interrogation import build_interrogation_context, process_turn
 from .llm.classifier import classify_player_turn, detect_evidence
-from .llm.factory import create_llm_client
+from .llm.factory import get_llm_client
 from .llm.base import ChatMessage, LLMClient
 from .npc_registry import get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
@@ -35,30 +36,43 @@ log = logging.getLogger(__name__)
 
 _WEB_DIR = pathlib.Path(__file__).resolve().parent.parent / "web"
 
-app = FastAPI(title="Detective Game Backend", version="0.1.0")
 
-# ── Load the active case at startup ───────────────────────────────────────
+# ── Lifespan: replaces deprecated @app.on_event("startup") ──────────────
 
-@app.on_event("startup")
-async def _load_case() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load case data at startup; cleanup (if any) on shutdown."""
     case = load_case(settings.case_id)
     log.info("Loaded case '%s' (%s)", case.case_id, case.title)
+    yield
+
+
+app = FastAPI(title="Detective Game Backend", version="0.1.0", lifespan=lifespan)
 
 
 @app.exception_handler(Exception)
 async def _global_exception_handler(request: Request, exc: Exception):
-    """Catch-all: ensure every error returns JSON so the client can parse it."""
+    """Catch-all: ensure every error returns JSON so the client can parse it.
+
+    Internal details are logged server-side but NOT sent to the client.
+    """
     log.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal server error: {type(exc).__name__}: {exc}"},
+        content={"detail": "Internal server error"},
     )
 
 
-if settings.llm_provider.lower() != "openai":  # allow running UI from file:// or another port
-    allow_origins = ["*"]
+# ── CORS ─────────────────────────────────────────────────────────────────
+# Configurable via ECHO_CORS_ORIGINS env var (comma-separated).
+# Defaults to permissive "*" for development; set to specific origins
+# in production (e.g. "https://yourdomain.com").
+
+_cors_env = getattr(settings, "cors_origins", None)
+if _cors_env:
+    allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 else:
-    allow_origins = ["http://localhost", "http://127.0.0.1", "http://localhost:5500", "http://127.0.0.1:5500"]
+    allow_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,16 +90,15 @@ app.include_router(tracking_router)
 app.include_router(feedback_router)
 
 
-async def get_llm_client() -> LLMClient:
-    """FastAPI dependency that returns the configured LLM client."""
-
+async def _get_llm_client() -> LLMClient:
+    """FastAPI dependency that returns the cached LLM client singleton."""
     try:
-        return create_llm_client()
+        return get_llm_client()
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-# ── Shared OpenAI client for audio operations ────────────────────────────────
+# ── Shared OpenAI client for audio operations ────────────────────────────
 
 _openai_client: AsyncOpenAI | None = None
 
@@ -100,7 +113,7 @@ def _get_openai_client() -> AsyncOpenAI:
     return _openai_client
 
 
-# ── Stray tag stripping (safety fallback) ────────────────────────────────────
+# ── Stray tag stripping (safety fallback) ────────────────────────────────
 # The main LLM no longer receives evidence-tagging instructions, but may still
 # occasionally produce stray tags.  Strip them from the displayed response.
 
@@ -115,7 +128,7 @@ def _strip_stray_tags(text: str) -> str:
     return _STRAY_TAG_RE.sub("", text).strip()
 
 
-# ── Endpoints ────────────────────────────────────────────────────────────────
+# ── Endpoints ────────────────────────────────────────────────────────────
 
 @app.get("/api/npcs")
 async def list_available_npcs():
@@ -136,7 +149,7 @@ async def list_available_npcs():
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -> ChatResponse:
+async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) -> ChatResponse:
     """Send the player's message to the LLM and return the NPC's reply.
 
     Pipeline per turn:
@@ -153,6 +166,9 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+    case = get_active_case()
+    archetype_id = case.npc_archetype_map.get(request.npc_id, "professional_fixer")
+
     history: List[ChatTurn] = list(request.history)
     history.append(ChatTurn(role="user", content=request.message))
 
@@ -167,7 +183,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
         )
     except Exception as exc:
         log.exception("[chat] Step 1 FAILED: classify_player_turn")
-        raise HTTPException(status_code=502, detail=f"Classifier error: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Classifier unavailable") from exc
     tactic_type = classification["tactic_type"]
     evidence_strength = classification["evidence_strength"]
     log.info("[chat] Step 1 result: tactic=%s evidence=%s", tactic_type, evidence_strength)
@@ -182,11 +198,12 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
             current_pressure=request.pressure,
             current_rapport=request.rapport,
             peak_pressure=request.peak_pressure,
+            archetype_id=archetype_id,
         )
     except Exception as exc:
         log.exception("[chat] Step 2 FAILED: process_turn")
-        raise HTTPException(status_code=500, detail=f"Interrogation engine error: {exc}") from exc
-    log.info("[chat] Step 2 result: pressure=%d→%s, rapport=%d→%s",
+        raise HTTPException(status_code=500, detail="Interrogation engine error") from exc
+    log.info("[chat] Step 2 result: pressure=%d->%s, rapport=%d->%s",
              interrogation_result["pressure"], interrogation_result["pressure_band"],
              interrogation_result["rapport"], interrogation_result["rapport_band"])
 
@@ -198,15 +215,16 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
             rapport_val=interrogation_result["rapport"],
             tactic_type=tactic_type,
             evidence_strength=evidence_strength,
+            archetype_id=archetype_id,
         )
     except Exception as exc:
         log.exception("[chat] Step 3 FAILED: build_interrogation_context")
-        raise HTTPException(status_code=500, detail=f"Context builder error: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Context builder error") from exc
 
     # ── Step 4: Generate NPC response (main LLM) ───────────────────────
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
     system_messages: List[ChatMessage] = [
-        {"role": "system", "content": get_active_case().world_context_prompt},
+        {"role": "system", "content": case.world_context_prompt},
     ]
     if npc_profile.timeline:
         system_messages.append({"role": "system", "content": npc_profile.timeline})
@@ -240,13 +258,16 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
     except Exception as exc:
         detail = str(exc)
         log.error("[chat] Step 4 FAILED: LLM generate — %s", detail)
+        # Surface only well-known, actionable errors to the client
         if "insufficient_quota" in detail or "exceeded" in detail.lower():
-            detail = "OpenAI quota exceeded. Add credits at platform.openai.com/settings/organization/billing"
+            client_detail = "OpenAI quota exceeded. Add credits at platform.openai.com/settings/organization/billing"
         elif "invalid_api_key" in detail or "Incorrect API key" in detail:
-            detail = "Invalid API key. Check the key in your .env file."
+            client_detail = "Invalid API key. Check the key in your .env file."
         elif "authentication" in detail.lower():
-            detail = f"Authentication failed: {detail}"
-        raise HTTPException(status_code=502, detail=detail) from exc
+            client_detail = "LLM authentication failed. Check your API key configuration."
+        else:
+            client_detail = "LLM service unavailable. Please try again."
+        raise HTTPException(status_code=502, detail=client_detail) from exc
     log.info("[chat] Step 4 done: reply length=%d chars", len(raw_reply))
 
     # Strip any stray tags the LLM may have produced out of habit
@@ -264,7 +285,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(get_llm_client)) -
         )
     except Exception as exc:
         log.exception("[chat] Step 5 FAILED: detect_evidence")
-        raise HTTPException(status_code=502, detail=f"Evidence detector error: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Evidence detector unavailable") from exc
     evidence_ids: List[str] = detection["evidence_ids"]
     discovery_ids: List[str] = detection["discovery_ids"]
     discovery_summaries: dict = detection.get("discovery_summaries", {})
@@ -338,10 +359,12 @@ async def transcribe(
     except Exception as exc:
         detail = str(exc)
         if "invalid_api_key" in detail or "Incorrect API key" in detail:
-            detail = "Invalid API key for audio transcription."
+            client_detail = "Invalid API key for audio transcription."
         elif "insufficient_quota" in detail or "exceeded" in detail.lower():
-            detail = "OpenAI quota exceeded. Add credits at platform.openai.com"
-        raise HTTPException(status_code=502, detail=detail) from exc
+            client_detail = "OpenAI quota exceeded. Add credits at platform.openai.com"
+        else:
+            client_detail = "Transcription service unavailable."
+        raise HTTPException(status_code=502, detail=client_detail) from exc
 
 
 @app.post("/api/speak")
@@ -376,10 +399,12 @@ async def speak(request: SpeakRequest):
     except Exception as exc:
         detail = str(exc)
         if "invalid_api_key" in detail or "Incorrect API key" in detail:
-            detail = "Invalid API key for text-to-speech."
+            client_detail = "Invalid API key for text-to-speech."
         elif "insufficient_quota" in detail or "exceeded" in detail.lower():
-            detail = "OpenAI quota exceeded. Add credits at platform.openai.com"
-        raise HTTPException(status_code=502, detail=detail) from exc
+            client_detail = "OpenAI quota exceeded. Add credits at platform.openai.com"
+        else:
+            client_detail = "Text-to-speech service unavailable."
+        raise HTTPException(status_code=502, detail=client_detail) from exc
 
 
 @app.get("/health")

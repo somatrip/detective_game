@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import importlib
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
+
+if TYPE_CHECKING:
+    from ..npc_registry import NPCProfile
 
 
 @dataclass(frozen=True)
@@ -20,12 +23,12 @@ class CaseData:
     case_id: str
     title: str
     world_context_prompt: str
-    npc_profiles: Dict[str, Any]         # npc_id → NPCProfile
-    npc_archetype_map: Dict[str, str]    # npc_id → archetype_id
+    npc_profiles: Dict[str, NPCProfile]    # npc_id → NPCProfile
+    npc_archetype_map: Dict[str, str]      # npc_id → archetype_id
     npc_relevant_evidence: Dict[str, List[str]]
     smoking_gun_map: Dict[str, List[str]]
-    evidence_catalog: Dict[str, str]     # evidence_id → description
-    discovery_catalog: Dict[str, Dict[str, str]]  # discovery_id → {npc_id, evidence_id, description}
+    evidence_catalog: Dict[str, str]       # evidence_id → description
+    discovery_catalog: Dict[str, Dict[str, Any]]  # discovery_id → {npc_id, evidence_id, description}
 
 
 # Module-level singleton, set at startup

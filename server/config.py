@@ -62,6 +62,12 @@ class Settings(BaseSettings):
         description="Cheaper Anthropic model for turn classification and evidence detection.",
     )
 
+    # ── CORS ───────────────────────────────────────────────────────────────
+    cors_origins: str | None = Field(
+        default=None,
+        description="Comma-separated list of allowed CORS origins. Defaults to '*' (all).",
+    )
+
     # ── Case ──────────────────────────────────────────────────────────────
     case_id: str = Field(
         default="echoes_in_the_atrium",
