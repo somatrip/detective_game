@@ -61,3 +61,18 @@ create table if not exists accusation_events (
 
 create index idx_accusation_events_session on accusation_events (session_id);
 create index idx_accusation_events_created on accusation_events (created_at);
+
+-- User feedback
+create table if not exists feedback (
+  id             uuid primary key default gen_random_uuid(),
+  session_id     uuid not null,
+  feedback_text  text not null,
+  screenshot_url text,
+  created_at     timestamptz not null default now()
+);
+
+create index idx_feedback_session on feedback (session_id);
+create index idx_feedback_created on feedback (created_at);
+
+-- Storage bucket for feedback screenshots (run once)
+-- insert into storage.buckets (id, name, public) values ('feedback-screenshots', 'feedback-screenshots', true);

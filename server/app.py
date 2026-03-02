@@ -24,6 +24,7 @@ from .npc_registry import get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
 from .auth_routes import router as auth_router, state_router
 from .tracking_routes import router as tracking_router, log_chat_event
+from .feedback_routes import router as feedback_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -72,6 +73,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(state_router)
 app.include_router(tracking_router)
+app.include_router(feedback_router)
 
 
 async def get_llm_client() -> LLMClient:

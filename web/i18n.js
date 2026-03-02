@@ -102,6 +102,17 @@ window.I18N = {
     "a11y.toggle_voice": "Toggle voice",
     "a11y.npc_bio": "Character Bio",
     "a11y.cancel_response": "Cancel response",
+    "a11y.feedback": "Send Feedback",
+
+    // Chat notes tab
+    "chat.nav_notes": "Notes",
+
+    // Feedback modal
+    "feedback.title": "Send Feedback",
+    "feedback.placeholder": "What\u2019s on your mind?",
+    "feedback.attach": "Attach Screenshot",
+    "feedback.submit": "Submit",
+    "feedback.thanks": "Thanks for your feedback!",
 
     // Tutorial coach marks
     "tutorial.step_caseboard": "This is your Case Board — review evidence and the case briefing here.",
@@ -219,6 +230,17 @@ window.I18N = {
     "a11y.toggle_voice": "Uklju\u010di/isklju\u010di glas",
     "a11y.npc_bio": "Biografija lika",
     "a11y.cancel_response": "Otka\u017ei odgovor",
+    "a11y.feedback": "Po\u0161aljite povratne informacije",
+
+    // Chat notes tab
+    "chat.nav_notes": "Bele\u0161ke",
+
+    // Feedback modal
+    "feedback.title": "Po\u0161aljite povratne informacije",
+    "feedback.placeholder": "\u0160ta vam je na umu?",
+    "feedback.attach": "Prilo\u017eite snimak ekrana",
+    "feedback.submit": "Po\u0161alji",
+    "feedback.thanks": "Hvala na povratnim informacijama!",
 
     // Tutorial coach marks
     "tutorial.step_caseboard": "Ovo je vaša Tabla Slučaja — pregledajte dokaze i brifing ovde.",
