@@ -56,7 +56,9 @@ window.I18N = {
 
     // Interrogation pills
     "interrogation.pressure_label": "Pressure:",
+    "interrogation.pressure_label_tooltip": "Pressure",
     "interrogation.rapport_label": "Rapport:",
+    "interrogation.rapport_label_tooltip": "Trust",
     "interrogation.calm": "Calm",
     "interrogation.tense": "Tense",
     "interrogation.shaken": "Shaken",
@@ -111,7 +113,7 @@ window.I18N = {
     // Feedback modal
     "feedback.title": "Send Feedback",
     "feedback.placeholder": "What\u2019s on your mind?",
-    "feedback.attach": "Attach Screenshot",
+    "feedback.attach": "Attach Image",
     "feedback.submit": "Submit",
     "feedback.thanks": "Thanks for your feedback!",
 
@@ -185,7 +187,9 @@ window.I18N = {
 
     // Interrogation pills
     "interrogation.pressure_label": "Pritisak:",
+    "interrogation.pressure_label_tooltip": "Pritisak",
     "interrogation.rapport_label": "Odnos:",
+    "interrogation.rapport_label_tooltip": "Poverenje",
     "interrogation.calm": "Miran",
     "interrogation.tense": "Napet",
     "interrogation.shaken": "Uzdrman",
@@ -240,7 +244,7 @@ window.I18N = {
     // Feedback modal
     "feedback.title": "Po\u0161aljite povratne informacije",
     "feedback.placeholder": "\u0160ta vam je na umu?",
-    "feedback.attach": "Prilo\u017eite snimak ekrana",
+    "feedback.attach": "Prilo\u017eite sliku",
     "feedback.submit": "Po\u0161alji",
     "feedback.thanks": "Hvala na povratnim informacijama!",
 
