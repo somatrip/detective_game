@@ -282,6 +282,7 @@
       display: flex; align-items: center; justify-content: center;
       clip-path: none;
       border-radius: 8px 8px 0 0;
+      margin-left: 0.25rem;
     }
     .manila-tab-icon svg {
       width: 16px; height: 16px;
@@ -3670,8 +3671,12 @@
       const hint = document.createElement("div");
       hint.id = "chat-empty-hint";
       hint.className = "chat-empty-hint";
-      const npcName = npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "this person";
-      hint.textContent = t("chat.hint", { name: npcName });
+      if (activeNpcId === PARTNER_NPC_ID) {
+        hint.textContent = t("chat.hint_partner");
+      } else {
+        const npcName = npcs.find(n => n.npc_id === activeNpcId)?.display_name?.split(" — ")[0] || "this person";
+        hint.textContent = t("chat.hint", { name: npcName });
+      }
       chatMessages.appendChild(hint);
 
       // Conversation starter buttons
