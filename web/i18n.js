@@ -308,6 +308,10 @@ window.applyLanguage = function applyLanguage(lang) {
     el.title = t(el.getAttribute("data-i18n-title"));
   });
 
+  document.querySelectorAll("[data-i18n-tooltip]").forEach(el => {
+    el.setAttribute("data-tooltip", t(el.getAttribute("data-i18n-tooltip")));
+  });
+
   document.querySelectorAll("[data-i18n-aria]").forEach(el => {
     el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
   });
