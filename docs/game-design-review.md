@@ -131,14 +131,14 @@ The Amelia/Mira conspiracy is both a strength (it adds depth) and a potential co
 1. **Add a structured deduction board** where players can link evidence and form theories. Even a simple "connect two discoveries" mechanic would transform the investigation from a memory exercise into an active reasoning game.
 2. **Surface tactical feedback.** After each exchange, show the player what tactic was detected and what evidence strength was scored. This closes the feedback loop and lets players learn the system.
 3. **Add mechanical secret gates.** Don't rely solely on the LLM to guard secrets. Implement hard gates: "Discovery X cannot fire unless pressure >= 50 OR rapport >= 60 OR discovery Y was already collected." This makes the game deterministically fair.
-4. **Improve Lila's hint system.** Make hints context-aware: track what the player has found, what's missing, and generate specific suggestions ("You've established motive but not opportunity — who might have seen Noah near the service elevator?").
+4. **Inject evidence state into Lila's prompt.** The player's evidence and discovery IDs are already sent to the server on hint requests, but they're only consumed by the classifier — never injected into the system prompt that generates Lila's response. Lila's LLM must currently infer the player's state from conversation history alone, meaning she's blind to evidence the player hasn't discussed with her. Fix: inject the player's current evidence/discovery list directly into the interrogation context for Lila, then add conditional hint logic (e.g., "if player has motive evidence but not opportunity, suggest witnesses who saw Noah's movements").
 
 ### Medium Priority
 
 5. **Add a conversation search or log.** Let players search across all NPC conversations for keywords, or provide a unified timeline view of all statements.
 6. **Show archetype hints.** After the first few exchanges with an NPC, surface their personality tendency ("This suspect seems guarded and methodical — direct confrontation may be less effective than building trust").
 7. **Add pacing pressure.** Not necessarily a timer, but escalating narrative stakes: "Suspects are requesting lawyers," "The DA is pressuring for an arrest," "A suspect wants to leave." Something to prevent indefinite stalling.
-8. **Consider a stronger default LLM.** GPT-3.5-turbo as the default generation model is a cost optimization that directly undermines the core experience. The nuance required for consistent NPC behavior — holding secrets, cracking under specific conditions, maintaining knowledge boundaries — likely exceeds what 3.5 can reliably deliver.
+8. **Upgrade the default OpenAI model.** The default NPC generation model is `gpt-3.5-turbo` (the Anthropic path already defaults to Claude Sonnet 4, which is adequate). GPT-3.5-turbo is the weakest option for the most demanding part of the game — maintaining character consistency, guarding secrets under pressure, and breaking convincingly at specific thresholds. Minimum recommendation: `gpt-4o-mini` (cheap, fast, much better at complex behavioral instructions). Ideal: `gpt-4o` — the per-turn cost delta is negligible and NPC quality is the entire game experience.
 
 ### Lower Priority
 
