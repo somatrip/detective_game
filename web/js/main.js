@@ -690,6 +690,7 @@
   let audioChunks = [];
   let isRecording = false;
   let isTranscribing = false;
+  const AUDIO_CACHE_MAX = 30;
   let audioCache = new Map();
   let currentAudio = null;
   let npcVoices = {};
@@ -1372,9 +1373,19 @@
           ? "Cannot reach server — please try again."
           : err.message;
         console.error("[chat] Request failed:", err);
+        const failedText = text;
         const errDiv = document.createElement("div");
         errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
         errDiv.textContent = t("chat.error", { message: displayMsg });
+        const retryBtn = document.createElement("button");
+        retryBtn.textContent = t("chat.retry") || "Retry";
+        retryBtn.style.cssText = "margin-top:4px; padding:4px 12px; cursor:pointer; border:1px solid var(--danger); background:transparent; color:var(--danger); border-radius:4px; font-size:0.8rem;";
+        retryBtn.addEventListener("click", () => {
+          errDiv.remove();
+          sendMessage(failedText);
+        });
+        errDiv.appendChild(document.createElement("br"));
+        errDiv.appendChild(retryBtn);
         chatMessages.appendChild(errDiv);
         scrollToBottom();
         conversations[activeNpcId].pop();
@@ -2183,6 +2194,12 @@
       if (!res.ok) throw new Error(`TTS failed: HTTP ${res.status}`);
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
+      // LRU eviction: revoke oldest blob URL when cache exceeds limit
+      if (audioCache.size >= AUDIO_CACHE_MAX) {
+        const oldest = audioCache.keys().next().value;
+        URL.revokeObjectURL(audioCache.get(oldest));
+        audioCache.delete(oldest);
+      }
       audioCache.set(cacheKey, blobUrl);
       ttsAbortController = null;
       playAudioBlob(blobUrl, cacheKey);

@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Iterable, List
 
 import anthropic
+import httpx
 
-from .base import ChatMessage, LLMClient
+from .base import ChatMessage, LLMClient, LLM_TIMEOUT_SECONDS
 
 
 class AnthropicLLMClient(LLMClient):
@@ -16,7 +17,10 @@ class AnthropicLLMClient(LLMClient):
         if not api_key:
             raise ValueError("Anthropic API key must be provided when using the Anthropic provider.")
 
-        self._client = anthropic.AsyncAnthropic(api_key=api_key)
+        self._client = anthropic.AsyncAnthropic(
+            api_key=api_key,
+            timeout=httpx.Timeout(LLM_TIMEOUT_SECONDS, connect=10.0),
+        )
         self._model = model
 
     async def generate(self, *, npc_id: str, messages: Iterable[ChatMessage]) -> str:

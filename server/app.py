@@ -100,17 +100,15 @@ async def _get_llm_client() -> LLMClient:
 
 # ── Shared OpenAI client for audio operations ────────────────────────────
 
-_openai_client: AsyncOpenAI | None = None
+from functools import lru_cache as _lru_cache
 
 
+@_lru_cache(maxsize=1)
 def _get_openai_client() -> AsyncOpenAI:
     """Return a cached AsyncOpenAI client for TTS/STT operations."""
-    global _openai_client
-    if _openai_client is None:
-        if not settings.openai_api_key:
-            raise HTTPException(status_code=500, detail="OpenAI API key not configured.")
-        _openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
-    return _openai_client
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured.")
+    return AsyncOpenAI(api_key=settings.openai_api_key)
 
 
 # ── Stray tag stripping (safety fallback) ────────────────────────────────
@@ -186,7 +184,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         raise HTTPException(status_code=502, detail="Classifier unavailable") from exc
     tactic_type = classification["tactic_type"]
     evidence_strength = classification["evidence_strength"]
-    log.info("[chat] Step 1 result: tactic=%s evidence=%s", tactic_type, evidence_strength)
+    classifier_degraded = classification.get("degraded", False)
+    if classifier_degraded:
+        log.warning("[chat] Step 1: classifier degraded — using defaults")
+    log.info("[chat] Step 1 result: tactic=%s evidence=%s degraded=%s", tactic_type, evidence_strength, classifier_degraded)
 
     # ── Step 2: Compute pressure/rapport deltas ─────────────────────────
     log.info("[chat] Step 2: computing deltas (pressure=%d, rapport=%d)", request.pressure, request.rapport)
@@ -290,8 +291,11 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     discovery_ids: List[str] = detection["discovery_ids"]
     discovery_summaries: dict = detection.get("discovery_summaries", {})
     expression: str = detection["expression"]
-    log.info("[chat] Step 5 result: discoveries=%s evidence=%s expression=%s",
-             discovery_ids, evidence_ids, expression)
+    detection_degraded = detection.get("degraded", False)
+    if detection_degraded:
+        log.warning("[chat] Step 5: evidence detection degraded — using defaults")
+    log.info("[chat] Step 5 result: discoveries=%s evidence=%s expression=%s degraded=%s",
+             discovery_ids, evidence_ids, expression, detection_degraded)
 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
@@ -328,6 +332,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         tactic_type=tactic_type,
         evidence_strength=evidence_strength,
         peak_pressure=interrogation_result["peak_pressure"],
+        degraded=classifier_degraded or detection_degraded,
     )
 
 

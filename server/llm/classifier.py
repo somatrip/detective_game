@@ -12,7 +12,13 @@ import logging
 from functools import lru_cache
 from typing import Any, Dict, List, TypedDict
 
+import httpx
+
 from ..config import settings
+from .base import LLM_TIMEOUT_SECONDS
+
+# Classifier calls should be faster than main generation — use a shorter timeout.
+_CLASSIFIER_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +30,7 @@ log = logging.getLogger(__name__)
 class ClassificationResult(TypedDict):
     tactic_type: str
     evidence_strength: str
+    degraded: bool  # True when classifier call failed and defaults were used
 
 
 class DetectionResult(TypedDict):
@@ -31,6 +38,7 @@ class DetectionResult(TypedDict):
     evidence_ids: List[str]
     expression: str
     discovery_summaries: Dict[str, str]
+    degraded: bool  # True when detection call failed and defaults were used
 
 
 # ---------------------------------------------------------------------------
@@ -162,14 +170,14 @@ def _get_npc_display_name(npc_id: str) -> str:
 def _get_openai_classifier():
     """Return a cached AsyncOpenAI client for classifier calls."""
     from openai import AsyncOpenAI
-    return AsyncOpenAI(api_key=settings.openai_api_key or "")
+    return AsyncOpenAI(api_key=settings.openai_api_key or "", timeout=_CLASSIFIER_TIMEOUT)
 
 
 @lru_cache(maxsize=1)
 def _get_anthropic_classifier():
     """Return a cached AsyncAnthropic client for classifier calls."""
     import anthropic
-    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key or "")
+    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key or "", timeout=_CLASSIFIER_TIMEOUT)
 
 
 # ---------------------------------------------------------------------------
@@ -265,11 +273,13 @@ async def classify_player_turn(
         recent_context=recent_context,
     )
 
+    degraded = False
     try:
         result = await _call_classifier_json(system_prompt, user_prompt)
     except Exception:
-        log.exception("Classifier failed for classify_player_turn")
+        log.exception("Classifier failed for classify_player_turn — using defaults")
         result = {}
+        degraded = True
 
     # Validate and default
     tactic = result.get("tactic_type", "open_ended")
@@ -282,7 +292,7 @@ async def classify_player_turn(
         log.warning("Classifier returned invalid evidence_strength '%s', defaulting to none", strength)
         strength = "none"
 
-    return ClassificationResult(tactic_type=tactic, evidence_strength=strength)
+    return ClassificationResult(tactic_type=tactic, evidence_strength=strength, degraded=degraded)
 
 
 async def detect_evidence(
@@ -324,6 +334,7 @@ async def detect_evidence(
             evidence_ids=[],
             expression="neutral",
             discovery_summaries={},
+            degraded=False,
         )
 
     catalog_lines = []
@@ -344,11 +355,13 @@ async def detect_evidence(
         response=npc_response,
     )
 
+    degraded = False
     try:
         result = await _call_classifier_json(system_prompt, user_prompt)
     except Exception:
-        log.exception("Classifier failed for detect_evidence")
+        log.exception("Classifier failed for detect_evidence — using defaults")
         result = {}
+        degraded = True
 
     # Validate discovery IDs
     raw_ids = result.get("discovery_ids", [])
@@ -373,8 +386,8 @@ async def detect_evidence(
     discovery_summaries = {}
     for did in valid_ids:
         s = raw_summaries.get(did, "")
-        if isinstance(s, str) and 5 < len(s) < 300:
-            discovery_summaries[did] = s
+        if isinstance(s, str) and len(s) > 5:
+            discovery_summaries[did] = s[:300]
 
     # Validate expression
     expression = result.get("expression", "neutral")
@@ -386,6 +399,7 @@ async def detect_evidence(
         evidence_ids=evidence_ids,
         expression=expression,
         discovery_summaries=discovery_summaries,
+        degraded=degraded,
     )
 
 

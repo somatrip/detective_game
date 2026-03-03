@@ -9,11 +9,14 @@ through :func:`get_active_case`.
 from __future__ import annotations
 
 import importlib
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, List
 
 if TYPE_CHECKING:
     from ..npc_registry import NPCProfile
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -30,6 +33,56 @@ class CaseData:
     evidence_catalog: Dict[str, str]       # evidence_id → description
     discovery_catalog: Dict[str, Dict[str, Any]]  # discovery_id → {npc_id, evidence_id, description}
 
+    def validate(self) -> None:
+        """Check referential integrity across all case data maps.
+
+        Raises ``ValueError`` on the first hard error; logs warnings for
+        non-fatal issues so the game can still start.
+        """
+        errors: list[str] = []
+        warnings: list[str] = []
+        npc_ids = set(self.npc_profiles.keys())
+
+        # Every NPC in archetype_map must exist in npc_profiles
+        for npc_id in self.npc_archetype_map:
+            if npc_id not in npc_ids:
+                warnings.append(f"archetype_map references unknown NPC '{npc_id}'")
+
+        # Every NPC in relevant_evidence and smoking_gun_map must exist
+        for npc_id in self.npc_relevant_evidence:
+            if npc_id not in npc_ids:
+                warnings.append(f"npc_relevant_evidence references unknown NPC '{npc_id}'")
+            for eid in self.npc_relevant_evidence[npc_id]:
+                if eid not in self.evidence_catalog:
+                    errors.append(f"npc_relevant_evidence['{npc_id}'] references unknown evidence '{eid}'")
+
+        for npc_id in self.smoking_gun_map:
+            if npc_id not in npc_ids:
+                warnings.append(f"smoking_gun_map references unknown NPC '{npc_id}'")
+            for eid in self.smoking_gun_map[npc_id]:
+                if eid not in self.evidence_catalog:
+                    errors.append(f"smoking_gun_map['{npc_id}'] references unknown evidence '{eid}'")
+
+        # Every discovery must reference a valid NPC and evidence
+        for did, info in self.discovery_catalog.items():
+            npc_id = info.get("npc_id")
+            if npc_id and npc_id not in npc_ids:
+                errors.append(f"discovery '{did}' references unknown NPC '{npc_id}'")
+            eid = info.get("evidence_id")
+            if eid and eid not in self.evidence_catalog:
+                errors.append(f"discovery '{did}' references unknown evidence '{eid}'")
+
+        for w in warnings:
+            log.warning("[case-validate] %s: %s", self.case_id, w)
+        if errors:
+            for e in errors:
+                log.error("[case-validate] %s: %s", self.case_id, e)
+            raise ValueError(
+                f"Case '{self.case_id}' has {len(errors)} data integrity error(s): {errors[0]}"
+            )
+
+        log.info("[case-validate] %s: all references OK", self.case_id)
+
 
 # Module-level singleton, set at startup
 _active_case: CaseData | None = None
@@ -44,6 +97,7 @@ def load_case(case_id: str) -> CaseData:
     global _active_case
     module = importlib.import_module(f".{case_id}", package=__name__)
     _active_case = module.case_data
+    _active_case.validate()
     return _active_case
 
 

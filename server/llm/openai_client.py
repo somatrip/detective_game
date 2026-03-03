@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Iterable
 
+import httpx
 from openai import AsyncOpenAI
 
-from .base import ChatMessage, LLMClient
+from .base import ChatMessage, LLMClient, LLM_TIMEOUT_SECONDS
 
 
 class OpenAILLMClient(LLMClient):
@@ -16,7 +17,10 @@ class OpenAILLMClient(LLMClient):
         if not api_key:
             raise ValueError("OpenAI API key must be provided when using the OpenAI provider.")
 
-        self._client = AsyncOpenAI(api_key=api_key)
+        self._client = AsyncOpenAI(
+            api_key=api_key,
+            timeout=httpx.Timeout(LLM_TIMEOUT_SECONDS, connect=10.0),
+        )
         self._model = model
 
     async def generate(self, *, npc_id: str, messages: Iterable[ChatMessage]) -> str:

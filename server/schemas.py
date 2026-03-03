@@ -109,6 +109,10 @@ class ChatResponse(BaseModel):
         default=0,
         description="Updated peak pressure after this turn (max of old peak and new pressure).",
     )
+    degraded: bool = Field(
+        default=False,
+        description="True if classifier or detection fell back to defaults due to an API error.",
+    )
 
 
 class SpeakRequest(BaseModel):

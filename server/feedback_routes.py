@@ -7,7 +7,7 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .supabase_client import get_supabase
 
@@ -15,12 +15,15 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/feedback", tags=["feedback"])
 
+_MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024  # 5 MB
+_ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+
 
 # ── Request schemas ──────────────────────────────────────────────────────
 
 class FeedbackRequest(BaseModel):
     session_id: str
-    feedback_text: str
+    feedback_text: str = Field(..., max_length=5000)
     screenshot_url: Optional[str] = None
 
 
@@ -55,9 +58,13 @@ async def submit_feedback(body: FeedbackRequest):
 @router.post("/upload")
 async def upload_screenshot(file: UploadFile = File(...)):
     sb = _get_sb()
-    ext = (file.filename or "img.png").rsplit(".", 1)[-1] or "png"
-    filename = f"{uuid.uuid4()}.{ext}"
+    ext = (file.filename or "img.png").rsplit(".", 1)[-1].lower() or "png"
+    if ext not in _ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"File type '.{ext}' not allowed. Use: {', '.join(sorted(_ALLOWED_EXTENSIONS))}")
     content = await file.read()
+    if len(content) > _MAX_SCREENSHOT_BYTES:
+        raise HTTPException(status_code=413, detail=f"Screenshot too large (max {_MAX_SCREENSHOT_BYTES // (1024*1024)} MB).")
+    filename = f"{uuid.uuid4()}.{ext}"
     try:
         sb.storage.from_(BUCKET).upload(
             filename,

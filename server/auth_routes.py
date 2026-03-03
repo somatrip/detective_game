@@ -78,7 +78,7 @@ async def signup(body: SignupRequest):
         result = sb.auth.sign_up({"email": body.email, "password": body.password})
     except Exception as exc:
         log.exception("Signup failed")
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail="Signup failed. Please check your email and try again.") from exc
 
     user = result.user
     session = result.session
@@ -111,7 +111,7 @@ async def login(body: LoginRequest):
         )
     except Exception as exc:
         log.exception("Login failed")
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise HTTPException(status_code=401, detail="Invalid email or password.") from exc
 
     user = result.user
     session = result.session
@@ -137,7 +137,7 @@ async def refresh(body: RefreshRequest):
         result = sb.auth._refresh_access_token(body.refresh_token)
     except Exception as exc:
         log.exception("Token refresh failed")
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise HTTPException(status_code=401, detail="Session expired. Please log in again.") from exc
 
     user = result.user
     session = result.session
@@ -169,20 +169,17 @@ async def logout(authorization: str | None = Header(default=None)):
 
 @router.get("/session")
 async def check_session(authorization: str | None = Header(default=None)):
-    sb = _require_supabase()
+    _require_supabase()
+    user_id = _get_user_id_from_token(authorization)
+    # Re-fetch email from token (lightweight — already validated above)
     token = _extract_token(authorization)
+    sb = _require_supabase()
     try:
         user = sb.auth.get_user(token)
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
-
-    if user is None or user.user is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired session")
-
-    return {
-        "user_id": str(user.user.id),
-        "email": user.user.email,
-    }
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    email = user.user.email if user and user.user else ""
+    return {"user_id": user_id, "email": email}
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -199,7 +196,8 @@ def _get_user_id_from_token(authorization: str | None) -> str:
     try:
         user_resp = sb.auth.get_user(token)
     except Exception as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        log.warning("Token validation failed: %s", exc)
+        raise HTTPException(status_code=401, detail="Invalid or expired session.") from exc
     if user_resp is None or user_resp.user is None:
         raise HTTPException(status_code=401, detail="Invalid session")
     return str(user_resp.user.id)
@@ -229,7 +227,7 @@ async def save_state(
         )
     except Exception as exc:
         log.exception("Failed to save game state for user %s", user_id)
-        raise HTTPException(status_code=500, detail=f"Save failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Save failed. Please try again.") from exc
 
     return {"ok": True, "user_id": user_id}
 
@@ -250,7 +248,7 @@ async def load_state(authorization: str | None = Header(default=None)):
         )
     except Exception as exc:
         log.exception("Failed to load game state for user %s", user_id)
-        raise HTTPException(status_code=500, detail=f"Load failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Load failed. Please try again.") from exc
 
     if result.data is None:
         return GameStateResponse(state=None, updated_at=None)
@@ -271,7 +269,7 @@ async def delete_state(authorization: str | None = Header(default=None)):
         sb.table("game_saves").delete().eq("user_id", user_id).execute()
     except Exception as exc:
         log.exception("Failed to delete game state for user %s", user_id)
-        raise HTTPException(status_code=500, detail=f"Delete failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Delete failed. Please try again.") from exc
 
     return {"ok": True}
 
