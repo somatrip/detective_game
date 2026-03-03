@@ -320,14 +320,40 @@
       color: var(--text-faint);
       font-style: italic;
     }
-    .chat-notes-panel {
-      flex: 1;
-      overflow-y: auto;
-      border-top: 3px solid var(--manila-border);
-      background: var(--bg-dark);
+    /* ── Notes Modal ────────────────────────────────── */
+    #notes-modal {
+      position: fixed; inset: 0; z-index: 250;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
     }
-    .chat-notes-panel .notes-container {
-      height: calc(100vh - 100px);
+    #notes-modal.visible { display: flex; }
+    .notes-modal-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 90%; max-width: 700px;
+      height: 70vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .notes-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .notes-modal-header h2 {
+      font-family: var(--font-noir);
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); margin: 0;
+    }
+    .notes-modal-body {
+      flex: 1; padding: 1rem 1.25rem;
+      display: flex; flex-direction: column;
+      min-height: 0;
+    }
+    .notes-modal-body .player-notes-textarea {
+      flex: 1;
     }
 
     /* ── NPC Grid (5 + 4 staggered rows) ───────────────────── */

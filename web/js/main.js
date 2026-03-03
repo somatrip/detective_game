@@ -721,7 +721,7 @@
   const navToSuspects     = $("#nav-to-suspects");
   const navToCaseboard    = $("#nav-to-caseboard");
   const navToNotes        = $("#nav-to-notes");
-  const chatNotesPanel    = $("#chat-notes-panel");
+  const notesModal        = $("#notes-modal");
   const chatNotesTextarea = $("#chat-notes-textarea");
   const chatLayout        = document.querySelector("#chat-screen .chat-layout");
   const chatPortraitImg   = $("#chat-portrait-img");
@@ -900,9 +900,8 @@
   function showChat() {
     hubScreen.classList.remove("active");
     chatScreen.classList.add("active");
-    // Ensure chat layout is visible (not notes panel)
-    chatNotesPanel.style.display = "none";
-    chatLayout.style.display = "";
+    // Dismiss notes modal if open
+    notesModal.classList.remove("visible");
   }
 
   /* ── Initialize ─────────────────────────────────────────── */
@@ -1917,8 +1916,7 @@
   }
 
   function showChatFromNotes() {
-    chatNotesPanel.style.display = "none";
-    chatLayout.style.display = "";
+    notesModal.classList.remove("visible");
   }
 
   navToSuspects.addEventListener("click", () => {
@@ -1943,11 +1941,14 @@
     clearCaseBoardBadges();
   });
   navToNotes.addEventListener("click", () => {
-    // Show notes panel, hide chat layout
-    chatLayout.style.display = "none";
-    chatNotesPanel.style.display = "";
-    // Sync textarea value from playerNotes
     chatNotesTextarea.value = playerNotes;
+    notesModal.classList.toggle("visible");
+  });
+  $("#notes-modal-close").addEventListener("click", () => {
+    notesModal.classList.remove("visible");
+  });
+  notesModal.addEventListener("click", (e) => {
+    if (e.target === notesModal) notesModal.classList.remove("visible");
   });
 
   // Hub manila folder tabs (only tabs with data-hub-tab attribute)
@@ -2478,11 +2479,13 @@
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
+    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
   ];
   // Suspect chat steps without input bar (used when Lila chat already covered it)
   const CHAT_STEPS_SHORT = [
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
+    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
   ];
 
   // Lila-specific tutorial (shown the first time Lila's chat is opened)
@@ -2494,6 +2497,7 @@
   const LILA_CHAT_STEPS = [
     { selector: '#lila-hint-btn', text: "tutorial.step_hint_btn", arrow: "bottom" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
+    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
   ];
 
   let tutorialSteps = [];
