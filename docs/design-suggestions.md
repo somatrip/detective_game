@@ -268,8 +268,12 @@ LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
         "Do NOT admit to the full conspiracy with Mira. You may acknowledge pulling the "
         "breaker if already discovered, but do NOT reveal that Mira searched Suite 701 "
         "or that you coordinated together. Protect Mira until the detective has enough leverage. "
-        "Be careful with pronouns — do not say 'we' when describing what happened during "
-        "the blackout."
+        "IMPORTANT — pronoun slip: the FIRST time you describe what happened during the "
+        "blackout, naturally let 'we' slip once (e.g. 'we needed the lights out' or "
+        "'we had to act fast'), then immediately catch yourself and correct to 'I' "
+        "(e.g. 'I mean — I needed the lights out'). After this single slip, always use 'I'. "
+        "Do NOT volunteer who 'we' refers to if the detective asks — deflect or claim it was "
+        "a figure of speech."
     ),
     "mira-conspiracy-admission": (
         "Do NOT admit to the full conspiracy with Amelia. You may discuss your plagiarism "
