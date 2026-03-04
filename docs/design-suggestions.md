@@ -7,10 +7,12 @@ These are design proposals to address the three high-priority recommendations fr
 ## 1. Deduction Board — "String Board"
 
 ### Problem
-Players must connect evidence across 9 NPCs and 17 evidence types in their head or a freeform textarea. There's no tool to form, test, or visualize theories.
+Players must connect evidence across 8 suspects and 17 evidence types in their head or a freeform textarea. There's no tool to form, test, or visualize theories.
 
 ### Player Experience
-A new **"String Board"** tab appears alongside Suspects / Case Board / Notes. It presents a cork-board metaphor: evidence cards the player has collected appear as pinned index cards. Players drag string between two cards to create a **link**, then type a short annotation (e.g., "Eddie had the key before Noah"). Links persist and can be deleted.
+A new **"String Board"** tab appears alongside Suspects / Case Board / Notes. It presents a cork-board metaphor: **evidence cards** the player has collected and **suspect cards** for each NPC appear as pinned index cards. Players drag string between any two cards to create a **link**, then type a short annotation (e.g., "Eddie had the key before Noah"). Links persist and can be deleted.
+
+Suspect cards show the NPC's name, portrait, and role. Evidence cards show the evidence title and discovery summary. Players can link evidence-to-evidence, suspect-to-suspect, or evidence-to-suspect — the board imposes no constraints on what can be connected.
 
 The board is a thinking tool, not a puzzle mechanic — the game never validates or scores links. This preserves challenge: the player can be wrong, and the board won't correct them.
 
@@ -22,15 +24,28 @@ The board is a thinking tool, not a puzzle mechanic — the game never validates
 
 ### Data Structure
 ```javascript
-// New state field, persisted to localStorage + cloud
+// New state field, persisted to localStorage AND synced to backend
 let stringBoard = {
-  cardPositions: { "key-trail": {x: 120, y: 340}, ... },  // player-arranged positions
+  cardPositions: {
+    "key-trail": {x: 120, y: 340},        // evidence card
+    "suspect:noah-blake": {x: 300, y: 200}, // suspect card (prefixed to distinguish)
+    ...
+  },
   links: [
-    { from: "key-trail", to: "financial-misconduct", note: "Noah needed the key because he was desperate" },
+    { from: "key-trail", to: "suspect:noah-blake", note: "Noah needed the key because he was desperate" },
+    { from: "suspect:eddie-voss", to: "suspect:noah-blake", note: "Eddie gave Noah the key" },
     ...
   ]
 };
 ```
+
+### Backend Persistence
+String board state **must be stored server-side** so it syncs across devices. This changes the "frontend only" assumption — a save/load API is needed.
+
+- **Save endpoint**: `POST /api/state/stringboard` — accepts the full `stringBoard` object, writes to the player's session/save data
+- **Load endpoint**: `GET /api/state/stringboard` — returns the stored object (or empty default)
+- **Sync strategy**: Save on every change (debounced ~2s) and on page unload. On load, merge: server state wins for positions/links, but locally-collected evidence that hasn't synced yet gets auto-positioned
+- **Storage**: Same backend store used for existing save state (progress, evidence, discoveries). The `stringBoard` field is added alongside existing save fields
 
 ### Implementation Sketch
 - **web/index.html**: Add fourth manila tab "String Board" (`data-hub-tab="stringboard"`), add `<div id="hub-stringboard" class="hub-panel"><canvas id="sb-canvas"></canvas><div id="sb-cards"></div></div>`
@@ -44,16 +59,17 @@ let stringBoard = {
 - **web/css/main.css**: Cork board bg, card positioning, string line styling, pin circles, mobile touch targets
 
 ### Auto-Population
-When evidence is first collected, its card appears on the board in an auto-grid position. Players can then rearrange freely. Discovery summaries appear as sub-bullets on the card (same as current case board rendering).
+**Suspect cards** are present on the board from the start (all 8 suspects — Lila is the player's partner, not a suspect), pre-arranged in a default layout. **Evidence cards** appear when evidence is first collected, auto-positioned in the nearest open grid slot. Players can rearrange everything freely. Discovery summaries appear as sub-bullets on evidence cards (same as current case board rendering).
 
 ### Tradeoffs
 - **Pro**: Gives players the "detective board" fantasy. Entirely optional — doesn't block progress.
-- **Pro**: No server changes needed. Purely frontend.
+- **Pro**: Suspect cards make the board immediately useful even before collecting evidence — players can start mapping relationships between people from the dossiers alone.
 - **Con**: Canvas/SVG string rendering adds visual complexity. Needs testing across screen sizes.
 - **Con**: On mobile, the pannable canvas UX needs care to avoid conflicts with page scroll.
+- **Con**: Backend persistence adds server-side scope (save/load endpoints, sync logic). Must handle merge conflicts if player has the board open on two devices simultaneously.
 - **Alternative considered**: Simpler "tag and group" system where players assign colored labels to evidence. Less visually exciting, but much simpler to implement. Could be a good Phase 1 before full string board.
 
-### Complexity: Medium-Large (frontend only)
+### Complexity: Medium-Large (frontend + backend sync)
 
 ---
 
@@ -63,13 +79,29 @@ When evidence is first collected, its card appears on the board in an auto-grid 
 The server already returns `tactic_type` and `evidence_strength` every turn, but the player never sees them. The pressure/rapport system is invisible. Players can't learn what works because there's no feedback loop.
 
 ### Player Experience
-After each NPC response, a subtle **"Intuition Line"** fades in below the player's message bubble (not the NPC's). It's styled as the detective's internal monologue — italic, muted gold, small font. It communicates three things:
+After **key moments** in interrogation, a subtle **"Intuition Line"** fades in below the player's message bubble (not the NPC's). It's styled as the detective's internal monologue — italic, muted gold, small font. It communicates:
 
 1. **What you did** (tactic classification, in natural language)
 2. **How it landed** (evidence strength + effectiveness signal)
 3. **What shifted** (pressure/rapport direction, not numbers)
 
-Example lines:
+**Critical design constraint: show sparingly, not every turn.** If the intuition line appears after every single message, it will quickly become background noise and lose its impact. This is especially important given how natural and open-ended the actual interrogations feel — a mechanical comment after every turn would break that flow.
+
+**When to show the intuition line (trigger conditions — must meet at least one):**
+- A **band transition** occurred (pressure or rapport crossed a threshold, e.g., calm→tense, neutral→open)
+- The player presented **strong or smoking_gun evidence** (significant tactical moment)
+- A **discovery was registered** this turn (the NPC revealed something important)
+- A **gated discovery was blocked** this turn (the player is close but hasn't met conditions — hint at this without revealing the mechanic)
+- The player made a **high-impact tactic** like `direct_accusation` or `point_out_contradiction` (dramatic moments worth commenting on)
+
+**When NOT to show it:**
+- Routine `open_ended` or `topic_change` turns with no band shift
+- Any turn where the only thing to say would be generic/uninformative
+- When no trigger condition above is met — the absence of a line IS the feedback (things are status quo)
+
+**Natural suppression (no fixed cooldown):** Rather than a brute-force "N-turn cooldown," the trigger conditions themselves act as a natural filter. Band transitions don't happen every turn. Discoveries are rare. Strong evidence is a deliberate player choice. The only trigger that could fire frequently is `direct_accusation` / `point_out_contradiction`, so limit those specifically: if the same high-impact tactic is used on consecutive turns against the same NPC, suppress the second intuition line (the player is already committed to that approach and doesn't need a comment on it). This keeps the pacing organic — during a tense sequence the lines might appear 3 turns in a row if each turn genuinely shifts something, but during routine questioning they naturally disappear.
+
+Example lines (shown only at trigger moments):
 - *"A direct accusation — but without evidence to back it up, it bounced off."* (direct_accusation + none)
 - *"Showing empathy. She's opening up a little."* (empathy + rapport moved from cold→neutral)
 - *"You presented the keycard logs. He flinched."* (present_evidence + strong + pressure moved up)
@@ -127,8 +159,25 @@ const EVIDENCE_LABELS = {
   ```
 - **Optional enhancement**: A settings toggle "Show detective's intuition" (default on) for players who prefer a cleaner interface
 
-### Template System
-Rather than hundreds of hardcoded strings, use composable templates:
+### Generation Strategy: LLM-Authored, Not Templated
+
+**Problem with templates:** Pre-set template strings ("A direct accusation — but without evidence to back it up, it bounced off") will feel scripted the moment a player sees the same line twice. This sharply contrasts with how natural and open-ended the actual interrogations feel. The rest of the game is a living conversation — the intuition line can't be a canned response.
+
+**Solution: Generate intuition lines via the LLM as part of the NPC response call.** Since the intuition line only appears at key moments (not every turn), the cost is manageable. The approach:
+
+1. When a trigger condition is met, add a section to the NPC system prompt: *"After your in-character response, on a new line starting with `[INTUITION]`, write one brief sentence (max 15 words) as the detective's internal thought about what just happened — what tactic the detective used and how the NPC reacted. Stay in-world, noir tone. Do not reference game mechanics."*
+2. The server strips the `[INTUITION]` line from the NPC's visible response and returns it as a separate field (`intuition_line`) in the chat response JSON
+3. The client renders it only when present — no intuition field = no line shown
+
+**Fallback:** If the LLM fails to produce the `[INTUITION]` line (or produces something unusable), fall back to a small set of generic templates as a safety net. But the primary path is LLM-generated, ensuring variety and context-awareness.
+
+**Why this works better than templates:**
+- Every intuition line is unique to the specific conversation moment
+- The LLM already has full context of what was said, so it can reference the actual content ("Mentioning the keycard made her go quiet")
+- No risk of seeing the same canned string twice
+- The noir tone stays consistent with the NPC dialogue since the same model writes both
+
+**Previous template approach (kept as fallback only):**
 
 ```javascript
 function buildIntuitionLine(tactic, evidence, pBandOld, pBandNew, rBandOld, rBandNew) {
@@ -144,7 +193,6 @@ function buildIntuitionLine(tactic, evidence, pBandOld, pBandNew, rBandOld, rBan
 
   // Part 3: What shifted (band transitions)
   if (pBandNew !== pBandOld) {
-    // pressure increased
     if (BAND_ORDER[pBandNew] > BAND_ORDER[pBandOld]) parts.push(PRESSURE_UP_LINES[pBandNew]);
     else parts.push(PRESSURE_DOWN_LINES[pBandNew]);
   }
@@ -158,14 +206,15 @@ function buildIntuitionLine(tactic, evidence, pBandOld, pBandNew, rBandOld, rBan
 ```
 
 ### Tradeoffs
-- **Pro**: Closes the feedback loop with zero server changes. Uses data already returned.
-- **Pro**: Teaches the system through narrative, not numbers. Maintains noir immersion.
-- **Pro**: Small implementation surface — one function, one CSS class, one insertion point.
+- **Pro**: Closes the feedback loop. Teaches the system through narrative, not numbers. Maintains noir immersion.
+- **Pro**: LLM-generated lines ensure variety and context-sensitivity — no risk of scripted repetition.
+- **Pro**: Sparse triggering (key moments only) keeps the lines feeling special, not routine.
 - **Con**: Classifier accuracy becomes more visible. If the classifier mis-classifies "empathy" as "open_ended", the intuition line will be wrong and confusing. This creates pressure to improve classifier quality.
-- **Con**: Line generation needs enough variety to not feel repetitive after 30+ exchanges with one NPC. May need 3–4 variants per tactic×band combination.
+- **Con**: LLM generation adds a small amount of server-side logic (prompt injection for `[INTUITION]`, parsing/stripping the tag, returning the field). Not purely frontend anymore.
+- **Con**: Trigger logic needs tuning — too aggressive and it's still noisy, too conservative and players rarely see feedback. Playtesting required.
 - **Alternative considered**: A post-conversation summary ("Your approach with Amelia: mostly pressure-based, with 2 empathy attempts") shown when returning to the hub. Less immediate but avoids per-turn clutter. Could be Phase 2.
 
-### Complexity: Small-Medium (frontend only)
+### Complexity: Small-Medium (frontend + small server change)
 
 ---
 
@@ -307,7 +356,7 @@ def _check_gate(conditions: List[Dict], pressure: int, rapport: int,
 
 This is the main UX risk. If Noah blurts out "Fine, I took money from the company!" but the gate blocks the discovery because pressure is only 25, the player heard the confession but gets no toast and no evidence card.
 
-**Mitigation strategies (pick one or combine):**
+**Mitigation strategies:**
 
 1. **Accept it.** The information is "unverified" — the player heard it but can't use it formally. This mirrors real investigations where a suspect says something but it's not admissible. Players who push harder later will get the discovery registered. This is the simplest approach and arguably adds to the detective fantasy.
 
@@ -315,7 +364,100 @@ This is the main UX risk. If Noah blurts out "Fine, I took money from the compan
 
 3. **Regeneration on violation.** If the classifier detects a gated discovery that the gate blocks, regenerate the NPC response with stronger "DO NOT REVEAL" instructions. Expensive (double LLM call), adds latency, and the regenerated response might be worse. Not recommended as primary strategy but could be a fallback for the most critical discoveries (noah-key-access, amelia-conspiracy-admission).
 
-**Recommendation**: Use strategy 1 (accept it) as default, with strategy 2 (prompt injection) for the 3–4 most critical plot discoveries. Don't use strategy 3 unless leak rates are unacceptably high in testing.
+**Decision: Use strategy 2 (inject gate awareness) for all hard-gated discoveries**, combined with strategy 1 (accept it) as the fallback when leaks still occur.
+
+**How it works in practice:** The existing `build_interrogation_context()` function in `server/interrogation.py` already injects pressure band, rapport band, and behavioral guidance into the NPC prompt each turn. Pressure and rapport values are already being passed to the LLM as band labels (CALM/TENSE/SHAKEN/CORNERED for pressure, COLD/NEUTRAL/OPEN/TRUSTING for rapport) — see `interrogation.py:347-353`. The gate awareness injection extends this by adding a `LOCKED SECRETS` block:
+
+```python
+# In build_interrogation_context(), after the existing BEHAVIORAL GUIDANCE section:
+locked_secrets = get_locked_secret_descriptions(npc_id, pressure_val, rapport_val,
+                                                  player_evidence, player_discoveries)
+if locked_secrets:
+    lines.append("")
+    lines.append("LOCKED INFORMATION (do NOT reveal, hint at, or allude to these — "
+                 "the detective has not earned access yet):")
+    for desc in locked_secrets:
+        lines.append(f"- {desc}")
+```
+
+This needs a helper `get_locked_secret_descriptions()` that checks each of the NPC's hard-gated discoveries against current conditions and returns human-readable descriptions of what to withhold. The descriptions are phrased as what NOT to say — natural language, not mechanic labels.
+
+**Concrete locked-secret descriptions per discovery:**
+
+```python
+# Maps discovery_id → the text injected into the NPC prompt when the gate is locked.
+# Only hard-gated discoveries need entries here.
+LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
+    "noah-embezzlement": (
+        "Do NOT admit to or hint at embezzlement, skimming funds, financial misconduct, "
+        "or gambling debts. If the detective accuses you of financial crimes, deny it firmly "
+        "or deflect. You have not been confronted with proof yet."
+    ),
+    "noah-board-vote": (
+        "Do NOT reveal that Mercer was planning a board vote to oust you. You are not aware "
+        "the detective knows about this — act as if the vote is your private fear, not public knowledge."
+    ),
+    "noah-key-access": (
+        "Do NOT admit to obtaining the maintenance key or engineering keycard from Eddie. "
+        "If asked about keys or rooftop access, deny involvement or claim ignorance. "
+        "The detective has not yet established the chain of custody."
+    ),
+    "amelia-conspiracy-admission": (
+        "Do NOT admit to the full conspiracy with Mira. You may acknowledge pulling the breaker "
+        "if already discovered (amelia-breaker), but do NOT reveal that Mira searched Suite 701 "
+        "or that you coordinated together. Protect Mira until the detective has enough leverage."
+    ),
+    "mira-conspiracy-admission": (
+        "Do NOT admit to the full conspiracy with Amelia. You may discuss your plagiarism grievance "
+        "freely, but do NOT reveal that you searched Suite 701 during the blackout or that Amelia "
+        "pulled the breaker for you. The detective has not yet connected these events."
+    ),
+    "matthias-data-sales": (
+        "Do NOT reveal your side business selling guest data. If the detective asks about your "
+        "finances or side income, deflect or discuss your legitimate security work. "
+        "This secret requires substantial pressure or direct evidence to extract."
+    ),
+    "celeste-rooftop-witness": (
+        "Do NOT reveal that you saw someone descending the atrium stairwell during the blackout. "
+        "This is information you are withholding out of fear or self-preservation. "
+        "The detective must earn your trust or apply significant pressure before you share this."
+    ),
+    "eddie-gave-noah-key": (
+        "Do NOT reveal that Noah pressured you into handing over the key and keycard. "
+        "If asked about the key, you may mention borrowing it from Amelia for a toolkit, "
+        "but do NOT mention giving it to Noah. You are scared and protecting yourself."
+    ),
+}
+```
+
+The helper checks which of the NPC's hard-gated discoveries are still locked (gate conditions not met) and returns the corresponding descriptions:
+
+```python
+def get_locked_secret_descriptions(
+    npc_id: str,
+    pressure: int,
+    rapport: int,
+    player_evidence: List[str],
+    player_discoveries: List[str],
+) -> List[str]:
+    """Return locked-secret prompt lines for this NPC's unmet gates."""
+    from .cases import get_active_case
+    case = get_active_case()
+    locked = []
+    for discovery_id, gate_conditions in case.discovery_gates.items():
+        # Only include gates belonging to this NPC
+        if case.discovery_catalog.get(discovery_id, {}).get("npc_id") != npc_id:
+            continue
+        # Check if the gate is still locked
+        if not _check_gate(gate_conditions, pressure, rapport,
+                           player_evidence, player_discoveries):
+            desc = LOCKED_SECRET_DESCRIPTIONS.get(discovery_id)
+            if desc:
+                locked.append(desc)
+    return locked
+```
+
+Strategy 3 (regeneration) is **not used** unless leak rates prove unacceptably high in testing.
 
 ### Tradeoffs
 - **Pro**: Deterministic safety net. The game's mechanical state is always consistent regardless of LLM behavior.
@@ -333,9 +475,9 @@ This is the main UX risk. If Noah blurts out "Fine, I took money from the compan
 
 | Feature | Files | Server? | Frontend? |
 |---------|-------|---------|-----------|
-| 1. String Board | `web/index.html`, `web/js/main.js`, `web/css/main.css` | No | Yes |
-| 2. Intuition Line | `web/js/main.js`, `web/css/main.css` | No | Yes |
-| 3. Secret Gates | `server/app.py`, `server/cases/echoes_in_the_atrium/evidence.py`, `server/cases/__init__.py` | Yes | No |
+| 1. String Board | `web/index.html`, `web/js/main.js`, `web/css/main.css`, save/load API endpoint | Yes (sync) | Yes |
+| 2. Intuition Line | `web/js/main.js`, `web/css/main.css`, `server/interrogation.py` (trigger logic + `[INTUITION]` prompt), `server/app.py` (parse/return field) | Yes | Yes |
+| 3. Secret Gates | `server/app.py`, `server/interrogation.py` (gate awareness injection), `server/cases/echoes_in_the_atrium/evidence.py`, `server/cases/__init__.py` | Yes | No |
 
 ## Suggested Implementation Order
 
@@ -348,5 +490,5 @@ This is the main UX risk. If Noah blurts out "Fine, I took money from the compan
 ## Verification
 
 - **Secret Gates**: Write unit tests in `tests/test_interrogation.py` that call `_check_gate()` with various combinations of pressure, rapport, evidence, and discovery lists. Verify that blocked discoveries don't appear in the ChatResponse. Test edge case: discovery detected + gate blocked + same discovery detected again after gate conditions met = should register on second attempt.
-- **Intuition Line**: Manual play-test. Verify intuition line appears after each exchange, content matches the tactic/evidence/band data returned by the server. Check that line doesn't appear for partner (Lila) conversations. Test with classifier degraded=True (should show generic line or nothing).
+- **Intuition Line**: Manual play-test. Verify intuition line appears only at trigger moments (band transitions, strong evidence, discoveries), NOT after every turn. Check that lines feel unique and contextual (LLM-generated), not canned. Verify that repeated same-tactic turns suppress the line naturally. Check that line doesn't appear for partner (Lila) conversations. Test fallback: if LLM doesn't produce `[INTUITION]` tag, verify template fallback activates gracefully. Test with classifier degraded=True (should show generic line or nothing).
 - **String Board**: Manual play-test. Verify cards appear when evidence is collected. Test drag positioning, link creation/deletion, persistence across page reload, and cloud save/restore. Test mobile touch interactions.
