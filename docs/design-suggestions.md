@@ -32,7 +32,9 @@ Each gate is a list of **conditions** evaluated as **ANY condition passing = gat
 
 **Starting evidence** the player always has: `burned-notebook`, `keycard-logs`. Gate conditions must never use these as standalone requirements — they would be always-true and render the gate meaningless.
 
-**Hard-gated discoveries (9):**
+**Rapport thresholds are set near max (~80-85).** Building rapport happens naturally through normal questioning, so rapport-based gates must require near-maximum trust to be meaningful barriers. Pressure thresholds can be lower since sustaining pressure requires deliberate tactical commitment.
+
+**Hard-gated discoveries (12):**
 
 | Discovery | NPC | Conditions (OR) | Rationale |
 |-----------|-----|-----------------|-----------|
@@ -43,30 +45,38 @@ Each gate is a list of **conditions** evaluated as **ANY condition passing = gat
 | | | evidence `encrypted-schedule` | Direct proof of the planned vote |
 | `noah-key-access` | Noah | discovery `eddie-gave-noah-key` | Eddie already told you |
 | | | evidence `key-trail` + pressure ≥ 50 | Key evidence + significant pressure |
+| `noah-murder` | Noah | discovery `noah-embezzlement` + discovery `noah-board-vote` + discovery `noah-key-access` + pressure ≥ 40 | Noah reveals the truth of what happened that night — requires the detective to have pieced together the full picture (motive, opportunity, means) and then applied moderate pressure to break him |
 | `eddie-gave-noah-key` | Eddie | pressure ≥ 30 | Eddie is anxious, moderate pressure works |
-| | | rapport ≥ 50 | Eddie trusts you enough to confess |
-| | | evidence `key-trail` | Confronting Eddie with key-trail evidence (contradiction: "we know the key was used on the rooftop, but you said you only used it for a toolkit") forces the admission |
-| `celeste-rooftop-witness` | Celeste | rapport ≥ 45 | She trusts you enough to share what she saw |
+| | | rapport ≥ 80 | Very high trust required — rapport builds easily through normal conversation |
+| | | evidence `key-trail` | Contradiction: "we know the key was used on the rooftop, but you said you only used it for a toolkit" |
+| `celeste-rooftop-witness` | Celeste | rapport ≥ 80 | Very high trust — she's withholding out of fear |
 | | | pressure ≥ 55 | Significant pressure overcomes her fear |
-| `matthias-data-sales` | Matthias | pressure ≥ 50 | Significant pressure required |
+| `matthias-data-sales` | Matthias | pressure ≥ 65 | Matthias is a professional fixer — cool under pressure, requires heavy pressure |
 | | | evidence `blackmail` | Proof that Mercer was blackmailing people — implies Mercer knew about the data sales |
+| `amelia-lockpick` | Amelia | discovery `amelia-key-loan` | Lockpick marks only make sense once you know Amelia lent her key to Eddie — if the key was out, who used lockpicks to get in? |
 | `mira-suite-search` | Mira | pressure ≥ 50 | Significant pressure |
-| | | rapport ≥ 55 | High trust |
+| | | rapport ≥ 80 | Very high trust |
 | | | discovery `amelia-breaker` | If you know Amelia pulled the breaker, confronting Mira about what she did during the blackout is natural |
-| `amelia-conspiracy-admission` | Amelia | discovery `amelia-breaker` + pressure ≥ 60 | Must already know she pulled the breaker, plus high pressure |
-| | | discovery `amelia-breaker` + rapport ≥ 65 | Must already know she pulled the breaker, plus very high trust |
+| `amelia-conspiracy-admission` | Amelia | discovery `amelia-breaker` + pressure ≥ 60 | General pressure path — breaker known + high pressure |
+| | | discovery `amelia-breaker` + rapport ≥ 85 | Very high trust path |
+| | | discovery `amelia-breaker` + pressure ≥ 40 | Lower pressure if Amelia has already let slip "we" — the detective calling out "you said 'we', who else was involved?" is a pointed contradiction that cracks her at lower pressure |
+| | | discovery `amelia-breaker` + discovery `matthew-amelia-direction` | Timeline contradiction — Matthew's log shows Amelia entered from B1 at 11:32, not from the 7th floor where she claims she was. No pressure needed; the evidence is overwhelming |
 | | | discovery `mira-suite-search` | Mira already told you about the conspiracy |
-| `mira-conspiracy-admission` | Mira | discovery `mira-suite-search` + pressure ≥ 40 | Must already know she searched the suite, plus moderate pressure |
-| | | discovery `amelia-conspiracy-admission` | Amelia already told you the full conspiracy |
+| `mira-conspiracy-admission` | Mira | discovery `mira-suite-search` + pressure ≥ 40 | Suite search known + moderate pressure |
+| | | discovery `mira-suite-search` + discovery `amelia-breaker` + pressure ≥ 25 | If you can confront Mira with both her suite search AND Amelia's breaker pull (referencing the "we" slip), very low pressure breaks her |
+| | | discovery `amelia-conspiracy-admission` | Amelia already told you everything |
 
-**Soft-gated discoveries (20)** — no mechanical check, LLM decides based on conversation context:
+**Note on `amelia-breaker` + pressure ≥ 40 vs ≥ 60:** The 40-threshold path exists specifically for the scenario where the player catches Amelia's "we" slip and presses on it. Calling out "you said 'we'" is a `point_out_contradiction` tactic which generates +22 pressure delta — so a player who's built moderate pressure and then catches the slip will naturally cross 40. The 60-threshold path covers the general scenario where the player hasn't caught the specific "we" slip but is applying sustained pressure.
+
+**`noah-murder`** is a new discovery that must be added to the discovery catalog, i18n strings, and case.js discovery-evidence map. It represents Noah's full confession — the climactic moment of the case. Evidence type TBD (e.g., `murder-confession`).
+
+**Soft-gated discoveries (18)** — no mechanical check, LLM decides based on conversation context:
 
 | Discovery | NPC | Why soft-gated |
 |-----------|-----|----------------|
 | `amelia-key-loan` | Amelia | Factual, she has little reason to hide lending a key |
 | `amelia-breaker` | Amelia | Important, but gating it creates too long a dependency chain for conspiracy admissions |
 | `amelia-hotel-sale` | Amelia | She's passionate and vocal about the hotel sale |
-| `amelia-lockpick` | Amelia | Observational — describes physical evidence |
 | `noah-cctv-gap` | Noah | Circumstantial, based on footage the player can reference |
 | `celeste-affair` | Celeste | Romantic revelation, flows naturally from emotional conversation |
 | `celeste-recordings` | Celeste | She wants leverage — may share voluntarily |
@@ -101,31 +111,41 @@ DISCOVERY_GATES: Dict[str, List[Dict[str, Any]]] = {
         {"requires_discovery": ["eddie-gave-noah-key"]},
         {"requires_evidence": ["key-trail"], "min_pressure": 50},
     ],
+    "noah-murder": [
+        {"requires_discovery": ["noah-embezzlement", "noah-board-vote", "noah-key-access"],
+         "min_pressure": 40},
+    ],
     "eddie-gave-noah-key": [
         {"min_pressure": 30},
-        {"min_rapport": 50},
+        {"min_rapport": 80},
         {"requires_evidence": ["key-trail"]},
     ],
     "celeste-rooftop-witness": [
-        {"min_rapport": 45},
+        {"min_rapport": 80},
         {"min_pressure": 55},
     ],
     "matthias-data-sales": [
-        {"min_pressure": 50},
+        {"min_pressure": 65},
         {"requires_evidence": ["blackmail"]},
+    ],
+    "amelia-lockpick": [
+        {"requires_discovery": ["amelia-key-loan"]},
     ],
     "mira-suite-search": [
         {"min_pressure": 50},
-        {"min_rapport": 55},
+        {"min_rapport": 80},
         {"requires_discovery": ["amelia-breaker"]},
     ],
     "amelia-conspiracy-admission": [
         {"requires_discovery": ["amelia-breaker"], "min_pressure": 60},
-        {"requires_discovery": ["amelia-breaker"], "min_rapport": 65},
+        {"requires_discovery": ["amelia-breaker"], "min_rapport": 85},
+        {"requires_discovery": ["amelia-breaker"], "min_pressure": 40},       # "we" slip path
+        {"requires_discovery": ["amelia-breaker", "matthew-amelia-direction"]}, # timeline contradiction
         {"requires_discovery": ["mira-suite-search"]},
     ],
     "mira-conspiracy-admission": [
         {"requires_discovery": ["mira-suite-search"], "min_pressure": 40},
+        {"requires_discovery": ["mira-suite-search", "amelia-breaker"], "min_pressure": 25},
         {"requires_discovery": ["amelia-conspiracy-admission"]},
     ],
 }
@@ -213,6 +233,12 @@ LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
         "If asked about keys or rooftop access, deny involvement or claim ignorance. "
         "The detective has not yet established the chain of custody."
     ),
+    "noah-murder": (
+        "Do NOT confess to or hint at killing Mercer. Do NOT describe what happened on the "
+        "rooftop that night. If the detective accuses you directly, deny it or demand a lawyer. "
+        "You will only break when the detective has proven your motive, your opportunity, "
+        "and your access — and then applies real pressure."
+    ),
     "eddie-gave-noah-key": (
         "Do NOT reveal that Noah pressured you into handing over the key and keycard. "
         "If asked about the key, you may mention borrowing it from Amelia for a toolkit, "
@@ -225,7 +251,13 @@ LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
     ),
     "matthias-data-sales": (
         "Do NOT reveal your side business selling guest data. If the detective asks about "
-        "your finances or side income, deflect or discuss your legitimate security work."
+        "your finances or side income, deflect or discuss your legitimate security work. "
+        "You are a professional — stay composed and redirect."
+    ),
+    "amelia-lockpick": (
+        "Do NOT bring up or speculate about the lockpick marks on the maintenance door. "
+        "If the detective asks about forced entry, say you don't know about it. This only "
+        "becomes relevant once the detective knows your key was already out with Eddie."
     ),
     "mira-suite-search": (
         "Do NOT reveal that you searched Suite 701 during the blackout. If asked about "
@@ -235,7 +267,9 @@ LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
     "amelia-conspiracy-admission": (
         "Do NOT admit to the full conspiracy with Mira. You may acknowledge pulling the "
         "breaker if already discovered, but do NOT reveal that Mira searched Suite 701 "
-        "or that you coordinated together. Protect Mira until the detective has enough leverage."
+        "or that you coordinated together. Protect Mira until the detective has enough leverage. "
+        "Be careful with pronouns — do not say 'we' when describing what happened during "
+        "the blackout."
     ),
     "mira-conspiracy-admission": (
         "Do NOT admit to the full conspiracy with Amelia. You may discuss your plagiarism "
@@ -446,6 +480,11 @@ String board state is stored server-side for cross-device sync.
 - Verify blocked discoveries don't appear in ChatResponse
 - Test edge case: discovery detected + gate blocked + same discovery detected again after gate conditions met = registers on second attempt
 - Verify no gate uses starting evidence (`burned-notebook`, `keycard-logs`) as a standalone OR condition
+- Test `noah-murder` requires ALL three prerequisite discoveries (embezzlement + board-vote + key-access) plus pressure ≥ 40 — missing any single prerequisite must block
+- Test `amelia-lockpick` is blocked until `amelia-key-loan` is discovered
+- Test conspiracy admission "we" slip path: `amelia-breaker` + pressure 40 opens `amelia-conspiracy-admission`; `mira-suite-search` + `amelia-breaker` + pressure 25 opens `mira-conspiracy-admission`
+- Test `amelia-conspiracy-admission` timeline contradiction: `amelia-breaker` + `matthew-amelia-direction` opens the gate with zero pressure requirement
+- Verify rapport gates require ≥ 80-85 — test that rapport of 70 does NOT open any rapport-gated discovery
 
 **Detective's Intuition:**
 - Manual play-test: verify intuition line appears only at trigger moments (band transitions, strong evidence, discoveries), NOT after every turn
