@@ -538,6 +538,31 @@ async def speak(request: SpeakRequest):
         raise HTTPException(status_code=502, detail=client_detail) from exc
 
 
+## ── String Board state endpoints ──────────────────────────────────────────
+# In-memory store keyed by a simple session concept.  For authenticated users
+# the string board is also persisted inside the main cloud save blob; these
+# endpoints provide a lightweight local-only fallback for unauthenticated play.
+
+_stringboard_store: Dict[str, Any] = {}
+
+
+@app.post("/api/state/stringboard")
+async def save_stringboard(request: Request):
+    """Save the string board state (card positions + links)."""
+    body = await request.json()
+    _stringboard_store["default"] = body
+    return {"ok": True}
+
+
+@app.get("/api/state/stringboard")
+async def load_stringboard():
+    """Load the string board state."""
+    state = _stringboard_store.get("default")
+    if state is None:
+        return {"cardPositions": {}, "links": []}
+    return state
+
+
 @app.get("/health")
 async def healthcheck():
     """Simple health endpoint for monitoring."""
