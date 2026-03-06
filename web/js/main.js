@@ -447,7 +447,7 @@
       updateAuthUI();
       closeAuthModal();
       // Return to title card
-      chatScreen.classList.remove("active");
+      removeNpcTab();
       hubScreen.classList.remove("active");
       titleCard.classList.remove("dismissed", "hidden");
     });
@@ -474,8 +474,9 @@
       settingsLogoutBtn.addEventListener("click", async () => {
         await flushCloudSave(); // persist any pending state before clearing auth
         // Leave chat BEFORE resetting state so saveState() saves the real state
-        if (chatScreen.classList.contains("active")) {
+        if (activeNpcId) {
           leaveChat();
+          removeNpcTab();
         }
         await authLogout();
         authUser = null;
@@ -486,7 +487,6 @@
         const settingsModal = document.getElementById("settings-modal");
         if (settingsModal) settingsModal.classList.remove("visible");
         // Return to title card
-        chatScreen.classList.remove("active");
         hubScreen.classList.remove("active");
         titleCard.classList.remove("dismissed", "hidden");
       });
@@ -710,7 +710,6 @@
   const titleCard         = $("#title-card");
   const titleCardBtn      = $("#title-card-btn");
   const hubScreen         = $("#hub-screen");
-  const chatScreen        = $("#chat-screen");
   const TITLE_STORAGE_KEY = "echoes_title_seen";
 
   // Hub elements
@@ -718,12 +717,7 @@
   const hubSettingsTab    = $("#hub-settings-tab");
 
   // Chat elements
-  const navToSuspects     = $("#nav-to-suspects");
-  const navToCaseboard    = $("#nav-to-caseboard");
-  const navToNotes        = $("#nav-to-notes");
-  const notesModal        = $("#notes-modal");
-  const chatNotesTextarea = $("#chat-notes-textarea");
-  const chatLayout        = document.querySelector("#chat-screen .chat-layout");
+  const chatLayout        = document.querySelector("#hub-chat .chat-layout");
   const chatPortraitImg   = $("#chat-portrait-img");
   const portraitName      = $("#portrait-name");
   const portraitRole      = $("#portrait-role");
@@ -809,7 +803,6 @@
       playerNotes = s.playerNotes;
       const notesEl = document.getElementById("player-notes");
       if (notesEl) notesEl.value = playerNotes;
-      if (chatNotesTextarea) chatNotesTextarea.value = playerNotes;
     }
     if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
     if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
@@ -895,19 +888,52 @@
     return d.innerHTML;
   }
 
-  /* ── Screen Transitions ────────────────────────────────── */
+  /* ── Unified Tab Navigation ──────────────────────────────── */
+  function activateTab(tabName) {
+    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
+
+    const tab = document.querySelector(`.manila-tab[data-hub-tab="${tabName}"]`);
+    if (tab) tab.classList.add("active");
+    const panel = document.getElementById(`hub-${tabName}`);
+    if (panel) panel.classList.add("active");
+
+    // Tab-specific side effects
+    if (tabName === "caseboard") { renderEvidence(); clearCaseBoardBadges(); }
+    if (tabName === "stringboard") renderStringBoard();
+    if (tabName === "suspects") { renderNpcGrid(); renderEvidence(); }
+
+    // Audio toggle only visible in chat
+    const audioBtn = document.getElementById("audio-toggle");
+    if (audioBtn) audioBtn.classList.toggle("hidden-icon", tabName !== "chat");
+  }
+
+  function addNpcTab(npcId) {
+    removeNpcTab();
+    const npc = npcs.find(n => n.npc_id === npcId);
+    const name = (npc?.display_name || npcId).split(/\s[—\u2014-]{1,2}\s/)[0];
+    const tab = document.createElement("button");
+    tab.className = "manila-tab manila-tab-npc";
+    tab.dataset.hubTab = "chat";
+    tab.innerHTML = `<span class="manila-tab-label">${escapeHtml(name)}</span>`;
+    tab.addEventListener("click", () => activateTab("chat"));
+    // Insert right after "Persons of Interest" tab
+    const suspectsTab = document.querySelector('.manila-tab[data-hub-tab="suspects"]');
+    suspectsTab.parentNode.insertBefore(tab, suspectsTab.nextSibling);
+  }
+
+  function removeNpcTab() {
+    document.querySelector(".manila-tab-npc")?.remove();
+  }
+
   function showHub() {
-    chatScreen.classList.remove("active");
-    hubScreen.classList.add("active");
-    renderNpcGrid();
-    renderEvidence();
+    removeNpcTab();
+    leaveChat();
+    activateTab("suspects");
   }
 
   function showChat() {
-    hubScreen.classList.remove("active");
-    chatScreen.classList.add("active");
-    // Dismiss notes modal if open
-    notesModal.classList.remove("visible");
+    activateTab("chat");
   }
 
   /* ── Initialize ─────────────────────────────────────────── */
@@ -1002,6 +1028,7 @@
     if (activeNpcId) {
       // Returning player with active chat — go directly there
       titleCard.classList.add("hidden");
+      hubScreen.classList.add("active");
       selectNpc(activeNpcId);
     } else if (!titleSeen && !hasConversations) {
       // First-time player — show title card, hub stays hidden until dismissed
@@ -1015,10 +1042,7 @@
 
   function showHubOnCaseboard() {
     hubScreen.classList.add("active");
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
-    document.getElementById("hub-caseboard").classList.add("active");
+    activateTab("caseboard");
   }
 
   /* ── Render NPC Grid (5 + 4 staggered rows) ────────────── */
@@ -1120,8 +1144,9 @@
       preload.src = portraitUrl(npcId, ex);
     }
 
-    // Transition to chat screen
-    showChat();
+    // Inject NPC sub-tab and switch to chat panel
+    addNpcTab(npcId);
+    activateTab("chat");
     chatInput.focus();
     saveState();
 
@@ -1496,7 +1521,7 @@
   function flashCaseBoardTab() {
     unseenDiscoveryCount++;
     // Flash both the hub caseboard tab and the chat-nav caseboard tab
-    const tabs = document.querySelectorAll('.manila-tab[data-hub-tab="caseboard"], #nav-to-caseboard');
+    const tabs = document.querySelectorAll('.manila-tab[data-hub-tab="caseboard"]');
     tabs.forEach(tab => {
       tab.classList.add("tab-flash");
       setTimeout(() => tab.classList.remove("tab-flash"), 4000);
@@ -2150,16 +2175,13 @@
     clearState();
     briefingOpen = true;
     seedStartingEvidence();
-    chatScreen.classList.remove("active");
+    removeNpcTab();
     chatMessages.innerHTML = "";
     renderEvidence();
     renderNpcGrid();
     // Go to hub on Case Board tab with briefing expanded
     hubScreen.classList.add("active");
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
-    document.getElementById("hub-caseboard").classList.add("active");
+    activateTab("caseboard");
     const briefingToggle = $("#cb-briefing-toggle");
     const briefingBody = $("#cb-briefing-body");
     briefingToggle.setAttribute("aria-expanded", "true");
@@ -2197,7 +2219,6 @@
   }
 
   $("#hub-feedback-tab").addEventListener("click", openFeedback);
-  $("#chat-feedback-tab").addEventListener("click", openFeedback);
   feedbackCloseBtn.addEventListener("click", closeFeedback);
   feedbackModal.addEventListener("click", (e) => {
     if (e.target === feedbackModal) closeFeedback();
@@ -2395,52 +2416,16 @@
     saveState();
   }
 
-  function showChatFromNotes() {
-    notesModal.classList.remove("visible");
-  }
-
-  navToSuspects.addEventListener("click", () => {
-    showChatFromNotes();
-    leaveChat();
-    showHub();
-    // Activate suspects tab
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('.manila-tab[data-hub-tab="suspects"]').classList.add("active");
-    document.getElementById("hub-suspects").classList.add("active");
-  });
-  navToCaseboard.addEventListener("click", () => {
-    showChatFromNotes();
-    leaveChat();
-    showHub();
-    // Activate caseboard tab
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
-    document.getElementById("hub-caseboard").classList.add("active");
-    clearCaseBoardBadges();
-  });
-  navToNotes.addEventListener("click", () => {
-    chatNotesTextarea.value = playerNotes;
-    notesModal.classList.toggle("visible");
-  });
-  $("#notes-modal-close").addEventListener("click", () => {
-    notesModal.classList.remove("visible");
-  });
-  notesModal.addEventListener("click", (e) => {
-    if (e.target === notesModal) notesModal.classList.remove("visible");
-  });
-
-  // Hub manila folder tabs (only tabs with data-hub-tab attribute)
+  // Hub manila folder tabs — unified handler
   document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(tab => {
     tab.addEventListener("click", () => {
-      document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-      tab.classList.add("active");
-      const panelId = `hub-${tab.dataset.hubTab}`;
-      document.getElementById(panelId).classList.add("active");
-      if (tab.dataset.hubTab === "caseboard") clearCaseBoardBadges();
-      if (tab.dataset.hubTab === "stringboard") renderStringBoard();
+      const name = tab.dataset.hubTab;
+      // Clicking "Persons of Interest" while chatting leaves the chat
+      if (activeNpcId && name === "suspects") {
+        leaveChat();
+        removeNpcTab();
+      }
+      activateTab(name);
     });
   });
 
@@ -2450,21 +2435,9 @@
     notesTextarea.value = playerNotes;
     notesTextarea.addEventListener("input", () => {
       playerNotes = notesTextarea.value;
-      if (chatNotesTextarea) chatNotesTextarea.value = playerNotes;
       saveState();
     });
   }
-  if (chatNotesTextarea) {
-    chatNotesTextarea.value = playerNotes;
-    chatNotesTextarea.addEventListener("input", () => {
-      playerNotes = chatNotesTextarea.value;
-      if (notesTextarea) notesTextarea.value = playerNotes;
-      saveState();
-    });
-  }
-
-  // Chat settings tab
-  $("#chat-settings-tab").addEventListener("click", openSettings);
 
   /* ── Portrait Info Button (bio tooltip) ──────────────── */
   const portraitInfoBtn = $("#portrait-info-btn");
@@ -2526,7 +2499,7 @@
     await clearState();
     briefingOpen = true;
     outcomeScreen.classList.remove("visible");
-    chatScreen.classList.remove("active");
+    removeNpcTab();
     hubScreen.classList.remove("active");
     chatMessages.innerHTML = "";
     await init();
@@ -2542,14 +2515,9 @@
   const caseReadyModal = $("#case-ready-modal");
   $("#case-ready-review").addEventListener("click", () => {
     caseReadyModal.classList.remove("visible");
-    showHub();
-    // Switch to caseboard tab
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    const cbTab = document.querySelector('.manila-tab[data-hub-tab="caseboard"]');
-    if (cbTab) cbTab.classList.add("active");
-    const cbPanel = document.getElementById("hub-caseboard");
-    if (cbPanel) cbPanel.classList.add("active");
+    leaveChat();
+    removeNpcTab();
+    activateTab("caseboard");
   });
   $("#case-ready-accuse").addEventListener("click", () => {
     caseReadyModal.classList.remove("visible");
@@ -2946,10 +2914,7 @@
     { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top", clickToAdvance: true },
     { selector: `.npc-card[data-npc-id="${PARTNER_NPC_ID}"]`, text: "tutorial.step_partner", arrow: "top", beforeShow() {
       // Ensure suspects tab is active (user just clicked it in the previous step)
-      document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-      document.querySelector('.manila-tab[data-hub-tab="suspects"]').classList.add("active");
-      document.getElementById("hub-suspects").classList.add("active");
+      activateTab("suspects");
     }},
     { selector: `.npc-card:not([data-npc-id="${PARTNER_NPC_ID}"])`, text: "tutorial.step_npc_card", arrow: "top" },
   ];
@@ -2960,13 +2925,13 @@
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
-    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
+    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
   // Suspect chat steps without input bar (used when Lila chat already covered it)
   const CHAT_STEPS_SHORT = [
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
-    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
+    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
 
   // Lila-specific tutorial (shown the first time Lila's chat is opened)
@@ -2978,7 +2943,7 @@
   const LILA_CHAT_STEPS = [
     { selector: '#lila-hint-btn', text: "tutorial.step_hint_btn", arrow: "bottom" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
-    { selector: '#nav-to-notes', text: "tutorial.step_notes", arrow: "bottom" },
+    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
 
   let tutorialSteps = [];
@@ -3209,14 +3174,11 @@
     localStorage.removeItem(LILA_HINT_STORAGE_KEY);
     chatTutorialPending = true; // ensure chat-phase tutorial fires after hub replay
     // Navigate to hub/caseboard first
-    if (chatScreen.classList.contains("active")) {
+    if (activeNpcId) {
       leaveChat();
-      showHub();
+      removeNpcTab();
     }
-    document.querySelectorAll(".manila-tab[data-hub-tab]").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".hub-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('.manila-tab[data-hub-tab="caseboard"]').classList.add("active");
-    document.getElementById("hub-caseboard").classList.add("active");
+    activateTab("caseboard");
     setTimeout(() => startTutorial("hub"), 400);
   });
 

@@ -216,7 +216,7 @@
       font-style: italic;
     }
 
-    /* ── Hub Screen ────────────────────────────────────────── */
+    /* ── Hub Screen (unified — always visible once game starts) ── */
     #hub-screen {
       display: none;
       height: 100vh;
@@ -280,15 +280,36 @@
       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       pointer-events: none;
     }
+    /* Dynamic NPC sub-tab — smaller than main tabs */
+    .manila-tab-npc {
+      min-width: auto;
+      padding: 0.5rem 1.2rem 0.45rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      border-left: 2px solid rgba(212,160,80,0.25);
+    }
+    .manila-tab-npc.active {
+      border-left-color: var(--gold);
+    }
+    /* Utility: hide icon buttons */
+    .hidden-icon { display: none !important; }
 
     .hub-content {
       flex: 1;
       overflow-y: auto;
       border-top: 3px solid var(--manila-border);
       background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
     .hub-panel { display: none; }
     .hub-panel.active { display: block; }
+    #hub-chat.active {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
 
     /* ── Notes Panel ──────────────────────────────────────── */
     .notes-container {
@@ -320,42 +341,6 @@
       color: var(--text-faint);
       font-style: italic;
     }
-    /* ── Notes Modal ────────────────────────────────── */
-    #notes-modal {
-      position: fixed; inset: 0; z-index: 250;
-      display: none; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-    }
-    #notes-modal.visible { display: flex; }
-    .notes-modal-card {
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      width: 90%; max-width: 700px;
-      height: 70vh;
-      display: flex; flex-direction: column;
-      overflow: hidden;
-    }
-    .notes-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .notes-modal-header h2 {
-      font-family: var(--font-noir);
-      font-size: 1rem; font-weight: 600;
-      color: var(--text); margin: 0;
-    }
-    .notes-modal-body {
-      flex: 1; padding: 1rem 1.25rem;
-      display: flex; flex-direction: column;
-      min-height: 0;
-    }
-    .notes-modal-body .player-notes-textarea {
-      flex: 1;
-    }
-
     /* ── NPC Grid (5 + 4 staggered rows) ───────────────────── */
     .npc-grid-container {
       padding: 1.25rem 2rem 0;
@@ -531,20 +516,6 @@
     .caseboard-briefing-body p { margin-bottom: 0.75rem; }
     .caseboard-briefing-body p:last-child { margin-bottom: 0; }
 
-    /* ── Chat Screen ───────────────────────────────────────── */
-    #chat-screen {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
-      background: var(--bg-dark);
-      overflow: hidden;
-    }
-    #chat-screen.active { display: flex; }
-
-    .chat-manila-tabs {
-      flex-shrink: 0;
-    }
-
     /* Chat layout: portrait | chat+dossier */
     .chat-layout {
       flex: 1;
@@ -552,7 +523,6 @@
       grid-template-columns: 380px 1fr;
       min-height: 0;
       overflow: hidden;
-      border-top: 3px solid var(--manila-border);
     }
 
     /* Portrait panel */
