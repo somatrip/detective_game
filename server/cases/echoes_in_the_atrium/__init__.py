@@ -10,6 +10,7 @@ from ..import CaseData
 from .archetypes import NPC_ARCHETYPE_MAP
 from .evidence import (
     DISCOVERY_CATALOG,
+    DISCOVERY_GATES,
     EVIDENCE_CATALOG_DESCRIPTIONS,
     NPC_RELEVANT_EVIDENCE,
     SMOKING_GUN_MAP,
@@ -27,4 +28,5 @@ case_data = CaseData(
     smoking_gun_map=SMOKING_GUN_MAP,
     evidence_catalog=EVIDENCE_CATALOG_DESCRIPTIONS,
     discovery_catalog=DISCOVERY_CATALOG,
+    discovery_gates=DISCOVERY_GATES,
 )

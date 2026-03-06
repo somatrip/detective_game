@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Literal, Sequence
+from typing import Dict, List, Literal, Optional, Sequence
 
 from pydantic import BaseModel, Field
 
@@ -112,6 +112,14 @@ class ChatResponse(BaseModel):
     degraded: bool = Field(
         default=False,
         description="True if classifier or detection fell back to defaults due to an API error.",
+    )
+    intuition_line: Optional[str] = Field(
+        default=None,
+        description="Detective's internal monologue line, shown after key interrogation moments.",
+    )
+    blocked_discovery_ids: List[str] = Field(
+        default_factory=list,
+        description="Discovery IDs that were detected but blocked by mechanical gates this turn.",
     )
 
 

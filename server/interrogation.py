@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Tuple, TypedDict
+from typing import Any, Dict, List, Tuple, TypedDict
 
 
 # ---------------------------------------------------------------------------
@@ -321,6 +321,60 @@ _HIGH_RAPPORT_HELPFULNESS: Dict[str, str] = {
 }
 
 
+def _check_gate(
+    conditions: List[Dict[str, Any]],
+    pressure: int,
+    rapport: int,
+    player_evidence: List[str],
+    player_discoveries: List[str],
+) -> bool:
+    """Return True if ANY condition in the gate is fully satisfied (OR logic).
+
+    Within each condition dict, ALL requirements must be met (AND logic).
+    """
+    for condition in conditions:
+        satisfied = True
+        if "min_pressure" in condition and pressure < condition["min_pressure"]:
+            satisfied = False
+        if "min_rapport" in condition and rapport < condition["min_rapport"]:
+            satisfied = False
+        if "requires_evidence" in condition:
+            if not all(e in player_evidence for e in condition["requires_evidence"]):
+                satisfied = False
+        if "requires_discovery" in condition:
+            if not all(d in player_discoveries for d in condition["requires_discovery"]):
+                satisfied = False
+        if satisfied:
+            return True
+    return False
+
+
+def get_locked_secret_descriptions(
+    npc_id: str,
+    pressure: int,
+    rapport: int,
+    player_evidence: List[str],
+    player_discoveries: List[str],
+) -> List[str]:
+    """Return locked-secret prompt lines for this NPC's unmet gates."""
+    from .cases import get_active_case
+    from .cases.echoes_in_the_atrium.evidence import LOCKED_SECRET_DESCRIPTIONS
+
+    case = get_active_case()
+    locked: List[str] = []
+    for discovery_id, gate_conditions in case.discovery_gates.items():
+        # Only include gates that belong to this NPC
+        if case.discovery_catalog.get(discovery_id, {}).get("npc_id") != npc_id:
+            continue
+        # If the gate is NOT satisfied, the secret is locked
+        if not _check_gate(gate_conditions, pressure, rapport,
+                           player_evidence, player_discoveries):
+            desc = LOCKED_SECRET_DESCRIPTIONS.get(discovery_id)
+            if desc:
+                locked.append(desc)
+    return locked
+
+
 def build_interrogation_context(
     npc_id: str,
     pressure_val: int,
@@ -328,6 +382,8 @@ def build_interrogation_context(
     tactic_type: str,
     evidence_strength: str,
     archetype_id: str | None = None,
+    player_evidence: List[str] | None = None,
+    player_discoveries: List[str] | None = None,
 ) -> str:
     """Build the system-prompt paragraph injected per turn.
 
@@ -335,6 +391,10 @@ def build_interrogation_context(
     ----------
     archetype_id : str | None
         When provided, avoids the internal case-data lookup.
+    player_evidence : list[str] | None
+        Evidence IDs the player currently holds (for gate awareness).
+    player_discoveries : list[str] | None
+        Discovery IDs the player has already collected (for gate awareness).
     """
     p_band = pressure_band(pressure_val)
     r_band = rapport_band(rapport_val)
@@ -377,7 +437,92 @@ def build_interrogation_context(
         lines.append("")
         lines.append(helpfulness)
 
+    # Inject locked-secret awareness so the LLM avoids revealing gated secrets
+    locked_secrets = get_locked_secret_descriptions(
+        npc_id,
+        pressure_val,
+        rapport_val,
+        player_evidence or [],
+        player_discoveries or [],
+    )
+    if locked_secrets:
+        lines.append("")
+        lines.append(
+            "LOCKED INFORMATION (do NOT reveal, hint at, or allude to these — "
+            "the detective has not earned access yet):"
+        )
+        for desc in locked_secrets:
+            lines.append(f"- {desc}")
+
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Detective's Intuition — trigger detection & prompt injection
+# ---------------------------------------------------------------------------
+
+#: High-impact tactics that trigger intuition lines (and are subject to
+#: consecutive-suppression on the client side).
+HIGH_IMPACT_TACTICS = {"direct_accusation", "point_out_contradiction"}
+
+
+def should_show_intuition(
+    *,
+    tactic_type: str,
+    evidence_strength: str,
+    old_pressure_band: str,
+    new_pressure_band: str,
+    old_rapport_band: str,
+    new_rapport_band: str,
+    discovery_ids: List[str],
+    blocked_discovery_ids: List[str],
+) -> bool:
+    """Return True when at least one intuition-trigger condition is met.
+
+    Conditions (OR):
+    - A band transition occurred (pressure or rapport crossed a threshold)
+    - Player presented strong or smoking_gun evidence
+    - A discovery was registered this turn
+    - A gated discovery was blocked this turn
+    - Player used a high-impact tactic (direct_accusation or point_out_contradiction)
+    """
+    # Band transition
+    if old_pressure_band != new_pressure_band:
+        return True
+    if old_rapport_band != new_rapport_band:
+        return True
+
+    # Strong or smoking-gun evidence
+    if evidence_strength in ("strong", "smoking_gun"):
+        return True
+
+    # Discovery registered
+    if discovery_ids:
+        return True
+
+    # Gated discovery blocked
+    if blocked_discovery_ids:
+        return True
+
+    # High-impact tactic
+    if tactic_type in HIGH_IMPACT_TACTICS:
+        return True
+
+    return False
+
+
+_INTUITION_PROMPT = (
+    "After your in-character response, on a new line starting with "
+    "`[INTUITION]`, write one brief sentence (max 15 words) as the "
+    "detective's internal thought about what just happened — what tactic "
+    "the detective used and how the NPC reacted. Stay in-world, noir tone. "
+    "Do not reference game mechanics."
+)
+
+
+def get_intuition_injection() -> str:
+    """Return the system-prompt paragraph that asks the LLM for an intuition line."""
+    return _INTUITION_PROMPT
 
 
 __all__ = [
@@ -387,4 +532,8 @@ __all__ = [
     "rapport_band",
     "TurnResult",
     "ARCHETYPES",
+    "should_show_intuition",
+    "get_intuition_injection",
+    "get_locked_secret_descriptions",
+    "HIGH_IMPACT_TACTICS",
 ]
