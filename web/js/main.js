@@ -1896,12 +1896,6 @@
       nameDiv.textContent = displayName;
       card.appendChild(nameDiv);
 
-      // Role
-      const roleDiv = document.createElement("div");
-      roleDiv.className = "sb-card-role";
-      roleDiv.textContent = npcRole(npcId);
-      card.appendChild(roleDiv);
-
       cardsContainer.appendChild(card);
     }
 
@@ -2004,15 +1998,6 @@
 
       svgEl.appendChild(path);
 
-      // Annotation label at midpoint
-      if (link.note) {
-        const label = document.createElement("div");
-        label.className = "string-board-annotation";
-        label.textContent = link.note;
-        label.style.left = (midX - 40) + "px";
-        label.style.top = (midY - 10) + "px";
-        document.getElementById("string-board-cards").appendChild(label);
-      }
     }
   }
 
@@ -2025,55 +2010,16 @@
     }
   }
 
-  /** Show an annotation prompt, then create a link. */
-  function sbPromptLink(fromId, toId) {
-    // Create overlay
-    const overlay = document.createElement("div");
-    overlay.className = "sb-link-input-overlay";
-
-    const card = document.createElement("div");
-    card.className = "sb-link-input-card";
-    card.innerHTML = `
-      <h3>Add Connection Note</h3>
-      <input type="text" placeholder="e.g. had access to the key..." maxlength="80" autofocus />
-      <div class="sb-link-input-actions">
-        <button class="cancel">Cancel</button>
-        <button class="primary">Connect</button>
-      </div>
-    `;
-    overlay.appendChild(card);
-    document.body.appendChild(overlay);
-
-    const input = card.querySelector("input");
-    const cancelBtn = card.querySelector(".cancel");
-    const connectBtn = card.querySelector(".primary");
-
-    function finish(note) {
-      overlay.remove();
-      // Check for duplicate link
-      const exists = stringBoard.links.some(l =>
-        (l.from === fromId && l.to === toId) || (l.from === toId && l.to === fromId)
-      );
-      if (!exists) {
-        stringBoard.links.push({ from: fromId, to: toId, note: note || "" });
-        renderStringBoard();
-        sbScheduleSave();
-      }
+  /** Create a link between two cards. */
+  function sbCreateLink(fromId, toId) {
+    const exists = stringBoard.links.some(l =>
+      (l.from === fromId && l.to === toId) || (l.from === toId && l.to === fromId)
+    );
+    if (!exists) {
+      stringBoard.links.push({ from: fromId, to: toId });
+      renderStringBoard();
+      sbScheduleSave();
     }
-
-    function cancel() {
-      overlay.remove();
-    }
-
-    connectBtn.addEventListener("click", () => finish(input.value.trim()));
-    cancelBtn.addEventListener("click", cancel);
-    overlay.addEventListener("click", (e) => { if (e.target === overlay) cancel(); });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") finish(input.value.trim());
-      if (e.key === "Escape") cancel();
-    });
-
-    setTimeout(() => input.focus(), 50);
   }
 
   /** Schedule a debounced save for string board state. */
@@ -2136,7 +2082,7 @@
           sbLinkFrom = null;
           // Remove all active pin highlights
           board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
-          sbPromptLink(fromId, cardId);
+          sbCreateLink(fromId, cardId);
         } else {
           // Clicked same pin — cancel
           sbLinkFrom = null;

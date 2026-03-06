@@ -2258,12 +2258,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .string-board-card .sb-card-role {
-      font-size: 0.62rem;
-      color: var(--text-faint);
-      text-align: center;
-      font-style: italic;
-    }
     .string-board-card.evidence {
       border-color: rgba(212,160,80,0.25);
     }
@@ -2304,77 +2298,6 @@
       box-shadow: 0 0 12px rgba(231,76,60,0.6);
     }
 
-    .string-board-annotation {
-      position: absolute;
-      background: rgba(26,21,16,0.9);
-      border: 1px solid rgba(212,160,80,0.2);
-      border-radius: 4px;
-      padding: 0.15rem 0.4rem;
-      font-size: 0.58rem;
-      color: var(--text-dim);
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 4;
-      font-family: var(--font-typewriter);
-    }
-
-    /* Link creation input modal */
-    .sb-link-input-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.15s ease;
-    }
-    .sb-link-input-card {
-      background: var(--bg-panel);
-      border: 1px solid var(--gold-border);
-      border-radius: 10px;
-      padding: 1.2rem;
-      width: 320px;
-      max-width: 90vw;
-    }
-    .sb-link-input-card h3 {
-      font-family: var(--font-noir);
-      font-size: 0.85rem;
-      color: var(--gold);
-      margin-bottom: 0.6rem;
-    }
-    .sb-link-input-card input {
-      width: 100%;
-      background: var(--noir-warm);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.6rem 0.8rem;
-      color: var(--text);
-      font-size: 0.85rem;
-      font-family: var(--font-typewriter);
-      margin-bottom: 0.6rem;
-    }
-    .sb-link-input-card input:focus { outline: none; border-color: var(--gold); }
-    .sb-link-input-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: flex-end;
-    }
-    .sb-link-input-actions button {
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--bg-input);
-      color: var(--text);
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-    .sb-link-input-actions button.primary {
-      background: var(--gold);
-      color: var(--bg-dark);
-      border-color: var(--gold);
-      font-weight: 600;
-    }
 
     /* Mobile: larger touch targets for pins */
     @media (max-width: 768px) {
