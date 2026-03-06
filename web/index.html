@@ -52,6 +52,9 @@
     <button class="manila-tab" data-hub-tab="notes">
       <span class="manila-tab-label" data-i18n="hub.tab_notes">Notes</span>
     </button>
+    <button class="manila-tab" data-hub-tab="stringboard">
+      <span class="manila-tab-label" data-i18n="hub.tab_stringboard">String Board</span>
+    </button>
     <div class="manila-tabs-spacer"></div>
     <button class="manila-tab manila-tab-icon" id="hub-settings-tab" title="Settings" data-i18n-title="a11y.settings">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -95,6 +98,12 @@
         <textarea id="player-notes" class="player-notes-textarea"
           placeholder="Type your investigation notes here..."
           data-i18n-placeholder="notes.placeholder"></textarea>
+      </div>
+    </div>
+    <div class="hub-panel" id="hub-stringboard">
+      <div class="string-board" id="string-board">
+        <svg class="string-board-svg" id="string-board-svg"></svg>
+        <div class="string-board-cards" id="string-board-cards"></div>
       </div>
     </div>
   </div>

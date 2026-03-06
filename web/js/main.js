@@ -672,6 +672,83 @@
   let accusationTarget = null;
   let subpoenaToastShown = false;
 
+  /* ── Detective's Intuition — suppression & fallback ──── */
+  // Track last high-impact tactic per NPC for consecutive-suppression
+  let lastIntuitionTactic = {};  // npc_id → tactic_type (only high-impact)
+
+  const HIGH_IMPACT_TACTICS = new Set(["direct_accusation", "point_out_contradiction"]);
+
+  const TACTIC_LABELS = {
+    open_ended: "an open question",
+    specific_factual: "a pointed question",
+    empathy: "showing empathy",
+    present_evidence: "presenting evidence",
+    point_out_contradiction: "calling out a contradiction",
+    direct_accusation: "a direct accusation",
+    repeat_pressure: "pressing the same point",
+    topic_change: "changing the subject",
+  };
+
+  const EVIDENCE_LABELS = {
+    none: null,
+    weak: "loosely relevant",
+    strong: "directly relevant",
+    smoking_gun: "damning",
+  };
+
+  /**
+   * Check intuition trigger conditions on the client side (mirrors server logic).
+   * Used for template fallback when the server didn't inject the prompt.
+   */
+  function shouldShowIntuition(data, npcId) {
+    if (npcId === PARTNER_NPC_ID) return false;
+
+    const oldState = npcInterrogation[npcId] || {};
+    const oldPBand = oldState.pressure_band || "calm";
+    const oldRBand = oldState.rapport_band || "neutral";
+
+    // Band transition
+    if (oldPBand !== data.pressure_band) return true;
+    if (oldRBand !== data.rapport_band) return true;
+
+    // Strong or smoking-gun evidence
+    if (data.evidence_strength === "strong" || data.evidence_strength === "smoking_gun") return true;
+
+    // Discovery registered
+    if (data.discovery_ids && data.discovery_ids.length > 0) return true;
+
+    // Gated discovery blocked
+    if (data.blocked_discovery_ids && data.blocked_discovery_ids.length > 0) return true;
+
+    // High-impact tactic
+    if (HIGH_IMPACT_TACTICS.has(data.tactic_type)) return true;
+
+    return false;
+  }
+
+  /**
+   * Generate a template-based intuition fallback line.
+   */
+  function generateIntuitionFallback(data) {
+    const tacticLabel = TACTIC_LABELS[data.tactic_type] || "a question";
+    const evidenceLabel = EVIDENCE_LABELS[data.evidence_strength] || null;
+
+    if (data.blocked_discovery_ids && data.blocked_discovery_ids.length > 0) {
+      return "Something flickered behind their eyes. Not ready to talk — but close.";
+    }
+
+    if (data.discovery_ids && data.discovery_ids.length > 0) {
+      return "That one landed. A crack in the armor, however small.";
+    }
+
+    let line = `You tried ${tacticLabel}`;
+    if (evidenceLabel) {
+      line += ` with ${evidenceLabel} evidence`;
+    }
+    line += ". Worth watching how they sit with it.";
+    return line;
+  }
+
   /* ── Gameplay tracking ─────────────────────────────────── */
   let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
   localStorage.setItem("echoes_game_id", gameId);
@@ -782,6 +859,7 @@
       playerNotes,
       caseReadyPromptShown,
       briefingOpen,
+      stringBoard,
       // Also persist tutorial / UI flags for full cloud restore
       tutorialDone: localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true",
       titleSeen: !!localStorage.getItem(TITLE_STORAGE_KEY),
@@ -812,6 +890,10 @@
     }
     if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
     if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
+    if (s.stringBoard) {
+      stringBoard.cardPositions = s.stringBoard.cardPositions || {};
+      stringBoard.links = s.stringBoard.links || [];
+    }
     // Restore tutorial flags
     if (s.tutorialDone) localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
     if (s.titleSeen) localStorage.setItem(TITLE_STORAGE_KEY, "1");
@@ -860,6 +942,7 @@
     subpoenaToastShown = false;
     briefingOpen = true;
     activeNpcId = null;
+    stringBoard = { cardPositions: {}, links: [] };
     gameId = crypto.randomUUID();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     for (const url of audioCache.values()) URL.revokeObjectURL(url);
@@ -966,6 +1049,12 @@
 
     renderNpcGrid();
     renderEvidence();
+    initStringBoard();
+
+    // Try loading string board state from server
+    sbLoadFromServer().then(() => {
+      sbEnsurePositions();
+    }).catch(() => {});
 
     // Populate briefing paragraphs from case data
     const briefingBody = $("#cb-briefing-body");
@@ -1346,6 +1435,52 @@
         setHeaderExpression(activeNpcId, data.expression);
       }
 
+      // ── Detective's Intuition line ─────────────────────────
+      // Must run BEFORE updating npcInterrogation so old bands are available
+      if (activeNpcId !== PARTNER_NPC_ID) {
+        let intuitionText = data.intuition_line || null;
+
+        // Template fallback: if server didn't produce a line, check client-side
+        if (!intuitionText && shouldShowIntuition(data, activeNpcId)) {
+          intuitionText = generateIntuitionFallback(data);
+        }
+
+        if (intuitionText) {
+          // Suppression: skip if same high-impact tactic on consecutive turns
+          const tactic = data.tactic_type;
+          let suppress = false;
+          if (HIGH_IMPACT_TACTICS.has(tactic) &&
+              lastIntuitionTactic[activeNpcId] === tactic) {
+            suppress = true;
+          }
+
+          if (!suppress) {
+            // Find the user bubble (second-to-last .msg in chatMessages)
+            const allMsgs = chatMessages.querySelectorAll(".msg");
+            // The user bubble is the one before the assistant bubble we just added
+            const userBubble = allMsgs.length >= 2 ? allMsgs[allMsgs.length - 2] : null;
+            if (userBubble && userBubble.classList.contains("user")) {
+              const intuitionEl = document.createElement("div");
+              intuitionEl.className = "intuition-line";
+              intuitionEl.textContent = intuitionText;
+              // Insert after the user bubble
+              userBubble.after(intuitionEl);
+              scrollToBottom();
+            }
+          }
+
+          // Track last tactic for suppression (only high-impact)
+          if (HIGH_IMPACT_TACTICS.has(tactic)) {
+            lastIntuitionTactic[activeNpcId] = tactic;
+          } else {
+            lastIntuitionTactic[activeNpcId] = null;
+          }
+        } else {
+          // No intuition line — reset suppression tracker
+          lastIntuitionTactic[activeNpcId] = null;
+        }
+      }
+
       // Update interrogation state
       if (data.pressure !== undefined) {
         npcInterrogation[activeNpcId] = {
@@ -1622,6 +1757,442 @@
     } else {
       for (const e of evidence) cbEvidenceList.appendChild(renderEvidenceItem(e));
     }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     STRING BOARD (Deduction Board)
+     ══════════════════════════════════════════════════════════════ */
+  let stringBoard = {
+    cardPositions: {},  // cardId -> {x, y}
+    links: [],          // [{from, to, note}]
+  };
+
+  let sbLinkFrom = null;  // cardId of link source (while creating a link)
+  let sbDragging = null;  // {cardId, offsetX, offsetY} while dragging a card
+  let sbSaveTimer = null; // debounce timer for persistence
+
+  const SUSPECT_IDS = Object.keys(NPC_META).filter(id => id !== PARTNER_NPC_ID);
+
+  /** Default auto-layout positions for suspect + starting evidence cards. */
+  function sbDefaultPositions() {
+    const defaults = {};
+    const cols = 4;
+    const spacingX = 200;
+    const spacingY = 180;
+    const startX = 40;
+    const startY = 60;
+
+    SUSPECT_IDS.forEach((npcId, i) => {
+      const cardId = "suspect:" + npcId;
+      defaults[cardId] = {
+        x: startX + (i % cols) * spacingX,
+        y: startY + Math.floor(i / cols) * spacingY,
+      };
+    });
+
+    // Starting evidence below suspects
+    const evidenceY = startY + Math.ceil(SUSPECT_IDS.length / cols) * spacingY + 40;
+    defaults["burned-notebook"] = { x: startX, y: evidenceY };
+    defaults["keycard-logs"] = { x: startX + spacingX, y: evidenceY };
+
+    return defaults;
+  }
+
+  /** Find the nearest open grid slot for a new evidence card. */
+  function sbFindOpenSlot() {
+    const slotW = 200;
+    const slotH = 180;
+    const startX = 40;
+    const startY = 60;
+    const cols = 6;
+    const occupied = new Set();
+
+    for (const pos of Object.values(stringBoard.cardPositions)) {
+      const col = Math.round((pos.x - startX) / slotW);
+      const row = Math.round((pos.y - startY) / slotH);
+      occupied.add(`${col},${row}`);
+    }
+
+    for (let row = 0; row < 20; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (!occupied.has(`${col},${row}`)) {
+          return { x: startX + col * slotW, y: startY + row * slotH };
+        }
+      }
+    }
+    return { x: startX, y: startY + 20 * slotH };
+  }
+
+  /** Ensure all suspect cards and collected evidence have positions. */
+  function sbEnsurePositions() {
+    const defaults = sbDefaultPositions();
+    let changed = false;
+
+    // Suspects always present
+    for (const npcId of SUSPECT_IDS) {
+      const cardId = "suspect:" + npcId;
+      if (!stringBoard.cardPositions[cardId]) {
+        stringBoard.cardPositions[cardId] = defaults[cardId] || sbFindOpenSlot();
+        changed = true;
+      }
+    }
+
+    // Evidence cards — only collected ones
+    for (const e of evidence) {
+      if (!stringBoard.cardPositions[e.id]) {
+        stringBoard.cardPositions[e.id] = defaults[e.id] || sbFindOpenSlot();
+        changed = true;
+      }
+    }
+
+    return changed;
+  }
+
+  /** Render (or re-render) the string board. */
+  function renderStringBoard() {
+    const cardsContainer = document.getElementById("string-board-cards");
+    const svgEl = document.getElementById("string-board-svg");
+    if (!cardsContainer || !svgEl) return;
+
+    sbEnsurePositions();
+    cardsContainer.innerHTML = "";
+
+    // Render suspect cards
+    for (const npcId of SUSPECT_IDS) {
+      const cardId = "suspect:" + npcId;
+      const pos = stringBoard.cardPositions[cardId] || { x: 0, y: 0 };
+      const npc = npcs.find(n => n.npc_id === npcId);
+      const displayName = npc?.display_name?.split(" -- ")[0] || npc?.display_name?.split(" — ")[0] || npcId;
+
+      const card = document.createElement("div");
+      card.className = "string-board-card suspect";
+      card.dataset.cardId = cardId;
+      card.style.left = pos.x + "px";
+      card.style.top = pos.y + "px";
+
+      // Pin circle
+      const pin = document.createElement("div");
+      pin.className = "string-board-pin";
+      pin.dataset.cardId = cardId;
+      card.appendChild(pin);
+
+      // Portrait
+      const portraitDiv = document.createElement("div");
+      portraitDiv.className = "sb-card-portrait";
+      const img = new Image();
+      img.src = portraitUrl(npcId, "neutral");
+      img.alt = displayName;
+      img.loading = "lazy";
+      img.onerror = function() {
+        const meta = NPC_META[npcId] || { initials: "?" };
+        this.parentElement.textContent = meta.initials;
+      };
+      portraitDiv.appendChild(img);
+      card.appendChild(portraitDiv);
+
+      // Name
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "sb-card-name";
+      nameDiv.textContent = displayName;
+      card.appendChild(nameDiv);
+
+      // Role
+      const roleDiv = document.createElement("div");
+      roleDiv.className = "sb-card-role";
+      roleDiv.textContent = npcRole(npcId);
+      card.appendChild(roleDiv);
+
+      cardsContainer.appendChild(card);
+    }
+
+    // Render evidence cards (only collected)
+    for (const e of evidence) {
+      const pos = stringBoard.cardPositions[e.id] || { x: 0, y: 0 };
+      const label = t("evidence." + e.id + "_label") || e.label;
+
+      const card = document.createElement("div");
+      card.className = "string-board-card evidence";
+      card.dataset.cardId = e.id;
+      card.style.left = pos.x + "px";
+      card.style.top = pos.y + "px";
+
+      // Pin circle
+      const pin = document.createElement("div");
+      pin.className = "string-board-pin";
+      pin.dataset.cardId = e.id;
+      card.appendChild(pin);
+
+      // Name
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "sb-card-name";
+      nameDiv.textContent = label;
+      card.appendChild(nameDiv);
+
+      // Discovery sub-bullets
+      const linkedDisc = getDiscoveriesForEvidence(e.id);
+      if (linkedDisc.length > 0) {
+        const discDiv = document.createElement("div");
+        discDiv.className = "sb-card-discoveries";
+        for (const d of linkedDisc) {
+          const line = document.createElement("div");
+          line.textContent = "- " + t(d.text);
+          discDiv.appendChild(line);
+        }
+        card.appendChild(discDiv);
+      }
+
+      cardsContainer.appendChild(card);
+    }
+
+    // Draw SVG string lines
+    sbDrawLinks();
+  }
+
+  /** Draw SVG link lines between connected cards. */
+  function sbDrawLinks() {
+    const svgEl = document.getElementById("string-board-svg");
+    if (!svgEl) return;
+    svgEl.innerHTML = "";
+
+    const cardsContainer = document.getElementById("string-board-cards");
+    if (!cardsContainer) return;
+
+    // Resize SVG to match container
+    svgEl.setAttribute("width", cardsContainer.scrollWidth || 1200);
+    svgEl.setAttribute("height", cardsContainer.scrollHeight || 900);
+
+    for (let i = 0; i < stringBoard.links.length; i++) {
+      const link = stringBoard.links[i];
+      const fromPos = stringBoard.cardPositions[link.from];
+      const toPos = stringBoard.cardPositions[link.to];
+      if (!fromPos || !toPos) continue;
+
+      // Center of card (card width ~160, pin is at top center)
+      const x1 = fromPos.x + 80;
+      const y1 = fromPos.y;
+      const x2 = toPos.x + 80;
+      const y2 = toPos.y;
+
+      // Quadratic bezier with slight sag
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2 + 30; // sag
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`);
+      path.setAttribute("class", "string-board-link");
+      path.dataset.linkIndex = i;
+
+      // Right-click to delete
+      path.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        sbDeleteLink(parseInt(path.dataset.linkIndex, 10));
+      });
+
+      // Long-press to delete (mobile)
+      let longPressTimer = null;
+      path.addEventListener("pointerdown", (e) => {
+        longPressTimer = setTimeout(() => {
+          sbDeleteLink(parseInt(path.dataset.linkIndex, 10));
+        }, 600);
+      });
+      path.addEventListener("pointerup", () => {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      });
+      path.addEventListener("pointercancel", () => {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      });
+
+      svgEl.appendChild(path);
+
+      // Annotation label at midpoint
+      if (link.note) {
+        const label = document.createElement("div");
+        label.className = "string-board-annotation";
+        label.textContent = link.note;
+        label.style.left = (midX - 40) + "px";
+        label.style.top = (midY - 10) + "px";
+        document.getElementById("string-board-cards").appendChild(label);
+      }
+    }
+  }
+
+  /** Delete a link by index. */
+  function sbDeleteLink(index) {
+    if (index >= 0 && index < stringBoard.links.length) {
+      stringBoard.links.splice(index, 1);
+      renderStringBoard();
+      sbScheduleSave();
+    }
+  }
+
+  /** Show an annotation prompt, then create a link. */
+  function sbPromptLink(fromId, toId) {
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "sb-link-input-overlay";
+
+    const card = document.createElement("div");
+    card.className = "sb-link-input-card";
+    card.innerHTML = `
+      <h3>Add Connection Note</h3>
+      <input type="text" placeholder="e.g. had access to the key..." maxlength="80" autofocus />
+      <div class="sb-link-input-actions">
+        <button class="cancel">Cancel</button>
+        <button class="primary">Connect</button>
+      </div>
+    `;
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    const input = card.querySelector("input");
+    const cancelBtn = card.querySelector(".cancel");
+    const connectBtn = card.querySelector(".primary");
+
+    function finish(note) {
+      overlay.remove();
+      // Check for duplicate link
+      const exists = stringBoard.links.some(l =>
+        (l.from === fromId && l.to === toId) || (l.from === toId && l.to === fromId)
+      );
+      if (!exists) {
+        stringBoard.links.push({ from: fromId, to: toId, note: note || "" });
+        renderStringBoard();
+        sbScheduleSave();
+      }
+    }
+
+    function cancel() {
+      overlay.remove();
+    }
+
+    connectBtn.addEventListener("click", () => finish(input.value.trim()));
+    cancelBtn.addEventListener("click", cancel);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) cancel(); });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") finish(input.value.trim());
+      if (e.key === "Escape") cancel();
+    });
+
+    setTimeout(() => input.focus(), 50);
+  }
+
+  /** Schedule a debounced save for string board state. */
+  function sbScheduleSave() {
+    if (sbSaveTimer) clearTimeout(sbSaveTimer);
+    sbSaveTimer = setTimeout(() => {
+      saveState();
+      sbSaveToServer();
+    }, 2000);
+  }
+
+  /** Save string board state to the backend. */
+  async function sbSaveToServer() {
+    try {
+      await fetch(`${API_BASE}/api/state/stringboard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(stringBoard),
+      });
+    } catch (err) {
+      console.error("[string-board] Failed to save to server:", err);
+    }
+  }
+
+  /** Load string board state from the backend. */
+  async function sbLoadFromServer() {
+    try {
+      const res = await fetch(`${API_BASE}/api/state/stringboard`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.cardPositions) {
+          stringBoard.cardPositions = data.cardPositions;
+          stringBoard.links = data.links || [];
+        }
+      }
+    } catch (err) {
+      console.error("[string-board] Failed to load from server:", err);
+    }
+  }
+
+  /** Initialize string board drag/drop and pin click handlers (delegated). */
+  function initStringBoard() {
+    const board = document.getElementById("string-board");
+    const cardsContainer = document.getElementById("string-board-cards");
+    if (!board || !cardsContainer) return;
+
+    // Delegated pointer events for dragging cards
+    board.addEventListener("pointerdown", (e) => {
+      // Pin click — start/complete link
+      const pin = e.target.closest(".string-board-pin");
+      if (pin) {
+        e.preventDefault();
+        e.stopPropagation();
+        const cardId = pin.dataset.cardId;
+        if (!sbLinkFrom) {
+          sbLinkFrom = cardId;
+          pin.classList.add("active");
+        } else if (sbLinkFrom !== cardId) {
+          const fromId = sbLinkFrom;
+          sbLinkFrom = null;
+          // Remove all active pin highlights
+          board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
+          sbPromptLink(fromId, cardId);
+        } else {
+          // Clicked same pin — cancel
+          sbLinkFrom = null;
+          pin.classList.remove("active");
+        }
+        return;
+      }
+
+      // Card drag start
+      const card = e.target.closest(".string-board-card");
+      if (card) {
+        e.preventDefault();
+        const cardId = card.dataset.cardId;
+        const rect = card.getBoundingClientRect();
+        sbDragging = {
+          cardId,
+          el: card,
+          offsetX: e.clientX - rect.left,
+          offsetY: e.clientY - rect.top,
+        };
+        card.classList.add("dragging");
+        card.setPointerCapture(e.pointerId);
+      }
+    });
+
+    board.addEventListener("pointermove", (e) => {
+      if (!sbDragging) return;
+      e.preventDefault();
+      const boardRect = board.getBoundingClientRect();
+      const scrollLeft = board.scrollLeft;
+      const scrollTop = board.scrollTop;
+      const x = e.clientX - boardRect.left + scrollLeft - sbDragging.offsetX;
+      const y = e.clientY - boardRect.top + scrollTop - sbDragging.offsetY;
+      sbDragging.el.style.left = Math.max(0, x) + "px";
+      sbDragging.el.style.top = Math.max(0, y) + "px";
+    });
+
+    board.addEventListener("pointerup", (e) => {
+      if (!sbDragging) return;
+      sbDragging.el.classList.remove("dragging");
+      stringBoard.cardPositions[sbDragging.cardId] = {
+        x: parseInt(sbDragging.el.style.left, 10),
+        y: parseInt(sbDragging.el.style.top, 10),
+      };
+      sbDragging = null;
+      sbDrawLinks(); // redraw lines at new positions
+      sbScheduleSave();
+    });
+
+    // Cancel link creation when clicking empty board area
+    board.addEventListener("click", (e) => {
+      if (!e.target.closest(".string-board-pin") && !e.target.closest(".string-board-card") && sbLinkFrom) {
+        sbLinkFrom = null;
+        board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
+      }
+    });
   }
 
   /* ── Auto-resize textarea ───────────────────────────────── */
@@ -1960,6 +2531,7 @@
       const panelId = `hub-${tab.dataset.hubTab}`;
       document.getElementById(panelId).classList.add("active");
       if (tab.dataset.hubTab === "caseboard") clearCaseBoardBadges();
+      if (tab.dataset.hubTab === "stringboard") renderStringBoard();
     });
   });
 
