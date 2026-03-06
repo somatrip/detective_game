@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 # ---------------------------------------------------------------------------
 # Evidence knowledge base (used by tactic classifier for strength scoring)
@@ -13,6 +13,7 @@ NPC_RELEVANT_EVIDENCE: Dict[str, List[str]] = {
     "noah-sterling": [
         "financial-misconduct", "encrypted-schedule",
         "key-trail", "surveillance", "burned-notebook",
+        "murder-confession",
     ],
     "amelia-reyes": ["key-trail", "lockpick-marks", "power-outage", "hotel-sale", "conspiracy"],
     "eddie-voss": ["key-trail"],
@@ -52,6 +53,7 @@ EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
     "hotel-sale": "Mercer planned to sell the Lyric Atrium Hotel to a developer",
     "stage-timing": "Lighting console logs or cue sheet gaps showing someone's absence",
     "conspiracy": "Amelia and Mira conspired together — Amelia pulled the breaker while Mira searched Suite 701 during the blackout",
+    "murder-confession": "Noah Sterling's confession to the murder of Julian Mercer on the rooftop",
 }
 
 # ---------------------------------------------------------------------------
@@ -98,6 +100,11 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "npc_id": "noah-sterling",
         "evidence_id": "key-trail",
         "description": "Noah obtained the maintenance-room key and engineering keycard (ENGR-0001) through Eddie Voss, giving him rooftop access",
+    },
+    "noah-murder": {
+        "npc_id": "noah-sterling",
+        "evidence_id": "murder-confession",
+        "description": "Noah confesses to killing Julian Mercer on the rooftop that night — the full truth of what happened",
     },
     "noah-cctv-gap": {
         "npc_id": "noah-sterling",
@@ -215,4 +222,136 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
         "evidence_id": "conspiracy",
         "description": "Matthew's running stage log records Amelia Reyes entering the Grand Ballroom from the B1 service stairwell door at ~11:32 PM — proving she came from the basement, not the 7th floor",
     },
+}
+
+# ---------------------------------------------------------------------------
+# Discovery gates — mechanical conditions that must be met before a discovery
+# is registered, even if the LLM reveals the information.  Each gate is a list
+# of condition dicts (OR logic — any single condition passing = gate open).
+# Within each condition dict, ALL requirements must be met (AND).
+# ---------------------------------------------------------------------------
+
+DISCOVERY_GATES: Dict[str, List[Dict[str, Any]]] = {
+    "noah-embezzlement": [
+        {"min_pressure": 70},
+        {"requires_evidence": ["financial-misconduct"]},
+        {"requires_evidence": ["encrypted-schedule"], "min_pressure": 35},
+    ],
+    "noah-board-vote": [
+        {"min_pressure": 35},
+        {"requires_evidence": ["encrypted-schedule"]},
+    ],
+    "noah-key-access": [
+        {"requires_discovery": ["eddie-gave-noah-key"]},
+        {"requires_evidence": ["key-trail"], "min_pressure": 50},
+    ],
+    "noah-murder": [
+        {
+            "requires_discovery": ["noah-embezzlement", "noah-board-vote", "noah-key-access"],
+            "min_pressure": 40,
+        },
+    ],
+    "eddie-gave-noah-key": [
+        {"min_pressure": 30},
+        {"min_rapport": 80},
+        {"requires_evidence": ["key-trail"]},
+    ],
+    "celeste-rooftop-witness": [
+        {"min_rapport": 80},
+        {"min_pressure": 55},
+    ],
+    "matthias-data-sales": [
+        {"min_pressure": 65},
+        {"requires_evidence": ["blackmail"]},
+    ],
+    "amelia-lockpick": [
+        {"requires_discovery": ["amelia-key-loan"]},
+    ],
+    "mira-suite-search": [
+        {"min_pressure": 50},
+        {"min_rapport": 80},
+        {"requires_discovery": ["amelia-breaker"]},
+    ],
+    "amelia-conspiracy-admission": [
+        {"requires_discovery": ["amelia-breaker"], "min_pressure": 60},
+        {"requires_discovery": ["amelia-breaker"], "min_rapport": 85},
+        {"requires_discovery": ["amelia-breaker"], "min_pressure": 40},       # "we" slip path
+        {"requires_discovery": ["amelia-breaker", "matthew-amelia-direction"]},  # timeline contradiction
+        {"requires_discovery": ["mira-suite-search"]},
+    ],
+    "mira-conspiracy-admission": [
+        {"requires_discovery": ["mira-suite-search"], "min_pressure": 40},
+        {"requires_discovery": ["mira-suite-search", "amelia-breaker"], "min_pressure": 25},
+        {"requires_discovery": ["amelia-conspiracy-admission"]},
+    ],
+}
+
+# ---------------------------------------------------------------------------
+# Locked secret descriptions — injected into NPC prompts when a gate is locked
+# so the LLM avoids revealing gated secrets prematurely.
+# ---------------------------------------------------------------------------
+
+LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
+    "noah-embezzlement": (
+        "Do NOT admit to or hint at embezzlement, skimming funds, financial misconduct, "
+        "or gambling debts. If the detective accuses you of financial crimes, deny it firmly "
+        "or deflect. You have not been confronted with proof yet."
+    ),
+    "noah-board-vote": (
+        "Do NOT reveal that Mercer was planning a board vote to oust you. You are not aware "
+        "the detective knows about this — act as if the vote is your private fear, not "
+        "public knowledge."
+    ),
+    "noah-key-access": (
+        "Do NOT admit to obtaining the maintenance key or engineering keycard from Eddie. "
+        "If asked about keys or rooftop access, deny involvement or claim ignorance. "
+        "The detective has not yet established the chain of custody."
+    ),
+    "noah-murder": (
+        "Do NOT confess to or hint at killing Mercer. Do NOT describe what happened on the "
+        "rooftop that night. If the detective accuses you directly, deny it or demand a lawyer. "
+        "You will only break when the detective has proven your motive, your opportunity, "
+        "and your access — and then applies real pressure."
+    ),
+    "eddie-gave-noah-key": (
+        "Do NOT reveal that Noah pressured you into handing over the key and keycard. "
+        "If asked about the key, you may mention borrowing it from Amelia for a toolkit, "
+        "but do NOT mention giving it to Noah. You are scared and protecting yourself."
+    ),
+    "celeste-rooftop-witness": (
+        "Do NOT reveal that you saw someone descending the atrium stairwell during the "
+        "blackout. This is information you are withholding out of fear or self-preservation. "
+        "The detective must earn your trust or apply significant pressure before you share this."
+    ),
+    "matthias-data-sales": (
+        "Do NOT reveal your side business selling guest data. If the detective asks about "
+        "your finances or side income, deflect or discuss your legitimate security work. "
+        "You are a professional — stay composed and redirect."
+    ),
+    "amelia-lockpick": (
+        "Do NOT bring up or speculate about the lockpick marks on the maintenance door. "
+        "If the detective asks about forced entry, say you don't know about it. This only "
+        "becomes relevant once the detective knows your key was already out with Eddie."
+    ),
+    "mira-suite-search": (
+        "Do NOT reveal that you searched Suite 701 during the blackout. If asked about "
+        "the blackout, say you stayed in or near the ballroom. The detective has not yet "
+        "uncovered enough to confront you about this."
+    ),
+    "amelia-conspiracy-admission": (
+        "Do NOT admit to the full conspiracy with Mira. You may acknowledge pulling the "
+        "breaker if already discovered, but do NOT reveal that Mira searched Suite 701 "
+        "or that you coordinated together. Protect Mira until the detective has enough leverage. "
+        "IMPORTANT — pronoun slip: the FIRST time you describe what happened during the "
+        "blackout, naturally let 'we' slip once (e.g. 'we needed the lights out' or "
+        "'we had to act fast'), then immediately catch yourself and correct to 'I' "
+        "(e.g. 'I mean — I needed the lights out'). After this single slip, always use 'I'. "
+        "Do NOT volunteer who 'we' refers to if the detective asks — deflect or claim it was "
+        "a figure of speech."
+    ),
+    "mira-conspiracy-admission": (
+        "Do NOT admit to the full conspiracy with Amelia. You may discuss your plagiarism "
+        "grievance freely, but do NOT reveal that Amelia pulled the breaker for you or that "
+        "you coordinated together. The detective has not yet connected these events."
+    ),
 }

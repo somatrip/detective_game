@@ -7,7 +7,7 @@ import logging
 import pathlib
 import re
 from contextlib import asynccontextmanager
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +17,14 @@ from openai import AsyncOpenAI
 
 from .cases import get_active_case, load_case
 from .config import settings
-from .interrogation import build_interrogation_context, process_turn
+from .interrogation import (
+    build_interrogation_context,
+    get_intuition_injection,
+    pressure_band as _pressure_band,
+    rapport_band as _rapport_band,
+    process_turn,
+    should_show_intuition,
+)
 from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import get_llm_client
 from .llm.base import ChatMessage, LLMClient
@@ -126,6 +133,51 @@ def _strip_stray_tags(text: str) -> str:
     return _STRAY_TAG_RE.sub("", text).strip()
 
 
+# ── Intuition tag parsing ─────────────────────────────────────────────────
+_INTUITION_RE = re.compile(r'\n?\[INTUITION\]\s*(.+)', re.IGNORECASE)
+
+
+def _extract_intuition(text: str) -> tuple[str, str | None]:
+    """Strip the [INTUITION] line from the NPC response.
+
+    Returns ``(clean_text, intuition_line_or_None)``.
+    """
+    m = _INTUITION_RE.search(text)
+    if not m:
+        return text, None
+    intuition = m.group(1).strip()
+    clean = text[:m.start()] + text[m.end():]
+    return clean.strip(), intuition
+
+
+def _check_gate(
+    conditions: List[Dict[str, Any]],
+    pressure: int,
+    rapport: int,
+    player_evidence: List[str],
+    player_discoveries: List[str],
+) -> bool:
+    """Return True if ANY condition in the gate is fully satisfied (OR logic).
+
+    Within each condition dict, ALL requirements must be met (AND logic).
+    """
+    for condition in conditions:
+        satisfied = True
+        if "min_pressure" in condition and pressure < condition["min_pressure"]:
+            satisfied = False
+        if "min_rapport" in condition and rapport < condition["min_rapport"]:
+            satisfied = False
+        if "requires_evidence" in condition:
+            if not all(e in player_evidence for e in condition["requires_evidence"]):
+                satisfied = False
+        if "requires_discovery" in condition:
+            if not all(d in player_discoveries for d in condition["requires_discovery"]):
+                satisfied = False
+        if satisfied:
+            return True
+    return False
+
+
 # ── Endpoints ────────────────────────────────────────────────────────────
 
 @app.get("/api/npcs")
@@ -189,6 +241,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         log.warning("[chat] Step 1: classifier degraded — using defaults")
     log.info("[chat] Step 1 result: tactic=%s evidence=%s degraded=%s", tactic_type, evidence_strength, classifier_degraded)
 
+    # ── Pre-Step 2: Capture old bands for intuition trigger detection ───
+    old_p_band = _pressure_band(request.pressure).value
+    old_r_band = _rapport_band(request.rapport).value
+
     # ── Step 2: Compute pressure/rapport deltas ─────────────────────────
     log.info("[chat] Step 2: computing deltas (pressure=%d, rapport=%d)", request.pressure, request.rapport)
     try:
@@ -217,10 +273,27 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
             tactic_type=tactic_type,
             evidence_strength=evidence_strength,
             archetype_id=archetype_id,
+            player_evidence=list(request.player_evidence_ids),
+            player_discoveries=list(request.player_discovery_ids),
         )
     except Exception as exc:
         log.exception("[chat] Step 3 FAILED: build_interrogation_context")
         raise HTTPException(status_code=500, detail="Context builder error") from exc
+
+    # ── Step 3b: Determine if intuition prompt should be injected ────────
+    # Pre-LLM check: band transitions, evidence strength, high-impact tactic.
+    # Discovery-based triggers (registered / blocked) are only known after Step 5
+    # and are handled by the client-side template fallback.
+    _pre_llm_intuition = should_show_intuition(
+        tactic_type=tactic_type,
+        evidence_strength=evidence_strength,
+        old_pressure_band=old_p_band,
+        new_pressure_band=interrogation_result["pressure_band"],
+        old_rapport_band=old_r_band,
+        new_rapport_band=interrogation_result["rapport_band"],
+        discovery_ids=[],          # not yet known
+        blocked_discovery_ids=[],  # not yet known
+    )
 
     # ── Step 4: Generate NPC response (main LLM) ───────────────────────
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
@@ -233,6 +306,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         {"role": "system", "content": npc_profile.system_prompt},
         {"role": "system", "content": interrogation_prompt},
     ]
+
+    # Inject intuition prompt when pre-LLM triggers are met
+    if _pre_llm_intuition:
+        system_messages.append({"role": "system", "content": get_intuition_injection()})
 
     if request.language == "sr":
         gender_sr = "ženskog" if npc_profile.gender == "female" else "muškog"
@@ -274,6 +351,9 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     # Strip any stray tags the LLM may have produced out of habit
     clean_reply = _strip_stray_tags(raw_reply)
 
+    # Extract [INTUITION] line before passing to discovery detection
+    clean_reply, intuition_line = _extract_intuition(clean_reply)
+
     # ── Step 5: Detect discoveries & expression (secondary LLM) ────────
     log.info("[chat] Step 5: detecting discoveries & expression")
     try:
@@ -296,6 +376,50 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         log.warning("[chat] Step 5: evidence detection degraded — using defaults")
     log.info("[chat] Step 5 result: discoveries=%s evidence=%s expression=%s degraded=%s",
              discovery_ids, evidence_ids, expression, detection_degraded)
+
+    # ── Step 5b: Apply mechanical gates to detected discoveries ────────
+    gated_discovery_ids: List[str] = []
+    blocked_discovery_ids: List[str] = []
+    for did in discovery_ids:
+        gates = case.discovery_gates.get(did)
+        if gates is None:
+            # No gate defined — discovery passes through unconditionally
+            gated_discovery_ids.append(did)
+            continue
+        if _check_gate(gates,
+                       pressure=interrogation_result["pressure"],
+                       rapport=interrogation_result["rapport"],
+                       player_evidence=request.player_evidence_ids,
+                       player_discoveries=request.player_discovery_ids):
+            gated_discovery_ids.append(did)
+        else:
+            blocked_discovery_ids.append(did)
+            log.info("[chat] Gate blocked discovery %s (pressure=%d, rapport=%d)",
+                     did, interrogation_result["pressure"], interrogation_result["rapport"])
+
+    discovery_ids = gated_discovery_ids
+    # Recompute evidence_ids from the surviving discoveries only
+    evidence_ids = list({case.discovery_catalog[d]["evidence_id"] for d in discovery_ids})
+
+    # ── Step 5c: Finalize intuition line with full trigger check ────────
+    # Now that we know discoveries and blocked discoveries, do the full check.
+    # If no pre-LLM trigger fired (so the LLM wasn't asked for an intuition
+    # line), but a post-LLM trigger IS met, intuition_line stays None and the
+    # client-side template fallback will generate one.
+    if intuition_line is not None:
+        # LLM produced a line — verify at least one trigger is actually met
+        _full_trigger = should_show_intuition(
+            tactic_type=tactic_type,
+            evidence_strength=evidence_strength,
+            old_pressure_band=old_p_band,
+            new_pressure_band=interrogation_result["pressure_band"],
+            old_rapport_band=old_r_band,
+            new_rapport_band=interrogation_result["rapport_band"],
+            discovery_ids=discovery_ids,
+            blocked_discovery_ids=blocked_discovery_ids,
+        )
+        if not _full_trigger:
+            intuition_line = None  # suppress spurious intuition
 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
@@ -333,6 +457,8 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         evidence_strength=evidence_strength,
         peak_pressure=interrogation_result["peak_pressure"],
         degraded=classifier_degraded or detection_degraded,
+        intuition_line=intuition_line,
+        blocked_discovery_ids=blocked_discovery_ids,
     )
 
 

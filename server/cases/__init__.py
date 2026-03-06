@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import importlib
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List
 
 if TYPE_CHECKING:
@@ -32,6 +32,7 @@ class CaseData:
     smoking_gun_map: Dict[str, List[str]]
     evidence_catalog: Dict[str, str]       # evidence_id → description
     discovery_catalog: Dict[str, Dict[str, Any]]  # discovery_id → {npc_id, evidence_id, description}
+    discovery_gates: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)  # discovery_id → list of gate conditions
 
     def validate(self) -> None:
         """Check referential integrity across all case data maps.
@@ -71,6 +72,11 @@ class CaseData:
             eid = info.get("evidence_id")
             if eid and eid not in self.evidence_catalog:
                 errors.append(f"discovery '{did}' references unknown evidence '{eid}'")
+
+        # Every gated discovery must exist in the discovery catalog
+        for did in self.discovery_gates:
+            if did not in self.discovery_catalog:
+                errors.append(f"discovery_gates references unknown discovery '{did}'")
 
         for w in warnings:
             log.warning("[case-validate] %s: %s", self.case_id, w)
