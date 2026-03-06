@@ -397,6 +397,41 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     if _should_intuit:
         try:
             npc_name = npc_profile.display_name.split(" — ")[0] if npc_profile.display_name else request.npc_id
+
+            # Build conversation recap for context
+            convo_lines = []
+            for turn in history:
+                speaker = "Detective" if turn.role == "user" else npc_name
+                convo_lines.append(f"{speaker}: {turn.content}")
+            convo_lines.append(f"{npc_name}: {clean_reply}")
+            convo_recap = "\n".join(convo_lines[-8:])  # last 8 turns max
+
+            # Summarise case progress
+            known = [
+                case.discovery_catalog[d].get("description", d)
+                for d in request.player_discovery_ids
+                if d in case.discovery_catalog
+            ]
+            just_found = [
+                case.discovery_catalog[d].get("description", d)
+                for d in discovery_ids
+                if d in case.discovery_catalog
+            ]
+            blocked_desc = [
+                case.discovery_catalog[d].get("description", d)
+                for d in blocked_discovery_ids
+                if d in case.discovery_catalog
+            ]
+
+            case_summary = f"Pressure: {interrogation_result['pressure_band']} (was {old_p_band}). "
+            case_summary += f"Rapport: {interrogation_result['rapport_band']} (was {old_r_band})."
+            if known:
+                case_summary += f"\nAlready uncovered: {'; '.join(known[:6])}"
+            if just_found:
+                case_summary += f"\nJust discovered: {'; '.join(just_found)}"
+            if blocked_desc:
+                case_summary += f"\nAlmost discovered (not enough trust/pressure): {'; '.join(blocked_desc)}"
+
             intuition_line = await llm.generate(
                 npc_id="intuition",
                 messages=[{
@@ -410,9 +445,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
                 }, {
                     "role": "user",
                     "content": (
-                        f"The detective just said: \"{request.message}\"\n"
-                        f"{npc_name} replied: \"{clean_reply[:200]}\"\n"
-                        f"Tactic used: {tactic_type}. Evidence strength: {evidence_strength}."
+                        f"Interrogating: {npc_name}\n"
+                        f"Tactic: {tactic_type}. Evidence strength: {evidence_strength}.\n"
+                        f"{case_summary}\n\n"
+                        f"Recent conversation:\n{convo_recap}"
                     ),
                 }],
             )
