@@ -2013,16 +2013,18 @@
     }
   }
 
-  /** Create a link between two cards. */
-  function sbCreateLink(fromId, toId) {
-    const exists = stringBoard.links.some(l =>
+  /** Toggle a link between two cards: create if missing, remove if exists. */
+  function sbToggleLink(fromId, toId) {
+    const idx = stringBoard.links.findIndex(l =>
       (l.from === fromId && l.to === toId) || (l.from === toId && l.to === fromId)
     );
-    if (!exists) {
+    if (idx >= 0) {
+      stringBoard.links.splice(idx, 1);
+    } else {
       stringBoard.links.push({ from: fromId, to: toId });
-      renderStringBoard();
-      sbScheduleSave();
     }
+    renderStringBoard();
+    sbScheduleSave();
   }
 
   /** Schedule a debounced save for string board state. */
@@ -2047,13 +2049,16 @@
     }
   }
 
-  /** Load string board state from the backend. */
+  /** Load string board state from the backend (only if richer than local). */
   async function sbLoadFromServer() {
     try {
       const res = await fetch(`${API_BASE}/api/state/stringboard`);
       if (res.ok) {
         const data = await res.json();
-        if (data && data.cardPositions) {
+        const serverPositions = Object.keys(data?.cardPositions || {}).length;
+        const localPositions = Object.keys(stringBoard.cardPositions).length;
+        // Only overwrite if server has more data than what localStorage restored
+        if (serverPositions > localPositions) {
           stringBoard.cardPositions = data.cardPositions;
           stringBoard.links = data.links || [];
         }
@@ -2102,7 +2107,7 @@
           const fromId = sbLinkFrom;
           sbLinkFrom = null;
           board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
-          sbCreateLink(fromId, cardId);
+          sbToggleLink(fromId, cardId);
         } else {
           sbLinkFrom = null;
           pin.classList.remove("active");
