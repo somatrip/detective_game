@@ -1770,6 +1770,9 @@
   let sbLinkFrom = null;  // cardId of link source (while creating a link)
   let sbDragging = null;  // {cardId, offsetX, offsetY} while dragging a card
   let sbSaveTimer = null; // debounce timer for persistence
+  let sbPan = { x: 0, y: 0 };
+  let sbZoom = 1;
+  let sbPanning = null;   // {startX, startY, startPanX, startPanY} while panning
 
   const SUSPECT_IDS = Object.keys(NPC_META).filter(id => id !== PARTNER_NPC_ID);
 
@@ -1862,7 +1865,7 @@
       const cardId = "suspect:" + npcId;
       const pos = stringBoard.cardPositions[cardId] || { x: 0, y: 0 };
       const npc = npcs.find(n => n.npc_id === npcId);
-      const displayName = npc?.display_name?.split(" -- ")[0] || npc?.display_name?.split(" — ")[0] || npcId;
+      const displayName = (npc?.display_name || npcId).split(/\s[—\u2014-]{1,2}\s/)[0];
 
       const card = document.createElement("div");
       card.className = "string-board-card suspect";
@@ -2060,13 +2063,31 @@
     }
   }
 
-  /** Initialize string board drag/drop and pin click handlers (delegated). */
+  /** Apply current pan/zoom transform to the viewport. */
+  function sbApplyTransform() {
+    const vp = document.getElementById("string-board-viewport");
+    if (vp) vp.style.transform = `translate(${sbPan.x}px, ${sbPan.y}px) scale(${sbZoom})`;
+  }
+
+  /** Convert a client-space coordinate to board-local coordinate. */
+  function sbClientToBoard(clientX, clientY) {
+    const board = document.getElementById("string-board");
+    const rect = board.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - sbPan.x) / sbZoom,
+      y: (clientY - rect.top - sbPan.y) / sbZoom,
+    };
+  }
+
+  /** Initialize string board drag/drop, pan, zoom, and pin click handlers. */
   function initStringBoard() {
     const board = document.getElementById("string-board");
     const cardsContainer = document.getElementById("string-board-cards");
     if (!board || !cardsContainer) return;
 
-    // Delegated pointer events for dragging cards
+    sbApplyTransform();
+
+    // Delegated pointer events for dragging cards and panning
     board.addEventListener("pointerdown", (e) => {
       // Pin click — start/complete link
       const pin = e.target.closest(".string-board-pin");
@@ -2080,11 +2101,9 @@
         } else if (sbLinkFrom !== cardId) {
           const fromId = sbLinkFrom;
           sbLinkFrom = null;
-          // Remove all active pin highlights
           board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
           sbCreateLink(fromId, cardId);
         } else {
-          // Clicked same pin — cancel
           sbLinkFrom = null;
           pin.classList.remove("active");
         }
@@ -2096,40 +2115,66 @@
       if (card) {
         e.preventDefault();
         const cardId = card.dataset.cardId;
-        const rect = card.getBoundingClientRect();
+        const boardPos = sbClientToBoard(e.clientX, e.clientY);
+        const cardX = parseInt(card.style.left, 10) || 0;
+        const cardY = parseInt(card.style.top, 10) || 0;
         sbDragging = {
           cardId,
           el: card,
-          offsetX: e.clientX - rect.left,
-          offsetY: e.clientY - rect.top,
+          offsetX: boardPos.x - cardX,
+          offsetY: boardPos.y - cardY,
         };
         card.classList.add("dragging");
         card.setPointerCapture(e.pointerId);
+        return;
+      }
+
+      // Pan start — empty board area
+      if (!e.target.closest(".sb-zoom-btn")) {
+        e.preventDefault();
+        sbPanning = {
+          startX: e.clientX,
+          startY: e.clientY,
+          startPanX: sbPan.x,
+          startPanY: sbPan.y,
+        };
+        board.classList.add("panning");
+        board.setPointerCapture(e.pointerId);
       }
     });
 
     board.addEventListener("pointermove", (e) => {
-      if (!sbDragging) return;
-      e.preventDefault();
-      const boardRect = board.getBoundingClientRect();
-      const scrollLeft = board.scrollLeft;
-      const scrollTop = board.scrollTop;
-      const x = e.clientX - boardRect.left + scrollLeft - sbDragging.offsetX;
-      const y = e.clientY - boardRect.top + scrollTop - sbDragging.offsetY;
-      sbDragging.el.style.left = Math.max(0, x) + "px";
-      sbDragging.el.style.top = Math.max(0, y) + "px";
+      if (sbDragging) {
+        e.preventDefault();
+        const pos = sbClientToBoard(e.clientX, e.clientY);
+        sbDragging.el.style.left = Math.max(0, pos.x - sbDragging.offsetX) + "px";
+        sbDragging.el.style.top = Math.max(0, pos.y - sbDragging.offsetY) + "px";
+        return;
+      }
+      if (sbPanning) {
+        e.preventDefault();
+        sbPan.x = sbPanning.startPanX + (e.clientX - sbPanning.startX);
+        sbPan.y = sbPanning.startPanY + (e.clientY - sbPanning.startY);
+        sbApplyTransform();
+      }
     });
 
     board.addEventListener("pointerup", (e) => {
-      if (!sbDragging) return;
-      sbDragging.el.classList.remove("dragging");
-      stringBoard.cardPositions[sbDragging.cardId] = {
-        x: parseInt(sbDragging.el.style.left, 10),
-        y: parseInt(sbDragging.el.style.top, 10),
-      };
-      sbDragging = null;
-      sbDrawLinks(); // redraw lines at new positions
-      sbScheduleSave();
+      if (sbDragging) {
+        sbDragging.el.classList.remove("dragging");
+        stringBoard.cardPositions[sbDragging.cardId] = {
+          x: parseInt(sbDragging.el.style.left, 10),
+          y: parseInt(sbDragging.el.style.top, 10),
+        };
+        sbDragging = null;
+        sbDrawLinks();
+        sbScheduleSave();
+        return;
+      }
+      if (sbPanning) {
+        board.classList.remove("panning");
+        sbPanning = null;
+      }
     });
 
     // Cancel link creation when clicking empty board area
@@ -2138,6 +2183,31 @@
         sbLinkFrom = null;
         board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
       }
+    });
+
+    // Zoom with scroll wheel
+    board.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.min(2, Math.max(0.3, sbZoom + delta));
+      // Zoom toward cursor position
+      const rect = board.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      sbPan.x = cx - (cx - sbPan.x) * (newZoom / sbZoom);
+      sbPan.y = cy - (cy - sbPan.y) * (newZoom / sbZoom);
+      sbZoom = newZoom;
+      sbApplyTransform();
+    }, { passive: false });
+
+    // Zoom buttons
+    document.getElementById("sb-zoom-in")?.addEventListener("click", () => {
+      sbZoom = Math.min(2, sbZoom + 0.15);
+      sbApplyTransform();
+    });
+    document.getElementById("sb-zoom-out")?.addEventListener("click", () => {
+      sbZoom = Math.max(0.3, sbZoom - 0.15);
+      sbApplyTransform();
     });
   }
 
