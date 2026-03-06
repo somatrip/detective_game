@@ -19,7 +19,6 @@ from .cases import get_active_case, load_case
 from .config import settings
 from .interrogation import (
     build_interrogation_context,
-    get_intuition_injection,
     pressure_band as _pressure_band,
     rapport_band as _rapport_band,
     process_turn,
@@ -280,21 +279,6 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         log.exception("[chat] Step 3 FAILED: build_interrogation_context")
         raise HTTPException(status_code=500, detail="Context builder error") from exc
 
-    # ── Step 3b: Determine if intuition prompt should be injected ────────
-    # Pre-LLM check: band transitions, evidence strength, high-impact tactic.
-    # Discovery-based triggers (registered / blocked) are only known after Step 5
-    # and are handled by the client-side template fallback.
-    _pre_llm_intuition = should_show_intuition(
-        tactic_type=tactic_type,
-        evidence_strength=evidence_strength,
-        old_pressure_band=old_p_band,
-        new_pressure_band=interrogation_result["pressure_band"],
-        old_rapport_band=old_r_band,
-        new_rapport_band=interrogation_result["rapport_band"],
-        discovery_ids=[],          # not yet known
-        blocked_discovery_ids=[],  # not yet known
-    )
-
     # ── Step 4: Generate NPC response (main LLM) ───────────────────────
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
     system_messages: List[ChatMessage] = [
@@ -306,10 +290,6 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         {"role": "system", "content": npc_profile.system_prompt},
         {"role": "system", "content": interrogation_prompt},
     ]
-
-    # Inject intuition prompt when pre-LLM triggers are met
-    if _pre_llm_intuition:
-        system_messages.append({"role": "system", "content": get_intuition_injection()})
 
     if request.language == "sr":
         gender_sr = "ženskog" if npc_profile.gender == "female" else "muškog"
@@ -351,8 +331,8 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     # Strip any stray tags the LLM may have produced out of habit
     clean_reply = _strip_stray_tags(raw_reply)
 
-    # Extract [INTUITION] line before passing to discovery detection
-    clean_reply, intuition_line = _extract_intuition(clean_reply)
+    # Strip any stray [INTUITION] tag the LLM may produce out of habit
+    clean_reply, _ = _extract_intuition(clean_reply)
 
     # ── Step 5: Detect discoveries & expression (secondary LLM) ────────
     log.info("[chat] Step 5: detecting discoveries & expression")
@@ -401,25 +381,45 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     # Recompute evidence_ids from the surviving discoveries only
     evidence_ids = list({case.discovery_catalog[d]["evidence_id"] for d in discovery_ids})
 
-    # ── Step 5c: Finalize intuition line with full trigger check ────────
-    # Now that we know discoveries and blocked discoveries, do the full check.
-    # If no pre-LLM trigger fired (so the LLM wasn't asked for an intuition
-    # line), but a post-LLM trigger IS met, intuition_line stays None and the
-    # client-side template fallback will generate one.
-    if intuition_line is not None:
-        # LLM produced a line — verify at least one trigger is actually met
-        _full_trigger = should_show_intuition(
-            tactic_type=tactic_type,
-            evidence_strength=evidence_strength,
-            old_pressure_band=old_p_band,
-            new_pressure_band=interrogation_result["pressure_band"],
-            old_rapport_band=old_r_band,
-            new_rapport_band=interrogation_result["rapport_band"],
-            discovery_ids=discovery_ids,
-            blocked_discovery_ids=blocked_discovery_ids,
-        )
-        if not _full_trigger:
-            intuition_line = None  # suppress spurious intuition
+    # ── Step 5c: Generate intuition line if triggers are met ─────────────
+    # Full trigger check now that discoveries & blocked discoveries are known.
+    _should_intuit = should_show_intuition(
+        tactic_type=tactic_type,
+        evidence_strength=evidence_strength,
+        old_pressure_band=old_p_band,
+        new_pressure_band=interrogation_result["pressure_band"],
+        old_rapport_band=old_r_band,
+        new_rapport_band=interrogation_result["rapport_band"],
+        discovery_ids=discovery_ids,
+        blocked_discovery_ids=blocked_discovery_ids,
+    )
+    intuition_line = None
+    if _should_intuit:
+        try:
+            npc_name = npc_profile.display_name.split(" — ")[0] if npc_profile.display_name else request.npc_id
+            intuition_line = await llm.generate(
+                npc_id="intuition",
+                messages=[{
+                    "role": "system",
+                    "content": (
+                        "You are the inner voice of a noir detective. Write ONE brief sentence "
+                        "(max 15 words) — the detective's gut feeling about what just happened. "
+                        "Stay in-world, noir tone. Do not reference game mechanics. "
+                        "Do not use quotation marks. Just the raw thought."
+                    ),
+                }, {
+                    "role": "user",
+                    "content": (
+                        f"The detective just said: \"{request.message}\"\n"
+                        f"{npc_name} replied: \"{clean_reply[:200]}\"\n"
+                        f"Tactic used: {tactic_type}. Evidence strength: {evidence_strength}."
+                    ),
+                }],
+            )
+            intuition_line = intuition_line.strip().strip('"')
+        except Exception:
+            log.warning("[chat] Intuition generation failed, skipping")
+            intuition_line = None
 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 

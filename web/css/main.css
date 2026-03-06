@@ -1094,14 +1094,29 @@
       font-size: 0.8rem;
       color: rgba(232,220,200,0.3);
     }
-    /* ── Detective's Intuition line ── */
-    .intuition-line {
-      font-style: italic;
-      font-size: 0.72rem;
-      color: var(--gold);
-      opacity: 0.6;
-      padding: 0.25rem 0.75rem;
+    /* ── Detective's Intuition bubble ── */
+    .msg.intuition {
+      align-self: flex-start;
+      max-width: 78%;
+      background: linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9));
+      border: 1px solid rgba(212,160,80,0.12);
+      border-left: 3px solid rgba(212,160,80,0.25);
+      color: var(--noir-text);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      position: relative;
+      padding: 1rem 1.1rem 0.9rem 1.3rem;
+      opacity: 0.75;
       animation: fadeIn 0.5s ease;
+    }
+    .msg.intuition .msg-sender {
+      color: var(--gold);
+      border-bottom-color: rgba(212,160,80,0.12);
+    }
+    .msg.intuition .msg-sender::before {
+      content: "\2727";
+      color: rgba(212,160,80,0.5);
+      font-weight: 400;
     }
 
     .typing-indicator {

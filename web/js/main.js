@@ -672,83 +672,6 @@
   let accusationTarget = null;
   let subpoenaToastShown = false;
 
-  /* ── Detective's Intuition — suppression & fallback ──── */
-  // Track last high-impact tactic per NPC for consecutive-suppression
-  let lastIntuitionTactic = {};  // npc_id → tactic_type (only high-impact)
-
-  const HIGH_IMPACT_TACTICS = new Set(["direct_accusation", "point_out_contradiction"]);
-
-  const TACTIC_LABELS = {
-    open_ended: "an open question",
-    specific_factual: "a pointed question",
-    empathy: "showing empathy",
-    present_evidence: "presenting evidence",
-    point_out_contradiction: "calling out a contradiction",
-    direct_accusation: "a direct accusation",
-    repeat_pressure: "pressing the same point",
-    topic_change: "changing the subject",
-  };
-
-  const EVIDENCE_LABELS = {
-    none: null,
-    weak: "loosely relevant",
-    strong: "directly relevant",
-    smoking_gun: "damning",
-  };
-
-  /**
-   * Check intuition trigger conditions on the client side (mirrors server logic).
-   * Used for template fallback when the server didn't inject the prompt.
-   */
-  function shouldShowIntuition(data, npcId) {
-    if (npcId === PARTNER_NPC_ID) return false;
-
-    const oldState = npcInterrogation[npcId] || {};
-    const oldPBand = oldState.pressure_band || "calm";
-    const oldRBand = oldState.rapport_band || "neutral";
-
-    // Band transition
-    if (oldPBand !== data.pressure_band) return true;
-    if (oldRBand !== data.rapport_band) return true;
-
-    // Strong or smoking-gun evidence
-    if (data.evidence_strength === "strong" || data.evidence_strength === "smoking_gun") return true;
-
-    // Discovery registered
-    if (data.discovery_ids && data.discovery_ids.length > 0) return true;
-
-    // Gated discovery blocked
-    if (data.blocked_discovery_ids && data.blocked_discovery_ids.length > 0) return true;
-
-    // High-impact tactic
-    if (HIGH_IMPACT_TACTICS.has(data.tactic_type)) return true;
-
-    return false;
-  }
-
-  /**
-   * Generate a template-based intuition fallback line.
-   */
-  function generateIntuitionFallback(data) {
-    const tacticLabel = TACTIC_LABELS[data.tactic_type] || "a question";
-    const evidenceLabel = EVIDENCE_LABELS[data.evidence_strength] || null;
-
-    if (data.blocked_discovery_ids && data.blocked_discovery_ids.length > 0) {
-      return "Something flickered behind their eyes. Not ready to talk — but close.";
-    }
-
-    if (data.discovery_ids && data.discovery_ids.length > 0) {
-      return "That one landed. A crack in the armor, however small.";
-    }
-
-    let line = `You tried ${tacticLabel}`;
-    if (evidenceLabel) {
-      line += ` with ${evidenceLabel} evidence`;
-    }
-    line += ". Worth watching how they sit with it.";
-    return line;
-  }
-
   /* ── Gameplay tracking ─────────────────────────────────── */
   let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
   localStorage.setItem("echoes_game_id", gameId);
@@ -1435,50 +1358,15 @@
         setHeaderExpression(activeNpcId, data.expression);
       }
 
-      // ── Detective's Intuition line ─────────────────────────
-      // Must run BEFORE updating npcInterrogation so old bands are available
-      if (activeNpcId !== PARTNER_NPC_ID) {
-        let intuitionText = data.intuition_line || null;
-
-        // Template fallback: if server didn't produce a line, check client-side
-        if (!intuitionText && shouldShowIntuition(data, activeNpcId)) {
-          intuitionText = generateIntuitionFallback(data);
-        }
-
-        if (intuitionText) {
-          // Suppression: skip if same high-impact tactic on consecutive turns
-          const tactic = data.tactic_type;
-          let suppress = false;
-          if (HIGH_IMPACT_TACTICS.has(tactic) &&
-              lastIntuitionTactic[activeNpcId] === tactic) {
-            suppress = true;
-          }
-
-          if (!suppress) {
-            // Find the user bubble (second-to-last .msg in chatMessages)
-            const allMsgs = chatMessages.querySelectorAll(".msg");
-            // The user bubble is the one before the assistant bubble we just added
-            const userBubble = allMsgs.length >= 2 ? allMsgs[allMsgs.length - 2] : null;
-            if (userBubble && userBubble.classList.contains("user")) {
-              const intuitionEl = document.createElement("div");
-              intuitionEl.className = "intuition-line";
-              intuitionEl.textContent = intuitionText;
-              // Insert after the user bubble
-              userBubble.after(intuitionEl);
-              scrollToBottom();
-            }
-          }
-
-          // Track last tactic for suppression (only high-impact)
-          if (HIGH_IMPACT_TACTICS.has(tactic)) {
-            lastIntuitionTactic[activeNpcId] = tactic;
-          } else {
-            lastIntuitionTactic[activeNpcId] = null;
-          }
-        } else {
-          // No intuition line — reset suppression tracker
-          lastIntuitionTactic[activeNpcId] = null;
-        }
+      // ── Detective's Intuition line (LLM-generated, after NPC reply) ──
+      if (activeNpcId !== PARTNER_NPC_ID && data.intuition_line) {
+        const intuitionEl = document.createElement("div");
+        intuitionEl.className = "msg intuition";
+        intuitionEl.innerHTML =
+          `<div class="msg-sender">A Detective's Intuition</div>` +
+          `<em>${escapeHtml(data.intuition_line)}</em>`;
+        chatMessages.appendChild(intuitionEl);
+        scrollToBottom();
       }
 
       // Update interrogation state
