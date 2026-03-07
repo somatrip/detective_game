@@ -147,6 +147,7 @@
       "intro.body_discovered",
       "intro.circumstances",
       "intro.starting_evidence",
+      "intro.investigators_note",
       "intro.your_role",
       "intro.your_partner",
       "intro.tip",

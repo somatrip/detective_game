@@ -10,9 +10,10 @@
     "intro.body_discovered": "<strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.",
     "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM \u2014 the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
     "intro.starting_evidence": "<strong>Initial Evidence:</strong> The murder weapon \u2014 an antique telescope mount \u2014 was found smashed beside the body. Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>\u2018Matt\u2019</em> is legible. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
+    "intro.investigators_note": "<strong>Investigator\u2019s Note:</strong> Two persons of interest share the name \u2018Matt\u2019 \u2014 <em>Matthias Holt</em>, the Security Director who discovered the body, and <em>Matthew Vale</em>, the Stage Manager who ran the show backstage. The burned notebook makes both priority interviews. Start by pressing each about the notebook and watch how they react.",
     "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest \u2014 each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
     "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. She is your trusted partner.",
-    "intro.tip": "<strong>Tip:</strong> Suspects will guard their secrets carefully. Present evidence and build pressure to break through their defenses. Pay attention to contradictions between testimonies.",
+    "intro.tip": "<strong>Interrogation Tips:</strong><br>\u2022 <em>Build pressure</em> by presenting evidence, pointing out contradictions, and making direct accusations. Under enough pressure, suspects crack and reveal secrets they\u2019d rather keep hidden.<br>\u2022 <em>Build trust</em> with empathy and open-ended questions. Suspects who trust you will volunteer information about <em>other</em> suspects without you even asking.<br>\u2022 <em>Cross-reference testimony</em> \u2014 what one suspect reveals can be used as evidence against another. If someone mentions a detail, bring it up in your next interrogation.<br>\u2022 <em>Present the right evidence to the right person</em> for maximum impact. Mentioning the burned notebook to a \u2018Matt\u2019 is far more powerful than asking a generic question.",
 
     // ── NPC roles ──
     "role.lila-chen": "Your Partner",
@@ -111,9 +112,9 @@
     "dossier.matthew-vale.bio": "Meticulous freelance stage manager responsible for lighting, sound cues, and technical production of the gala. Has worked events at the Lyric Atrium for two years. Tracks every performer\u2019s cue and logistics with operational precision. Stayed backstage coordinating the show during the outage.",
 
     // ── Conversation starters (3 per NPC) ──
-    "starter.lila-chen.1": "What do we know about the victim so far?",
-    "starter.lila-chen.2": "Who should I prioritize interviewing first?",
-    "starter.lila-chen.3": "Walk me through the timeline of events tonight.",
+    "starter.lila-chen.1": "Walk me through the timeline \u2014 what happened tonight?",
+    "starter.lila-chen.2": "The burned notebook names \u2018Matt\u2019 \u2014 we have two Matts here. Who should I press first?",
+    "starter.lila-chen.3": "How should I approach interrogations? Any tips on getting suspects to talk?",
 
     "starter.amelia-reyes.1": "Tell me about this hotel and your role here.",
     "starter.amelia-reyes.2": "Who has access to the maintenance room?",
@@ -129,7 +130,7 @@
 
     "starter.matthias-holt.1": "Walk me through what happened during the blackout.",
     "starter.matthias-holt.2": "Is there security footage from tonight?",
-    "starter.matthias-holt.3": "Who had access to the rooftop observatory?",
+    "starter.matthias-holt.3": "We found a burned notebook with the name \u2018Matt\u2019 on it. Care to explain?",
 
     "starter.mira-kline.1": "What exactly is your role with the Panopticon project?",
     "starter.mira-kline.2": "Did you have any ethical concerns about Mercer\u2019s work?",
@@ -145,7 +146,7 @@
 
     "starter.matthew-vale.1": "You were backstage during the blackout. What happened?",
     "starter.matthew-vale.2": "Did anyone leave the stage area during the outage?",
-    "starter.matthew-vale.3": "Did you notice anyone backstage who shouldn\u2019t have been there?",
+    "starter.matthew-vale.3": "Your name came up in a burned notebook we recovered. Know anything about that?",
 
     // ── Chat hint display (case-specific partner hints) ──
     "chat.hint_display.0": "What do you think about this case so far?",

@@ -10,9 +10,10 @@
     "intro.body_discovered": "<strong>Telo prona\u0111eno:</strong> Pribli\u017eno u 23:44, od strane direktora obezbe\u0111enja Matijasa Holta u opservatoriji na krovu, tokom ekskluzivne gala ve\u010deri u istorijskom art deko hotelu iz 1920-ih.",
     "intro.circumstances": "<strong>Okolnosti:</strong> Nestanak struje je trajao od 23:15 do 23:30 \u2014 neko je ru\u010dno iskop\u010dao osigura\u010d. Olujno vreme je usporilo dolazak policije, daju\u0107i osumnji\u010denima vremena da usklade alibije.",
     "intro.starting_evidence": "<strong>Po\u010detni dokazi:</strong> Oru\u017eje ubistva \u2014 anti\u010dko postolje teleskopa \u2014 prona\u0111eno je razbijeno pored tela. Forenzi\u010dari su prona\u0161li <em>spaljen fragment bele\u017enice</em> u podrumskom spalioniku; sadr\u017ei delimi\u010dnu listu imena koja izgleda kao lista za ucenu ili pretnje. Ime <em>\u2018Matt\u2019</em> je \u010ditljivo. Hotelsko obezbe\u0111enje je tako\u0111e obezbedilo <em>evidenciju pristupnih kartica</em> za krov. Koristite ovo da pritisnete osumnji\u010dene tokom ispitivanja.",
+    "intro.investigators_note": "<strong>Bele\u0161ka istra\u017eitelja:</strong> Dva osumnji\u010dena dele ime \u2018Matt\u2019 \u2014 <em>Matijas Holt</em>, direktor obezbe\u0111enja koji je prona\u0161ao telo, i <em>Metju Vejl</em>, menad\u017eer scene koji je vodio program iza kulisa. Spaljena bele\u017enica ih \u010dini prioritetnim za ispitivanje. Po\u010dnite tako \u0161to \u0107ete svakog pritisnuti u vezi sa bele\u017enicom i pratite kako reaguju.",
     "intro.your_role": "<strong>Va\u0161a uloga:</strong> Vi ste glavni detektiv. Ispitajte osam osumnji\u010denih \u2014 svaki sa sopstvenim tajnama, motivima i ograni\u010denjima znanja. Otkrijte kontradikcije, prikupite dokaze i identifikujte ubicu.",
     "intro.your_partner": "<strong>Va\u0161 partner:</strong> Detektiv Lila \u010cen \u0107e vam pomo\u0107i sa takti\u010dkim savetima i pravnim smernicama. Po\u010dnite sa njom za pregled slu\u010daja.",
-    "intro.tip": "<strong>Savet:</strong> Likovi \u0107e pa\u017eeljivo \u010duvati svoje tajne. Predstavite dokaze i izgradite pritisak da probijete njihovu odbranu. Obratite pa\u017enju na kontradikcije izme\u0111u svedo\u010denja.",
+    "intro.tip": "<strong>Saveti za ispitivanje:</strong><br>\u2022 <em>Gradite pritisak</em> predstavljanjem dokaza, ukazivanjem na kontradikcije i direktnim optu\u017ebama. Pod dovoljnim pritiskom, osumnji\u010deni pucaju i otkrivaju tajne koje bi radije sakrili.<br>\u2022 <em>Gradite poverenje</em> empatijom i otvorenim pitanjima. Osumnji\u010deni koji vam veruju \u0107e dobrovoljno deliti informacije o <em>drugim</em> osumnji\u010denima bez va\u0161eg pitanja.<br>\u2022 <em>Ukr\u0161tajte svedo\u010denja</em> \u2014 ono \u0161to jedan osumnji\u010deni otkrije mo\u017ee se koristiti kao dokaz protiv drugog. Ako neko pomene detalj, pokrenite ga u slede\u0107em ispitivanju.<br>\u2022 <em>Predstavite pravi dokaz pravoj osobi</em> za maksimalni efekat. Pominjanje spaljene bele\u017enice \u2018Mattu\u2019 daleko je mo\u0107nije od op\u0161teg pitanja.",
 
     // ── NPC roles ──
     "role.lila-chen": "Va\u0161 Partner",
@@ -111,9 +112,9 @@
     "dossier.matthew-vale.bio": "Pedantan slobodni menad\u017eer scene zadu\u017een za osvetljenje, zvu\u010dne signale i tehni\u010dku produkciju gale. Radio je doga\u0111aje u Lyric Atriumu dve godine. Prati svaki signal i logistiku izvo\u0111a\u010da sa operativnom precizno\u0161\u0107u. Ostao je iza scene koordiniraju\u0107i \u0161ou tokom nestanka struje.",
 
     // ── Conversation starters (3 per NPC) ──
-    "starter.lila-chen.1": "\u0160ta znamo o \u017ertvi do sada?",
-    "starter.lila-chen.2": "Koga treba prvo da saslu\u0161am?",
-    "starter.lila-chen.3": "Provedi me kroz hronologiju doga\u0111aja ve\u010deras.",
+    "starter.lila-chen.1": "Provedi me kroz hronologiju \u2014 \u0161ta se desilo ve\u010deras?",
+    "starter.lila-chen.2": "Spaljena bele\u017enica pominje \u2018Matt\u2019 \u2014 imamo dva Matta ovde. Koga prvo da pritisnem?",
+    "starter.lila-chen.3": "Kako da pristupim ispitivanjima? Ima\u0161 li savete kako da nateram osumnji\u010dene da progovore?",
 
     "starter.amelia-reyes.1": "Recite mi o ovom hotelu i va\u0161oj ulozi ovde.",
     "starter.amelia-reyes.2": "Ko ima pristup prostoriji za odr\u017eavanje?",
@@ -129,7 +130,7 @@
 
     "starter.matthias-holt.1": "Ispri\u010dajte mi \u0161ta se desilo tokom nestanka struje.",
     "starter.matthias-holt.2": "Postoje li snimci sigurnosnih kamera od ve\u010deras?",
-    "starter.matthias-holt.3": "Ko je imao pristup opservatoriji na krovu?",
+    "starter.matthias-holt.3": "Prona\u0161li smo spaljenu bele\u017enicu sa imenom \u2018Matt\u2019. Mo\u017eete li to da objasnite?",
 
     "starter.mira-kline.1": "Koja je ta\u010dno va\u0161a uloga u projektu Panopticon?",
     "starter.mira-kline.2": "Da li ste imali eti\u010dke primedbe na Merserov rad?",
@@ -145,7 +146,7 @@
 
     "starter.matthew-vale.1": "Bili ste iza scene tokom nestanka struje. \u0160ta se desilo?",
     "starter.matthew-vale.2": "Da li je neko napustio prostor scene tokom nestanka struje?",
-    "starter.matthew-vale.3": "Da li ste primetili nekoga iza scene ko nije trebalo da bude tamo?",
+    "starter.matthew-vale.3": "Va\u0161e ime se pojavilo u spaljenoj bele\u017enici koju smo prona\u0161li. Znate li ne\u0161to o tome?",
 
     // ── Chat hint display (case-specific partner hints) ──
     "chat.hint_display.0": "\u0160ta misli\u0161 o ovom slu\u010daju do sada?",
