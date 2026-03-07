@@ -2941,6 +2941,7 @@
   const HUB_STEPS = [
     { selector: '.manila-tab[data-hub-tab="caseboard"]', text: "tutorial.step_caseboard", arrow: "top" },
     { selector: '#cb-briefing-toggle', text: "tutorial.step_briefing", arrow: "top" },
+    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="stringboard"]', text: "tutorial.step_stringboard", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top", clickToAdvance: true },
     { selector: `.npc-card[data-npc-id="${PARTNER_NPC_ID}"]`, text: "tutorial.step_partner", arrow: "top", beforeShow() {
@@ -2956,13 +2957,11 @@
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
-    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
   // Suspect chat steps without input bar (used when Lila chat already covered it)
   const CHAT_STEPS_SHORT = [
     { selector: '#gauge-pressure', text: "tutorial.step_gauges", arrow: "bottom", selectorAlt: '#gauge-rapport' },
     { selector: '#portrait-info-btn', text: isTouchDevice ? "tutorial.step_info_mobile" : "tutorial.step_info_desktop", arrow: "left" },
-    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
 
   // Lila-specific tutorial (shown the first time Lila's chat is opened)
@@ -2974,7 +2973,6 @@
   const LILA_CHAT_STEPS = [
     { selector: '#lila-hint-btn', text: "tutorial.step_hint_btn", arrow: "bottom" },
     { selector: '#chat-input-bar', text: "tutorial.step_input", arrow: "bottom" },
-    { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
   ];
 
   let tutorialSteps = [];
@@ -3170,12 +3168,12 @@
       const alreadyOnSuspects = suspPanel && suspPanel.classList.contains("active");
 
       if (!alreadyOnSuspects && suspectsTab) {
-        // Resume from the Lila step (index 4) when user clicks suspects tab
+        // Resume from the Lila step (index 5) when user clicks suspects tab
         const resumeFromLila = () => {
           tutorialPhase = "hub";
           tutorialSteps = HUB_STEPS;
-          tutorialCurrentStep = 4; // Lila partner step
-          showTutorialStep(4);
+          tutorialCurrentStep = 5; // Lila partner step
+          showTutorialStep(5);
         };
         suspectsTab.addEventListener("click", () => {
           setTimeout(resumeFromLila, 350);
