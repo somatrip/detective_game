@@ -5,15 +5,24 @@
 
     // ── Case briefing (case board) ──
     "intro.briefing_label": "Case Briefing",
-    "intro.victim": "<strong>Victim:</strong> Julian Mercer, charismatic venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of the Panopticon surveillance startup \u2014 found dead in the hotel's rooftop observatory.",
-    "intro.time_of_death": "<strong>Estimated Time of Death:</strong> Between 11:15 and 11:30 PM (during the power outage). The victim was bludgeoned with an antique telescope mount.",
-    "intro.body_discovered": "<strong>Body Discovered:</strong> Approximately 11:44 PM by Security Director Matthias Holt in the rooftop observatory, during an exclusive tech-meets-jazz gala at the historic 1920s art deco hotel.",
-    "intro.circumstances": "<strong>Circumstances:</strong> A power outage struck between 11:15 and 11:30 PM \u2014 the breaker was pulled manually. Stormy weather delayed police arrival, giving suspects time to coordinate alibis.",
-    "intro.starting_evidence": "<strong>Initial Evidence:</strong> The murder weapon \u2014 an antique telescope mount \u2014 was found smashed beside the body. Forensics recovered a <em>burned notebook fragment</em> from the basement incinerator; it contains a partial list of names that appears to be a blackmail or threat list. The name <em>\u2018Matt\u2019</em> is legible. Hotel security has also provided <em>keycard access logs</em> for the rooftop. Use these to press suspects during interrogation.",
-    "intro.investigators_note": "<strong>Investigator\u2019s Note:</strong> Two persons of interest share the name \u2018Matt\u2019 \u2014 <em>Matthias Holt</em>, the Security Director who discovered the body, and <em>Matthew Vale</em>, the Stage Manager who ran the show backstage. The burned notebook makes both priority interviews. Start by pressing each about the notebook and watch how they react.",
-    "intro.your_role": "<strong>Your Role:</strong> You are the lead detective. Interrogate eight persons of interest \u2014 each with their own secrets, motives, and knowledge boundaries. Uncover contradictions, gather evidence, and identify the killer.",
-    "intro.your_partner": "<strong>Your Partner:</strong> Detective Lila Chen will assist with tactical advice and legal guidance. She is your trusted partner.",
-    "intro.tip": "<strong>Interrogation Tips:</strong><br>\u2022 <em>Build pressure</em> by presenting evidence, pointing out contradictions, and making direct accusations. Under enough pressure, suspects crack and reveal secrets they\u2019d rather keep hidden.<br>\u2022 <em>Build trust</em> with empathy and open-ended questions. Suspects who trust you will volunteer information about <em>other</em> suspects without you even asking.<br>\u2022 <em>Cross-reference testimony</em> \u2014 what one suspect reveals can be used as evidence against another. If someone mentions a detail, bring it up in your next interrogation.<br>\u2022 <em>Present the right evidence to the right person</em> for maximum impact. Mentioning the burned notebook to a \u2018Matt\u2019 is far more powerful than asking a generic question.",
+
+    // Section: The Crime
+    "intro.section_crime": "The Crime",
+    "intro.victim": "<strong>Victim:</strong> Julian Mercer — venture capitalist, majority owner of the Lyric Atrium Hotel, and CEO of surveillance startup Panopticon.",
+    "intro.time_of_death": "<strong>Time of Death:</strong> Between 11:15–11:30 PM. Bludgeoned with an antique telescope mount during a manually triggered power outage.",
+    "intro.discovery": "<strong>Discovery:</strong> Found at ~11:44 PM by Security Director Matthias Holt in the rooftop observatory. An exclusive tech-meets-jazz gala was underway at this 1920s art deco hotel. Stormy weather delayed police, giving suspects time to coordinate alibis.",
+
+    // Section: Evidence at Hand
+    "intro.section_evidence": "Evidence at Hand",
+    "intro.evidence_summary": "The murder weapon — an antique telescope mount — was smashed beside the body. Forensics also recovered a <em>burned notebook fragment</em> from the basement incinerator containing a partial list of names that resembles a blackmail or threat list. The name <em>'Matt'</em> is legible. Hotel security has provided <em>keycard access logs</em> for the rooftop.",
+    "intro.matt_note": "Two persons of interest share the name 'Matt' — <em>Matthias Holt</em> (Security Director, discovered the body) and <em>Matthew Vale</em> (Stage Manager). The burned notebook makes both priority interviews. Press each about it and watch how they react.",
+
+    // Section: Your Assignment
+    "intro.section_assignment": "Your Assignment",
+    "intro.assignment": "You are the lead detective. Interrogate eight persons of interest — each with their own secrets, motives, and knowledge boundaries. Your partner, <strong>Detective Lila Chen</strong>, will provide tactical advice and legal guidance.",
+
+    // Interrogation tips callout
+    "intro.tip": "<strong>Interrogation Tips</strong><br>• <em>Build pressure</em> — present evidence, point out contradictions, make accusations. Under enough pressure, suspects crack.<br>• <em>Build trust</em> — use empathy and open-ended questions. Trusted suspects volunteer information about others.<br>• <em>Cross-reference</em> — what one suspect reveals can be used against another.<br>• <em>Match evidence to suspect</em> — mentioning the burned notebook to a 'Matt' hits harder than a generic question.",
 
     // ── NPC roles ──
     "role.lila-chen": "Your Partner",

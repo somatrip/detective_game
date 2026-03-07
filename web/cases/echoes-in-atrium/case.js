@@ -142,15 +142,16 @@
 
     /* ── Briefing i18n keys (case intro screen) ────────────── */
     briefingKeys: [
+      { type: "heading", key: "intro.section_crime" },
       "intro.victim",
       "intro.time_of_death",
-      "intro.body_discovered",
-      "intro.circumstances",
-      "intro.starting_evidence",
-      "intro.investigators_note",
-      "intro.your_role",
-      "intro.your_partner",
-      "intro.tip",
+      "intro.discovery",
+      { type: "heading", key: "intro.section_evidence" },
+      "intro.evidence_summary",
+      { type: "highlight", key: "intro.matt_note" },
+      { type: "heading", key: "intro.section_assignment" },
+      "intro.assignment",
+      { type: "callout", key: "intro.tip" },
     ],
 
     /* ── Asset paths ───────────────────────────────────────── */

@@ -1008,12 +1008,38 @@
     // Populate briefing paragraphs from case data
     const briefingBody = $("#cb-briefing-body");
     briefingBody.innerHTML = "";
-    for (const key of CASE.briefingKeys) {
-      const p = document.createElement("p");
-      p.setAttribute("data-i18n", key);
-      p.setAttribute("data-i18n-html", "");
-      p.innerHTML = t(key);
-      briefingBody.appendChild(p);
+    for (const entry of CASE.briefingKeys) {
+      const isObj = typeof entry === "object";
+      const key = isObj ? entry.key : entry;
+      const type = isObj ? entry.type : "paragraph";
+
+      if (type === "heading") {
+        const h4 = document.createElement("h4");
+        h4.className = "briefing-section-heading";
+        h4.setAttribute("data-i18n", key);
+        h4.textContent = t(key);
+        briefingBody.appendChild(h4);
+      } else if (type === "highlight") {
+        const div = document.createElement("div");
+        div.className = "briefing-highlight";
+        div.setAttribute("data-i18n", key);
+        div.setAttribute("data-i18n-html", "");
+        div.innerHTML = t(key);
+        briefingBody.appendChild(div);
+      } else if (type === "callout") {
+        const div = document.createElement("div");
+        div.className = "briefing-callout";
+        div.setAttribute("data-i18n", key);
+        div.setAttribute("data-i18n-html", "");
+        div.innerHTML = t(key);
+        briefingBody.appendChild(div);
+      } else {
+        const p = document.createElement("p");
+        p.setAttribute("data-i18n", key);
+        p.setAttribute("data-i18n-html", "");
+        p.innerHTML = t(key);
+        briefingBody.appendChild(p);
+      }
     }
 
     // Restore briefing open/closed state
