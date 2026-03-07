@@ -1997,6 +1997,33 @@
     };
   }
 
+  /** Select / deselect a card for linking (same logic as pin click). */
+  function sbSelectCard(cardId) {
+    const board = document.getElementById("string-board");
+    if (!sbLinkFrom) {
+      // First selection
+      sbLinkFrom = cardId;
+      const pin = board.querySelector(`.string-board-pin[data-card-id="${cardId}"]`);
+      if (pin) pin.classList.add("active");
+      const card = board.querySelector(`.string-board-card[data-card-id="${cardId}"]`);
+      if (card) card.classList.add("selected");
+    } else if (sbLinkFrom !== cardId) {
+      // Second selection — toggle link
+      const fromId = sbLinkFrom;
+      sbLinkFrom = null;
+      board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
+      board.querySelectorAll(".string-board-card.selected").forEach(c => c.classList.remove("selected"));
+      sbToggleLink(fromId, cardId);
+    } else {
+      // Same card — deselect
+      sbLinkFrom = null;
+      const pin = board.querySelector(`.string-board-pin[data-card-id="${cardId}"]`);
+      if (pin) pin.classList.remove("active");
+      const card = board.querySelector(`.string-board-card[data-card-id="${cardId}"]`);
+      if (card) card.classList.remove("selected");
+    }
+  }
+
   /** Initialize string board drag/drop, pan, zoom, and pin click handlers. */
   function initStringBoard() {
     const board = document.getElementById("string-board");
@@ -2012,19 +2039,7 @@
       if (pin) {
         e.preventDefault();
         e.stopPropagation();
-        const cardId = pin.dataset.cardId;
-        if (!sbLinkFrom) {
-          sbLinkFrom = cardId;
-          pin.classList.add("active");
-        } else if (sbLinkFrom !== cardId) {
-          const fromId = sbLinkFrom;
-          sbLinkFrom = null;
-          board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
-          sbToggleLink(fromId, cardId);
-        } else {
-          sbLinkFrom = null;
-          pin.classList.remove("active");
-        }
+        sbSelectCard(pin.dataset.cardId);
         return;
       }
 
@@ -2041,6 +2056,9 @@
           el: card,
           offsetX: boardPos.x - cardX,
           offsetY: boardPos.y - cardY,
+          startX: e.clientX,
+          startY: e.clientY,
+          didMove: false,
         };
         card.classList.add("dragging");
         card.setPointerCapture(e.pointerId);
@@ -2064,6 +2082,9 @@
     board.addEventListener("pointermove", (e) => {
       if (sbDragging) {
         e.preventDefault();
+        const dx = e.clientX - sbDragging.startX;
+        const dy = e.clientY - sbDragging.startY;
+        if (!sbDragging.didMove && (dx * dx + dy * dy) > 25) sbDragging.didMove = true;
         const pos = sbClientToBoard(e.clientX, e.clientY);
         sbDragging.el.style.left = Math.max(0, pos.x - sbDragging.offsetX) + "px";
         sbDragging.el.style.top = Math.max(0, pos.y - sbDragging.offsetY) + "px";
@@ -2079,14 +2100,22 @@
 
     board.addEventListener("pointerup", (e) => {
       if (sbDragging) {
-        sbDragging.el.classList.remove("dragging");
-        stringBoard.cardPositions[sbDragging.cardId] = {
-          x: parseInt(sbDragging.el.style.left, 10),
-          y: parseInt(sbDragging.el.style.top, 10),
+        const wasDrag = sbDragging.didMove;
+        const cardId = sbDragging.cardId;
+        const cardEl = sbDragging.el;
+        cardEl.classList.remove("dragging");
+        stringBoard.cardPositions[cardId] = {
+          x: parseInt(cardEl.style.left, 10),
+          y: parseInt(cardEl.style.top, 10),
         };
         sbDragging = null;
         sbDrawLinks();
-        sbScheduleSave();
+        if (wasDrag) {
+          sbScheduleSave();
+        } else {
+          // Click (no drag) — select/deselect card for linking
+          sbSelectCard(cardId);
+        }
         return;
       }
       if (sbPanning) {
@@ -2100,6 +2129,7 @@
       if (!e.target.closest(".string-board-pin") && !e.target.closest(".string-board-card") && sbLinkFrom) {
         sbLinkFrom = null;
         board.querySelectorAll(".string-board-pin.active").forEach(p => p.classList.remove("active"));
+        board.querySelectorAll(".string-board-card.selected").forEach(c => c.classList.remove("selected"));
       }
     });
 

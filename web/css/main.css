@@ -229,6 +229,7 @@
     /* ── Manila Folder Tabs ────────────────────────────────── */
     .manila-tabs {
       display: flex;
+      align-items: flex-end;
       gap: 0;
       padding: 0 2rem;
       padding-top: 0.75rem;
@@ -247,14 +248,17 @@
       clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
       background: var(--bg-panel-alt);
       color: var(--text-faint);
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.2s, color 0.2s, filter 0.2s;
       min-width: 180px;
       text-align: center;
+      align-self: flex-end;
+      filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.35));
     }
     .manila-tab.active {
       background: var(--manila-tab-active);
       color: var(--manila-tab-text);
       z-index: 2;
+      filter: drop-shadow(0 -3px 5px rgba(0,0,0,0.5));
     }
     .manila-tab:not(.active):hover {
       background: var(--bg-input);
@@ -280,16 +284,18 @@
       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       pointer-events: none;
     }
-    /* Dynamic NPC sub-tab — smaller than main tabs */
+    /* Dynamic NPC sub-tab — shorter, smaller, overlaps Persons of Interest */
     .manila-tab-npc {
       min-width: auto;
-      padding: 0.5rem 1.2rem 0.45rem;
-      font-size: 0.68rem;
+      padding: 0.35rem 1.3rem 0.35rem;
+      font-size: 0.6rem;
       letter-spacing: 0.04em;
-      border-left: 2px solid rgba(212,160,80,0.25);
+      margin-left: -18px;
+      z-index: 1;
+      border-left: none;
     }
     .manila-tab-npc.active {
-      border-left-color: var(--gold);
+      z-index: 3;
     }
     /* Utility: hide icon buttons */
     .hidden-icon { display: none !important; }
@@ -2130,6 +2136,7 @@
     @media (max-width: 768px) {
       .manila-tabs { padding: 0 0.75rem; padding-top: 0.5rem; }
       .manila-tab { min-width: auto; font-size: 0.65rem; padding: 0.55rem 0.7rem 0.45rem; }
+      .manila-tab-npc { padding: 0.3rem 0.6rem 0.3rem; font-size: 0.52rem; margin-left: -12px; }
       .manila-tab-icon { padding: 0.55rem 0.7rem; }
       .gauge-icon { width: 64px; height: 64px; }
       .portrait-nameplate-row { gap: 0.5rem; }
@@ -2247,6 +2254,10 @@
     .string-board-card:hover {
       border-color: var(--gold);
       box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .string-board-card.selected {
+      border-color: #e74c3c;
+      box-shadow: 0 0 14px rgba(231,76,60,0.45), 0 4px 16px rgba(0,0,0,0.4);
     }
     .string-board-card.dragging {
       opacity: 0.85;
