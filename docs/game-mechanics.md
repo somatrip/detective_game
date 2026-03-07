@@ -12,44 +12,50 @@ Everything a new team member needs to understand how Echoes in the Atrium works 
 4. [Interrogation Engine](#interrogation-engine)
 5. [Turn Classification](#turn-classification)
 6. [Evidence & Discovery System](#evidence--discovery-system)
-7. [NPC Prompt Architecture](#npc-prompt-architecture)
-8. [Arrest & Endgame Grading](#arrest--endgame-grading)
-9. [Voice I/O](#voice-io)
-10. [NPC Portraits & Expressions](#npc-portraits--expressions)
-11. [Hint System](#hint-system)
-12. [Player Notes](#player-notes)
-13. [Save System](#save-system)
-14. [Internationalization (i18n)](#internationalization-i18n)
-15. [Keycard Log Viewer](#keycard-log-viewer)
-16. [Tutorial System](#tutorial-system)
-17. [Analytics & Tracking](#analytics--tracking)
-18. [API Endpoints](#api-endpoints)
-19. [Configuration](#configuration)
-20. [Deployment](#deployment)
+7. [Secret Gates](#secret-gates)
+8. [Detective's Intuition](#detectives-intuition)
+9. [NPC Prompt Architecture](#npc-prompt-architecture)
+10. [Arrest & Endgame Grading](#arrest--endgame-grading)
+11. [String Board](#string-board)
+12. [Voice I/O](#voice-io)
+13. [NPC Portraits & Expressions](#npc-portraits--expressions)
+14. [Hint System](#hint-system)
+15. [Player Notes](#player-notes)
+16. [Save System](#save-system)
+17. [Internationalization (i18n)](#internationalization-i18n)
+18. [Keycard Log Viewer](#keycard-log-viewer)
+19. [Tutorial System](#tutorial-system)
+20. [Analytics & Tracking](#analytics--tracking)
+21. [API Endpoints](#api-endpoints)
+22. [Configuration](#configuration)
+23. [Deployment](#deployment)
 
 ---
 
 ## Architecture Overview
 
-The game is a single-page web application backed by a FastAPI server. The frontend is one monolithic HTML file (`web/index.html`, ~5000 lines) containing all CSS, HTML, and JavaScript. The server brokers communication between the browser and an LLM provider.
+The game is a single-page web application backed by a FastAPI server. The frontend consists of `web/index.html` (structure), `web/css/main.css` (styles), and `web/js/main.js` (all game logic). The server brokers communication between the browser and an LLM provider.
 
 ```
-Browser (web/index.html)
+Browser
+  ├── web/index.html           — Page structure (single-screen layout)
+  ├── web/css/main.css         — All styles
+  ├── web/js/main.js           — All game logic, state, UI
   ├── Loads case.js + i18n-*.js at startup
   ├── Manages all UI state in-memory
   └── Calls server API for chat, voice, auth, saves
 
 Server (FastAPI)
-  ├── server/app.py          — Main app, routes, chat pipeline
-  ├── server/interrogation.py — Deterministic pressure/rapport engine
-  ├── server/llm/             — LLM provider abstraction
-  │   ├── factory.py          — Provider factory
-  │   ├── classifier.py       — Turn classification + discovery detection
-  │   ├── openai_client.py    — OpenAI implementation
-  │   ├── anthropic_client.py — Anthropic implementation
-  │   └── local_stub.py       — Echo bot for offline testing
-  ├── server/cases/           — Case data packages (Python)
-  ├── server/auth_routes.py   — Supabase auth + cloud saves
+  ├── server/app.py            — Main app, routes, chat pipeline
+  ├── server/interrogation.py  — Deterministic pressure/rapport engine + gates + intuition
+  ├── server/llm/              — LLM provider abstraction
+  │   ├── factory.py           — Provider factory
+  │   ├── classifier.py        — Turn classification + discovery detection
+  │   ├── openai_client.py     — OpenAI implementation
+  │   ├── anthropic_client.py  — Anthropic implementation
+  │   └── local_stub.py        — Echo bot for offline testing
+  ├── server/cases/            — Case data packages (Python)
+  ├── server/auth_routes.py    — Supabase auth + cloud saves
   └── server/tracking_routes.py — Gameplay analytics
 ```
 
@@ -65,24 +71,41 @@ Server (FastAPI)
 ## Game Flow
 
 ```
-Title Card → Hub Screen → Chat Screen → Arrest → Outcome
+Title Card → Hub (single screen, tab navigation) → Arrest → Outcome
 ```
 
 1. **Title Card** — shown once per session. After dismissal, goes straight to the Hub on revisit.
-2. **Hub Screen** — grid of NPC portraits (manila folder tabs for Case Board, Dossier, Notes, Settings). Player selects an NPC to interrogate.
-3. **Chat Screen** — full-screen interrogation view with text input, pressure/rapport gauges, portrait, and voice controls.
+2. **Hub Screen** — a single unified screen with manila folder tab navigation. All panels live under one `#hub-screen` container:
+   - **Persons of Interest** — NPC portrait grid. Click an NPC to start interrogation.
+   - **Case Board** — evidence board, case briefing, keycard logs.
+   - **Notes** — free-form investigation notepad.
+   - **String Board** — deduction board with draggable cards and string connections.
+   - **Chat** (dynamic) — interrogation view, activated when an NPC is selected.
+3. **Chat** — when the player clicks an NPC, a dynamic sub-tab with the NPC's name appears in the tab bar and the chat panel activates. The player can switch to Case Board, Notes, or String Board mid-chat without losing context — the NPC tab persists until the player returns to Persons of Interest.
 4. **Arrest** — triggered when all canonical evidence types are collected. Player picks a suspect. A modal confirms the accusation.
 5. **Outcome** — graded result (slam dunk / plea deal / released) based on which culprit-specific discoveries were found.
 
-### Screen Transitions
+### Unified Tab Navigation
 
-The Hub and Chat screens toggle via CSS `.active` class. The title card is a fixed overlay dismissed with a fade-out animation. The outcome screen overlays everything.
+There is no separate "chat screen" — everything is a tab within the hub. The `activateTab(tabName)` function handles all panel switching:
+
+- Deactivates all tabs and panels, then activates the requested one.
+- Triggers side effects per tab (e.g., `renderStringBoard()` for String Board, `renderEvidence()` for Case Board).
+- Shows/hides the audio toggle (only visible during chat).
+
+When an NPC is selected, `addNpcTab(npcId)` dynamically injects a smaller sub-tab next to "Persons of Interest". This sub-tab:
+- Is shorter and smaller-font than main tabs (`.manila-tab-npc` class)
+- Slightly overlaps the preceding tab for visual hierarchy
+- Points to the chat panel (`data-hub-tab="chat"`)
+- Is removed by `removeNpcTab()` when the player returns to the suspect grid
+
+Clicking "Persons of Interest" while chatting calls `leaveChat()`, removes the NPC tab, and shows the suspect grid.
 
 ---
 
 ## Chat Pipeline
 
-Every player message goes through a 5-step server pipeline:
+Every player message goes through a multi-step server pipeline:
 
 ### Step 1 — Classify Player Turn (Secondary LLM)
 
@@ -130,9 +153,23 @@ Returns:
 - **expression** — NPC's emotional state (`neutral`, `guarded`, `distressed`, `angry`, `contemplative`, `smirking`)
 - **discovery_summaries** — LLM-generated 1-sentence summaries of what was revealed
 
+### Step 5b — Mechanical Gate Enforcement (Deterministic)
+
+Before accepting discovered secrets, each discovery is checked against **secret gates** (see [Secret Gates](#secret-gates)). A gate defines conditions (pressure threshold, rapport threshold, required evidence/discoveries) that must be met before a secret can be revealed.
+
+- **No gate defined** → discovery passes unconditionally.
+- **Gate conditions met** → discovery is accepted and returned to the client.
+- **Gate conditions not met** → discovery is blocked. The NPC said something close, but the game withholds the discovery. Blocked discoveries are tracked separately and can trigger a Detective's Intuition line.
+
+### Step 5c — Detective's Intuition (Optional LLM)
+
+If this turn was significant (see [Detective's Intuition](#detectives-intuition)), a short noir-flavored internal monologue line is generated. The NPC's response is also checked for an `[INTUITION]` tag injected by prompt engineering — if found, it's extracted and stripped from the visible response.
+
+The intuition line is returned in the `intuition_line` field of the response.
+
 ### Response to Client
 
-All results are bundled into a `ChatResponse` and returned. The frontend updates conversation history, pressure/rapport gauges, portrait expression, evidence board, and fires discovery toasts.
+All results are bundled into a `ChatResponse` and returned. The frontend updates conversation history, pressure/rapport gauges, portrait expression, evidence board, fires discovery toasts, and optionally appends a Detective's Intuition message bubble.
 
 ---
 
@@ -295,6 +332,104 @@ The classifier generates a 1-sentence summary of what the NPC actually revealed.
 
 ---
 
+## Secret Gates
+
+A mechanical system that prevents NPCs from revealing certain secrets until the player has earned them through gameplay. Located in `server/interrogation.py` and configured in `server/cases/echoes_in_the_atrium/evidence.py`.
+
+### How Gates Work
+
+Each gated discovery has a list of **condition sets** (OR logic between sets, AND logic within a set):
+
+```python
+DISCOVERY_GATES = {
+    "noah-embezzlement": [
+        {"min_pressure": 70},                                      # Condition 1 (OR)
+        {"requires_evidence": ["financial-misconduct"]},           # Condition 2 (OR)
+        {"requires_evidence": ["encrypted-schedule"], "min_pressure": 35},  # Condition 3 (OR)
+    ],
+}
+```
+
+The gate opens if **any single condition set** is fully satisfied. Within a condition set, **all requirements** must be met.
+
+### Condition Types
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `min_pressure` | int (0–100) | Current pressure must be ≥ this value |
+| `min_rapport` | int (0–100) | Current rapport must be ≥ this value |
+| `requires_evidence` | list[str] | Player must have collected all listed evidence types |
+| `requires_discovery` | list[str] | Player must have already unlocked all listed discoveries |
+
+### Gate Enforcement
+
+In Step 5b of the chat pipeline (`_check_gate()` in `server/interrogation.py`):
+
+1. The classifier detects discoveries in the NPC's response.
+2. Each discovery is checked against `DISCOVERY_GATES`.
+3. If no gate exists → discovery passes unconditionally.
+4. If gate conditions are met → discovery accepted.
+5. If gate conditions are NOT met → discovery blocked. Added to `blocked_discovery_ids`.
+
+Blocked discoveries are invisible to the player but can trigger a Detective's Intuition line ("You sense there's more to pull on here...").
+
+### Locked Secret Prompts
+
+To prevent the LLM from revealing gated secrets even without being asked, `get_locked_secret_descriptions()` injects behavioral guidance into the NPC's system prompt. Each gated discovery has a corresponding `LOCKED_SECRET_DESCRIPTIONS` entry:
+
+```python
+LOCKED_SECRET_DESCRIPTIONS = {
+    "noah-murder": (
+        "Do NOT confess to or hint at killing Mercer. If the detective accuses "
+        "you directly, deny it or demand a lawyer. You will only break when the "
+        "detective has proven your motive, opportunity, and access — and then "
+        "applies real pressure."
+    ),
+}
+```
+
+These instructions are removed from the prompt once the gate conditions are met.
+
+---
+
+## Detective's Intuition
+
+A noir-flavored internal monologue system that gives the player subtle feedback on significant interrogation moments. Appears as a styled message bubble in the chat.
+
+### Trigger Conditions
+
+`should_show_intuition()` in `server/interrogation.py` returns true when **any** of these occur:
+
+1. **Band transition** — pressure or rapport crossed a band boundary (e.g., calm → tense)
+2. **Strong evidence** — player presented `strong` or `smoking_gun` evidence
+3. **Discovery registered** — a new secret was revealed this turn
+4. **Gated discovery blocked** — the NPC almost revealed something but the gate held
+5. **High-impact tactic** — player used `direct_accusation` or `point_out_contradiction`
+
+### Generation
+
+Two methods are used, with the best result selected:
+
+1. **Injection method** — an `[INTUITION]` prompt is appended to the NPC's system prompt asking the LLM to write a detective thought after its in-character response. The `_extract_intuition()` function strips this tag from the visible NPC reply.
+
+2. **Dedicated LLM call** — a separate call to the primary LLM with a focused system prompt:
+   > "You are the inner voice of a noir detective. Write ONE brief sentence (max 15 words) about what just happened."
+
+   The user message provides context: NPC name, archetype, recent discoveries, blocked discoveries, and recent conversation excerpt.
+
+### Frontend Display
+
+Intuition messages are rendered as a styled `.msg.intuition` bubble:
+- Left-aligned, max 78% width
+- Dark gradient background with gold left-border accent
+- Dimmed opacity (0.75) for a "thought" appearance
+- Header: "✧ A Detective's Intuition"
+- Content in italics
+- Fade-in animation
+- Only shown for suspect chats (not for the partner NPC Lila)
+
+---
+
 ## NPC Prompt Architecture
 
 Each NPC receives a layered system prompt:
@@ -333,6 +468,8 @@ Generated fresh each turn by `build_interrogation_context()`:
 - Behavioral guidance matching the current state
 - Special rules for smoking-gun or strong evidence
 - High-rapport helpfulness instructions
+- **Locked secret instructions** — injected by `get_locked_secret_descriptions()` for any gated discoveries whose conditions are not yet met (see [Secret Gates](#secret-gates))
+- **Intuition injection** — when the turn triggers intuition, an `[INTUITION]` prompt is appended asking the NPC to include a detective thought line (see [Detective's Intuition](#detectives-intuition))
 
 ### Layer 5 — Language (Serbian only)
 
@@ -372,6 +509,81 @@ Three outcomes:
 - **Released** — insufficient evidence against the true culprit (even if they guessed correctly)
 
 The outcome screen displays a themed result with the player's grade and collected evidence summary.
+
+---
+
+## String Board
+
+An interactive deduction board where the player can visually organize suspects and evidence, drag cards around, and draw string connections between related items. Inspired by classic detective "crazy wall" corkboards.
+
+### Data Structure
+
+```javascript
+let stringBoard = {
+  cardPositions: {},  // cardId → {x, y}
+  links: [],          // [{from, to}] — undirected connections
+};
+```
+
+Card IDs use a prefix format: `"suspect:amelia-reyes"` for suspects, raw evidence IDs for evidence (e.g., `"burned-notebook"`).
+
+### Cards
+
+Two types of cards are rendered:
+
+- **Suspect cards** — one per suspect. Shows portrait image, display name, and a pin circle at the top. Card ID: `"suspect:{npc-id}"`.
+- **Evidence cards** — one per collected evidence type. Shows evidence label and linked discovery sub-bullets. Card ID: evidence type ID.
+
+Cards are positioned absolutely within a large board container. Default layout places suspects in a 4-column grid with evidence below.
+
+### Pin Circles & Click-to-Select
+
+Each card has a `.string-board-pin` circle at the top (gold dot). Both the pin **and the card body** can be clicked to select:
+
+1. **First click** — selects the card for linking. The card gets a red border glow (`.selected` class) and the pin turns red (`.active` class).
+2. **Click a different card** — toggles a string connection between the two cards, then deselects both.
+3. **Click the same card** — deselects it.
+4. **Click empty board area** — cancels selection.
+
+Card clicks are distinguished from drags via a 5px movement threshold — if the pointer moves less than 5px between pointerdown and pointerup, it's treated as a click.
+
+### String Connections
+
+`sbToggleLink(fromId, toId)` adds or removes a link. Links are undirected — `{from: A, to: B}` is the same as `{from: B, to: A}`.
+
+Links are rendered as red SVG quadratic bezier curves with 30px sag. Each link line has a click handler for deletion (removes the link on click).
+
+### Drag & Drop
+
+Cards can be dragged to reposition them. The `initStringBoard()` function handles pointer events:
+- `pointerdown` on a card starts drag tracking
+- `pointermove` updates card position in real-time using board-local coordinates via `sbClientToBoard()`
+- `pointerup` saves the new position to `stringBoard.cardPositions` and redraws links
+
+### Pan & Zoom
+
+The board supports viewport navigation:
+
+- **Pan** — drag on empty board area. Tracked via `sbPan` offset applied as CSS `translate()`.
+- **Zoom** — scroll wheel (±0.1 per tick) or +/- buttons (±0.15). Range: 0.3× to 2.0×. Zooms toward cursor position. Applied as CSS `scale()`.
+- **Transform** — `sbApplyTransform()` sets `transform: translate(${sbPan.x}px, ${sbPan.y}px) scale(${sbZoom})` on the inner container.
+
+### Auto-Positioning
+
+`sbEnsurePositions()` runs on every render and places any cards that don't yet have a position:
+- Suspects: 4 columns × N rows, 200px horizontal / 180px vertical spacing
+- Evidence: positioned below suspects using `sbFindOpenSlot()` which scans a 6×20 grid for the first unoccupied slot
+
+### State Persistence
+
+String board state is saved both locally (via `saveState()` to localStorage) and to the server:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/state/stringboard` | POST | Save card positions and links |
+| `/api/state/stringboard` | GET | Load saved state |
+
+Saves are **debounced** — `sbScheduleSave()` waits 2 seconds after the last change before POSTing. On load, `sbLoadFromServer()` compares server state with local state and uses whichever has more card positions.
 
 ---
 
@@ -454,7 +666,7 @@ The first time a player visits Lila's chat, a tutorial highlights the hint butto
 
 ## Player Notes
 
-A simple textarea in the Hub's "Notes" tab where the player can type free-form investigation notes. Notes are:
+A simple textarea in the Hub's "Notes" tab (`#hub-notes` panel) where the player can type free-form investigation notes. Accessible from any tab including mid-interrogation (the NPC chat persists when switching tabs). Notes are:
 - Stored in the `playerNotes` variable
 - Persisted to `localStorage` and cloud saves as part of game state
 - Restored on page load
@@ -472,8 +684,12 @@ Every state change calls `saveState()` which writes a JSON blob to `localStorage
 conversations, evidence, discoveries, npcInterrogation,
 discoveryMessageIndices, playerNotes, activeNpcId,
 caseReadyPromptShown, lilaHintSeen, audioEnabled,
-language, gameId, savedAt
+language, gameId, savedAt, stringBoard
 ```
+
+### String Board State (Server-Side)
+
+String board positions and links are additionally saved to a dedicated server endpoint (`/api/state/stringboard`), debounced at 2 seconds. On load, the client compares server vs. local state and uses the richer one.
 
 ### Cloud Saves (Supabase)
 
@@ -613,9 +829,11 @@ The frontend sends these via `fetch()` with no error handling (fire-and-forget).
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/npcs` | GET | List available NPCs (id, name, voice) |
-| `/api/chat` | POST | Full chat pipeline (classify → deltas → context → LLM → detect) |
+| `/api/chat` | POST | Full chat pipeline (classify → deltas → context → gates → intuition → LLM → detect) |
 | `/api/transcribe` | POST | Speech-to-text via Whisper |
 | `/api/speak` | POST | Text-to-speech via gpt-4o-mini-tts |
+| `/api/state/stringboard` | POST | Save string board state (card positions + links) |
+| `/api/state/stringboard` | GET | Load string board state |
 | `/health` | GET | Health check (returns LLM provider) |
 
 ### Chat Request Schema
@@ -652,7 +870,8 @@ The frontend sends these via `fetch()` with no error handling (fire-and-forget).
   "rapport_band": "cold",
   "tactic_type": "present_evidence",
   "evidence_strength": "strong",
-  "peak_pressure": 35
+  "peak_pressure": 35,
+  "intuition_line": "She's rattled — the breaker room detail hit close to home."
 }
 ```
 
