@@ -2941,6 +2941,7 @@
   const HUB_STEPS = [
     { selector: '.manila-tab[data-hub-tab="caseboard"]', text: "tutorial.step_caseboard", arrow: "top" },
     { selector: '#cb-briefing-toggle', text: "tutorial.step_briefing", arrow: "top" },
+    { selector: '.manila-tab[data-hub-tab="stringboard"]', text: "tutorial.step_stringboard", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top", clickToAdvance: true },
     { selector: `.npc-card[data-npc-id="${PARTNER_NPC_ID}"]`, text: "tutorial.step_partner", arrow: "top", beforeShow() {
       // Ensure suspects tab is active (user just clicked it in the previous step)
@@ -3169,12 +3170,12 @@
       const alreadyOnSuspects = suspPanel && suspPanel.classList.contains("active");
 
       if (!alreadyOnSuspects && suspectsTab) {
-        // Resume from the Lila step (index 3) when user clicks suspects tab
+        // Resume from the Lila step (index 4) when user clicks suspects tab
         const resumeFromLila = () => {
           tutorialPhase = "hub";
           tutorialSteps = HUB_STEPS;
-          tutorialCurrentStep = 3; // Lila partner step
-          showTutorialStep(3);
+          tutorialCurrentStep = 4; // Lila partner step
+          showTutorialStep(4);
         };
         suspectsTab.addEventListener("click", () => {
           setTimeout(resumeFromLila, 350);
