@@ -68,7 +68,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
     "amelia-key-loan": {
         "npc_id": "amelia-reyes",
         "evidence_id": "key-trail",
-        "description": "Amelia admits she lent her maintenance-room key and engineering keycard to Eddie Voss",
+        "description": "Amelia admits she lent her lanyard (which holds her maintenance-room key and engineering keycard) to Eddie Voss",
     },
     "amelia-breaker": {
         "npc_id": "amelia-reyes",
