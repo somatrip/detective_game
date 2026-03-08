@@ -33,6 +33,7 @@ class CaseData:
     evidence_catalog: Dict[str, str]       # evidence_id → description
     discovery_catalog: Dict[str, Dict[str, Any]]  # discovery_id → {npc_id, evidence_id, description}
     discovery_gates: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)  # discovery_id → list of gate conditions
+    intuition_prompt: str | None = None  # per-case system prompt for detective intuition; None disables intuition
 
     def validate(self) -> None:
         """Check referential integrity across all case data maps.

@@ -382,75 +382,47 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     evidence_ids = list({case.discovery_catalog[d]["evidence_id"] for d in discovery_ids})
 
     # ── Step 5c: Generate intuition line if triggers are met ─────────────
-    # Full trigger check now that discoveries & blocked discoveries are known.
-    _should_intuit = should_show_intuition(
-        tactic_type=tactic_type,
+    _should_intuit, moment_type = should_show_intuition(
+        npc_id=request.npc_id,
         evidence_strength=evidence_strength,
-        old_pressure_band=old_p_band,
-        new_pressure_band=interrogation_result["pressure_band"],
-        old_rapport_band=old_r_band,
-        new_rapport_band=interrogation_result["rapport_band"],
         discovery_ids=discovery_ids,
-        blocked_discovery_ids=blocked_discovery_ids,
+        player_discovery_ids=request.player_discovery_ids,
+        discovery_catalog=case.discovery_catalog,
     )
     intuition_line = None
-    if _should_intuit:
+    if _should_intuit and case.intuition_prompt:
         try:
             npc_name = npc_profile.display_name.split(" — ")[0] if npc_profile.display_name else request.npc_id
 
-            # Build conversation recap for context
+            # Build a short conversation recap (fewer lines for atmospheric)
             convo_lines = []
             for turn in history:
                 speaker = "Detective" if turn.role == "user" else npc_name
                 convo_lines.append(f"{speaker}: {turn.content}")
             convo_lines.append(f"{npc_name}: {clean_reply}")
-            convo_recap = "\n".join(convo_lines[-8:])  # last 8 turns max
 
-            # Summarise case progress
-            known = [
-                case.discovery_catalog[d].get("description", d)
-                for d in request.player_discovery_ids
-                if d in case.discovery_catalog
-            ]
-            just_found = [
-                case.discovery_catalog[d].get("description", d)
-                for d in discovery_ids
-                if d in case.discovery_catalog
-            ]
-            blocked_desc = [
-                case.discovery_catalog[d].get("description", d)
-                for d in blocked_discovery_ids
-                if d in case.discovery_catalog
-            ]
-
-            case_summary = f"Pressure: {interrogation_result['pressure_band']} (was {old_p_band}). "
-            case_summary += f"Rapport: {interrogation_result['rapport_band']} (was {old_r_band})."
-            if known:
-                case_summary += f"\nAlready uncovered: {'; '.join(known[:6])}"
-            if just_found:
-                case_summary += f"\nJust discovered: {'; '.join(just_found)}"
-            if blocked_desc:
-                case_summary += f"\nAlmost discovered (not enough trust/pressure): {'; '.join(blocked_desc)}"
+            if moment_type:
+                # Major moment: NPC name + moment type + last 4 lines
+                convo_recap = "\n".join(convo_lines[-4:])
+                user_content = (
+                    f"Interrogating: {npc_name}\n"
+                    f"moment_type: {moment_type}\n\n"
+                    f"Recent conversation:\n{convo_recap}"
+                )
+            else:
+                # Atmospheric: NPC name + last 2 lines only, no gameplay state
+                convo_recap = "\n".join(convo_lines[-2:])
+                user_content = (
+                    f"Interrogating: {npc_name}\n\n"
+                    f"Recent conversation:\n{convo_recap}"
+                )
 
             intuition_line = await llm.generate(
                 npc_id="intuition",
-                messages=[{
-                    "role": "system",
-                    "content": (
-                        "You are the inner voice of a noir detective. Write ONE brief sentence "
-                        "(max 15 words) — the detective's gut feeling about what just happened. "
-                        "Stay in-world, noir tone. Do not reference game mechanics. "
-                        "Do not use quotation marks. Just the raw thought."
-                    ),
-                }, {
-                    "role": "user",
-                    "content": (
-                        f"Interrogating: {npc_name}\n"
-                        f"Tactic: {tactic_type}. Evidence strength: {evidence_strength}.\n"
-                        f"{case_summary}\n\n"
-                        f"Recent conversation:\n{convo_recap}"
-                    ),
-                }],
+                messages=[
+                    {"role": "system", "content": case.intuition_prompt},
+                    {"role": "user", "content": user_content},
+                ],
             )
             intuition_line = intuition_line.strip().strip('"')
         except Exception:

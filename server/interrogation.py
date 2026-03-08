@@ -458,71 +458,59 @@ def build_interrogation_context(
 
 
 # ---------------------------------------------------------------------------
-# Detective's Intuition — trigger detection & prompt injection
+# Detective's Intuition — trigger detection
 # ---------------------------------------------------------------------------
 
-#: High-impact tactics that trigger intuition lines (and are subject to
-#: consecutive-suppression on the client side).
-HIGH_IMPACT_TACTICS = {"direct_accusation", "point_out_contradiction"}
+_ATMOSPHERIC_CHANCE = 0.15  # ~15% random chance per turn
 
 
 def should_show_intuition(
     *,
-    tactic_type: str,
+    npc_id: str,
     evidence_strength: str,
-    old_pressure_band: str,
-    new_pressure_band: str,
-    old_rapport_band: str,
-    new_rapport_band: str,
     discovery_ids: List[str],
-    blocked_discovery_ids: List[str],
-) -> bool:
-    """Return True when at least one intuition-trigger condition is met.
+    player_discovery_ids: List[str],
+    discovery_catalog: Dict[str, Dict[str, Any]],
+) -> Tuple[bool, str | None]:
+    """Decide whether to show an intuition line and what kind.
 
-    Conditions (OR):
-    - A band transition occurred (pressure or rapport crossed a threshold)
-    - Player presented strong or smoking_gun evidence
-    - A discovery was registered this turn
-    - A gated discovery was blocked this turn
-    - Player used a high-impact tactic (direct_accusation or point_out_contradiction)
+    Returns ``(should_fire, moment_type)`` where *moment_type* is ``None``
+    for atmospheric flavor text, or one of ``"dead_end"``,
+    ``"breakthrough"``, ``"smoking_gun"`` for major-moment nudges.
     """
-    # Band transition
-    if old_pressure_band != new_pressure_band:
-        return True
-    if old_rapport_band != new_rapport_band:
-        return True
+    import random
 
-    # Strong or smoking-gun evidence
-    if evidence_strength in ("strong", "smoking_gun"):
-        return True
+    # --- Major moment triggers (checked first, always shown) ---
 
-    # Discovery registered
+    # Smoking-gun evidence presented
+    if evidence_strength == "smoking_gun":
+        return True, "smoking_gun"
+
+    # First discovery with this NPC (breakthrough)
     if discovery_ids:
-        return True
+        prior_npc_discoveries = {
+            did for did in player_discovery_ids
+            if discovery_catalog.get(did, {}).get("npc_id") == npc_id
+            and did not in discovery_ids  # exclude what was just found
+        }
+        if not prior_npc_discoveries:
+            return True, "breakthrough"
 
-    # Gated discovery blocked
-    if blocked_discovery_ids:
-        return True
+    # All discoveries exhausted for this NPC (dead end)
+    npc_total = {
+        did for did, info in discovery_catalog.items()
+        if info.get("npc_id") == npc_id
+    }
+    if npc_total:
+        player_npc = npc_total & (set(player_discovery_ids) | set(discovery_ids))
+        if player_npc == npc_total:
+            return True, "dead_end"
 
-    # High-impact tactic
-    if tactic_type in HIGH_IMPACT_TACTICS:
-        return True
+    # --- Atmospheric trigger (random, no gameplay signal) ---
+    if random.random() < _ATMOSPHERIC_CHANCE:
+        return True, None
 
-    return False
-
-
-_INTUITION_PROMPT = (
-    "After your in-character response, on a new line starting with "
-    "`[INTUITION]`, write one brief sentence (max 15 words) as the "
-    "detective's internal thought about what just happened — what tactic "
-    "the detective used and how the NPC reacted. Stay in-world, noir tone. "
-    "Do not reference game mechanics."
-)
-
-
-def get_intuition_injection() -> str:
-    """Return the system-prompt paragraph that asks the LLM for an intuition line."""
-    return _INTUITION_PROMPT
+    return False, None
 
 
 __all__ = [
@@ -533,7 +521,5 @@ __all__ = [
     "TurnResult",
     "ARCHETYPES",
     "should_show_intuition",
-    "get_intuition_injection",
     "get_locked_secret_descriptions",
-    "HIGH_IMPACT_TACTICS",
 ]
