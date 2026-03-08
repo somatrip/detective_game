@@ -32,6 +32,7 @@ from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
 from .auth_routes import router as auth_router, state_router
 from .tracking_routes import router as tracking_router, log_chat_event
 from .feedback_routes import router as feedback_router
+from .admin_routes import router as admin_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -94,6 +95,7 @@ app.include_router(auth_router)
 app.include_router(state_router)
 app.include_router(tracking_router)
 app.include_router(feedback_router)
+app.include_router(admin_router)
 
 
 async def _get_llm_client() -> LLMClient:
@@ -576,6 +578,21 @@ async def healthcheck():
     """Simple health endpoint for monitoring."""
 
     return {"status": "ok", "llm_provider": settings.llm_provider}
+
+
+# ── Admin page ───────────────────────────────────────────────────────────
+_ADMIN_DIR = pathlib.Path(__file__).resolve().parent.parent / "web" / "admin"
+
+from fastapi.responses import FileResponse
+
+@app.get("/admin")
+@app.get("/admin/")
+async def admin_page():
+    """Serve the admin SPA."""
+    admin_html = _ADMIN_DIR / "index.html"
+    if not admin_html.is_file():
+        raise HTTPException(status_code=404, detail="Admin page not found")
+    return FileResponse(str(admin_html))
 
 
 # Serve the web frontend as static files (must be mounted last so API routes

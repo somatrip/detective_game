@@ -358,9 +358,12 @@ def get_locked_secret_descriptions(
 ) -> List[str]:
     """Return locked-secret prompt lines for this NPC's unmet gates."""
     from .cases import get_active_case
-    from .cases.echoes_in_the_atrium.evidence import LOCKED_SECRET_DESCRIPTIONS
 
     case = get_active_case()
+
+    # Use CaseData.locked_secret_descriptions (populated from DB or Python module)
+    locked_descs = case.locked_secret_descriptions
+
     locked: List[str] = []
     for discovery_id, gate_conditions in case.discovery_gates.items():
         # Only include gates that belong to this NPC
@@ -369,7 +372,7 @@ def get_locked_secret_descriptions(
         # If the gate is NOT satisfied, the secret is locked
         if not _check_gate(gate_conditions, pressure, rapport,
                            player_evidence, player_discoveries):
-            desc = LOCKED_SECRET_DESCRIPTIONS.get(discovery_id)
+            desc = locked_descs.get(discovery_id)
             if desc:
                 locked.append(desc)
     return locked

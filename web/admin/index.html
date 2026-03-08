@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detective Game — Admin</title>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-input: #0f3460;
+  --accent: #e94560;
+  --accent-dim: #a83279;
+  --text: #eee;
+  --text-dim: #999;
+  --border: #333;
+  --success: #4ade80;
+  --warning: #fbbf24;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+.sidebar {
+  width: 280px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Sidebar */
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.sidebar-section { padding: 12px 0; }
+.sidebar-section-title {
+  padding: 4px 20px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.sidebar-item {
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+}
+.sidebar-item:hover { background: var(--bg-input); }
+.sidebar-item.active { background: var(--bg-input); border-left: 3px solid var(--accent); }
+.sidebar-item .slug { color: var(--text-dim); font-size: 12px; }
+
+/* Login */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+}
+.login-box {
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: 12px;
+  width: 360px;
+}
+.login-box h2 { margin-bottom: 24px; color: var(--accent); }
+.login-box input {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+.login-box button {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.login-box button:hover { opacity: 0.9; }
+.login-error { color: var(--accent); font-size: 13px; margin-top: 8px; }
+
+/* Content panels */
+.panel { display: none; }
+.panel.active { display: block; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.panel-header h2 { font-size: 24px; }
+.panel-header .badge {
+  background: var(--accent-dim);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.card-header h3 { font-size: 16px; }
+.card-actions { display: flex; gap: 8px; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+}
+.form-group textarea.tall { min-height: 300px; }
+
+/* Buttons */
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: #991b1b; color: white; }
+.btn-success { background: #15803d; color: white; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  font-size: 14px;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+th { color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--success);
+  color: #000;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 1000;
+}
+.toast.show { opacity: 1; }
+.toast.error { background: var(--accent); color: white; }
+
+/* Graph */
+#graph-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 400px;
+  position: relative;
+  overflow: hidden;
+}
+.graph-node {
+  position: absolute;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  max-width: 180px;
+  text-align: center;
+}
+.graph-node:hover { border-color: var(--accent); }
+.graph-node .node-label { font-weight: 600; }
+.graph-node .node-npc { color: var(--text-dim); font-size: 11px; }
+
+/* Collapsible */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  user-select: none;
+}
+.collapsible-header::before {
+  content: '\25B6';
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.collapsible-header.open::before { transform: rotate(90deg); }
+.collapsible-body { display: none; padding-bottom: 16px; }
+.collapsible-body.open { display: block; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 220px; }
+  .main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-container">
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <input type="email" id="login-email" placeholder="Email">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app-screen" class="app" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-header">Case Admin</div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Cases</div>
+      <div id="case-list"></div>
+      <div class="sidebar-item" onclick="showNewCase()" style="color:var(--accent);">+ New Case</div>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sidebar-item" onclick="doLogout()" style="color:var(--text-dim); border-top:1px solid var(--border); padding:16px 20px;">
+      Sign Out
+    </div>
+  </aside>
+  <main class="main">
+    <!-- Welcome panel -->
+    <div id="panel-welcome" class="panel active">
+      <h2>Select a case from the sidebar</h2>
+      <p style="color:var(--text-dim); margin-top:8px;">Or create a new one to get started.</p>
+    </div>
+
+    <!-- Case detail panel -->
+    <div id="panel-case" class="panel">
+      <div class="panel-header">
+        <h2 id="case-title"></h2>
+        <span id="case-slug" class="badge"></span>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="overview" onclick="switchTab(this)">Overview</div>
+        <div class="tab" data-tab="npcs" onclick="switchTab(this)">NPCs</div>
+        <div class="tab" data-tab="evidence" onclick="switchTab(this)">Evidence</div>
+        <div class="tab" data-tab="discoveries" onclick="switchTab(this)">Discoveries</div>
+        <div class="tab" data-tab="graph" onclick="switchTab(this)">Dependency Graph</div>
+      </div>
+
+      <!-- Overview tab -->
+      <div id="tab-overview" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3>Case Metadata</h3>
+            <button class="btn btn-primary btn-sm" onclick="saveCaseOverview()">Save</button>
+          </div>
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="case-edit-title">
+          </div>
+          <div class="form-group">
+            <label>Slug</label>
+            <input type="text" id="case-edit-slug">
+          </div>
+          <div class="form-group">
+            <label>Partner NPC Slug</label>
+            <input type="text" id="case-edit-partner">
+          </div>
+          <div class="form-group">
+            <label>Culprit NPC Slug</label>
+            <input type="text" id="case-edit-culprit">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>World Context Prompt</h3>
+            <button class="btn btn-primary btn-sm" onclick="saveCaseOverview()">Save</button>
+          </div>
+          <div class="form-group">
+            <textarea id="case-edit-world" class="tall"></textarea>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Intuition Prompt</h3>
+            <button class="btn btn-primary btn-sm" onclick="saveCaseOverview()">Save</button>
+          </div>
+          <div class="form-group">
+            <textarea id="case-edit-intuition" class="tall"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- NPCs tab -->
+      <div id="tab-npcs" class="tab-content" style="display:none;"></div>
+
+      <!-- Evidence tab -->
+      <div id="tab-evidence" class="tab-content" style="display:none;"></div>
+
+      <!-- Discoveries tab -->
+      <div id="tab-discoveries" class="tab-content" style="display:none;"></div>
+
+      <!-- Graph tab -->
+      <div id="tab-graph" class="tab-content" style="display:none;">
+        <div class="card">
+          <h3 style="margin-bottom:12px;">Discovery Dependency Graph</h3>
+          <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">
+            Arrows show which discoveries must be unlocked before others. Derived from discovery gates.
+          </p>
+          <div id="graph-container" style="min-height:500px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ── State ───────────────────────────────────────────────────────────────
+let token = localStorage.getItem('admin_token');
+let currentCaseId = null;
+let caseData = null;  // full case response from /api/admin/cases/:id
+
+const API = '/api/admin';
+
+// ── Auth ────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password}),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      errEl.textContent = data.detail || 'Login failed';
+      return;
+    }
+    const data = await res.json();
+    token = data.access_token;
+    localStorage.setItem('admin_token', token);
+
+    // Test admin access
+    const testRes = await apiFetch('/cases');
+    if (testRes === null) {
+      errEl.textContent = 'Account does not have admin access';
+      token = null;
+      localStorage.removeItem('admin_token');
+      return;
+    }
+    showApp();
+  } catch (e) {
+    errEl.textContent = 'Network error';
+  }
+}
+
+function doLogout() {
+  token = null;
+  localStorage.removeItem('admin_token');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ── API helpers ─────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(opts.headers || {}),
+    },
+  });
+  if (res.status === 401 || res.status === 403) {
+    doLogout();
+    return null;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    toast(err.detail || 'Request failed', true);
+    return null;
+  }
+  return res.json();
+}
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+
+// ── App init ────────────────────────────────────────────────────────────
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  await loadCaseList();
+}
+
+async function loadCaseList() {
+  const cases = await apiFetch('/cases');
+  if (!cases) return;
+  const container = document.getElementById('case-list');
+  container.innerHTML = cases.map(c => `
+    <div class="sidebar-item ${c.id === currentCaseId ? 'active' : ''}" onclick="selectCase('${c.id}')">
+      ${c.title}
+      <div class="slug">${c.slug}</div>
+    </div>
+  `).join('');
+}
+
+async function selectCase(caseId) {
+  currentCaseId = caseId;
+  caseData = await apiFetch(`/cases/${caseId}`);
+  if (!caseData) return;
+  await loadCaseList();
+  renderCasePanel();
+}
+
+function showNewCase() {
+  const title = prompt('Case title:');
+  if (!title) return;
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  createNewCase(title, slug);
+}
+
+async function createNewCase(title, slug) {
+  const result = await apiFetch('/cases', {
+    method: 'POST',
+    body: JSON.stringify({title, slug}),
+  });
+  if (result) {
+    toast('Case created');
+    await loadCaseList();
+    selectCase(result.id);
+  }
+}
+
+// ── Case panel rendering ────────────────────────────────────────────────
+function renderCasePanel() {
+  const c = caseData.case;
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-case').classList.add('active');
+
+  document.getElementById('case-title').textContent = c.title;
+  document.getElementById('case-slug').textContent = c.slug;
+  document.getElementById('case-edit-title').value = c.title;
+  document.getElementById('case-edit-slug').value = c.slug;
+  document.getElementById('case-edit-partner').value = c.partner_npc_slug || '';
+  document.getElementById('case-edit-culprit').value = c.culprit_npc_slug || '';
+  document.getElementById('case-edit-world').value = c.world_context_prompt || '';
+  document.getElementById('case-edit-intuition').value = c.intuition_prompt || '';
+
+  renderNPCs();
+  renderEvidence();
+  renderDiscoveries();
+}
+
+async function saveCaseOverview() {
+  const data = {
+    title: document.getElementById('case-edit-title').value,
+    slug: document.getElementById('case-edit-slug').value,
+    partner_npc_slug: document.getElementById('case-edit-partner').value,
+    culprit_npc_slug: document.getElementById('case-edit-culprit').value,
+    world_context_prompt: document.getElementById('case-edit-world').value,
+    intuition_prompt: document.getElementById('case-edit-intuition').value,
+  };
+  const result = await apiFetch(`/cases/${currentCaseId}`, {method: 'PUT', body: JSON.stringify(data)});
+  if (result !== null) {
+    toast('Case saved');
+    caseData.case = {...caseData.case, ...data};
+    document.getElementById('case-title').textContent = data.title;
+    document.getElementById('case-slug').textContent = data.slug;
+    loadCaseList();
+  }
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const tabName = el.dataset.tab;
+  document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.style.display = 'block';
+  if (tabName === 'graph') renderGraph();
+}
+
+// ── NPCs ────────────────────────────────────────────────────────────────
+function renderNPCs() {
+  const container = document.getElementById('tab-npcs');
+  const npcs = caseData.npcs || [];
+  container.innerHTML = npcs.map(npc => {
+    const arch = npc.archetypes;
+    return `
+    <div class="card" id="npc-card-${npc.id}">
+      <div class="card-header">
+        <h3>${npc.display_name}</h3>
+        <div class="card-actions">
+          <button class="btn btn-primary btn-sm" onclick="saveNPC('${npc.id}')">Save</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Slug</label>
+          <input type="text" value="${npc.npc_slug}" disabled>
+        </div>
+        <div class="form-group">
+          <label>Voice</label>
+          <input type="text" id="npc-voice-${npc.id}" value="${npc.voice || ''}">
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="npc-gender-${npc.id}">
+            <option value="male" ${npc.gender==='male'?'selected':''}>Male</option>
+            <option value="female" ${npc.gender==='female'?'selected':''}>Female</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Display Name</label>
+        <input type="text" id="npc-name-${npc.id}" value="${esc(npc.display_name)}">
+      </div>
+      <div class="form-group">
+        <label>Voice Instruction</label>
+        <input type="text" id="npc-voiceinst-${npc.id}" value="${esc(npc.voice_instruction || '')}">
+      </div>
+      <div class="form-group">
+        <label>Archetype: ${arch ? arch.label : 'None'}</label>
+      </div>
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">System Prompt</div>
+      <div class="collapsible-body">
+        <div class="form-group">
+          <textarea id="npc-prompt-${npc.id}" class="tall">${esc(npc.system_prompt)}</textarea>
+        </div>
+      </div>
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">Timeline</div>
+      <div class="collapsible-body">
+        <div class="form-group">
+          <textarea id="npc-timeline-${npc.id}" class="tall">${esc(npc.timeline)}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveNPC(npcId) {
+  const data = {
+    display_name: document.getElementById(`npc-name-${npcId}`).value,
+    voice: document.getElementById(`npc-voice-${npcId}`).value,
+    voice_instruction: document.getElementById(`npc-voiceinst-${npcId}`).value,
+    gender: document.getElementById(`npc-gender-${npcId}`).value,
+    system_prompt: document.getElementById(`npc-prompt-${npcId}`).value,
+    timeline: document.getElementById(`npc-timeline-${npcId}`).value,
+  };
+  const result = await apiFetch(`/npcs/${npcId}`, {method: 'PUT', body: JSON.stringify(data)});
+  if (result !== null) toast('NPC saved');
+}
+
+// ── Evidence ────────────────────────────────────────────────────────────
+function renderEvidence() {
+  const container = document.getElementById('tab-evidence');
+  const evidence = caseData.evidence || [];
+  const groups = {};
+  evidence.forEach(e => {
+    const g = e.evidence_group || 'other';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(e);
+  });
+
+  let html = '';
+  for (const [group, items] of Object.entries(groups)) {
+    html += `<h3 style="margin:16px 0 8px;text-transform:capitalize;">${group}</h3>`;
+    html += items.map(ev => `
+      <div class="card">
+        <div class="card-header">
+          <h3>${ev.evidence_slug}</h3>
+          <button class="btn btn-primary btn-sm" onclick="saveEvidence('${ev.id}')">Save</button>
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <input type="text" id="ev-label-${ev.id}" value="${esc(ev.label)}">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="ev-desc-${ev.id}">${esc(ev.description)}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Group</label>
+          <select id="ev-group-${ev.id}">
+            ${['physical','documentary','testimony','access','motive'].map(g =>
+              `<option value="${g}" ${ev.evidence_group===g?'selected':''}>${g}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+    `).join('');
+  }
+  container.innerHTML = html;
+}
+
+async function saveEvidence(evId) {
+  const data = {
+    label: document.getElementById(`ev-label-${evId}`).value,
+    description: document.getElementById(`ev-desc-${evId}`).value,
+    evidence_group: document.getElementById(`ev-group-${evId}`).value,
+  };
+  const result = await apiFetch(`/evidence/${evId}`, {method: 'PUT', body: JSON.stringify(data)});
+  if (result !== null) toast('Evidence saved');
+}
+
+// ── Discoveries ─────────────────────────────────────────────────────────
+function renderDiscoveries() {
+  const container = document.getElementById('tab-discoveries');
+  const discoveries = caseData.discoveries || [];
+  const gates = caseData.gates || [];
+  const lockedSecrets = caseData.locked_secrets || [];
+
+  // Group by NPC
+  const byNpc = {};
+  discoveries.forEach(d => {
+    const npcName = d.npcs?.display_name || 'Unknown';
+    if (!byNpc[npcName]) byNpc[npcName] = [];
+    byNpc[npcName].push(d);
+  });
+
+  let html = '';
+  for (const [npcName, discs] of Object.entries(byNpc)) {
+    html += `<h3 style="margin:16px 0 8px;">${npcName}</h3>`;
+    html += discs.map(d => {
+      const discGates = gates.filter(g => g.discovery_id === d.id);
+      const lockedSecret = lockedSecrets.find(ls => ls.discovery_id === d.id);
+      const evLabel = d.evidence?.label || d.evidence?.evidence_slug || '';
+
+      return `
+      <div class="card">
+        <div class="card-header">
+          <h3>${d.discovery_slug}</h3>
+          <div class="card-actions">
+            <span class="badge">${evLabel}</span>
+            <button class="btn btn-primary btn-sm" onclick="saveDiscovery('${d.id}')">Save</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description (what NPC must reveal)</label>
+          <textarea id="disc-desc-${d.id}">${esc(d.description)}</textarea>
+        </div>
+        ${discGates.length ? `
+          <div style="margin-top:8px;">
+            <label style="font-size:12px;color:var(--text-dim);text-transform:uppercase;">Gates (OR logic — any condition unlocks)</label>
+            <table>
+              <tr><th>#</th><th>Min Pressure</th><th>Min Rapport</th><th>Req. Evidence</th><th>Req. Discoveries</th></tr>
+              ${discGates.map(g => `
+                <tr>
+                  <td>${g.gate_index}</td>
+                  <td>${g.min_pressure ?? '—'}</td>
+                  <td>${g.min_rapport ?? '—'}</td>
+                  <td>${(g.required_evidence_slugs || []).join(', ') || '—'}</td>
+                  <td>${(g.required_discovery_slugs || []).join(', ') || '—'}</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        ` : ''}
+        ${lockedSecret ? `
+          <div class="collapsible-header" onclick="toggleCollapsible(this)">Locked Secret Prompt</div>
+          <div class="collapsible-body">
+            <div class="form-group">
+              <textarea id="ls-desc-${d.id}">${esc(lockedSecret.description)}</textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveLockedSecret('${d.id}')">Save Locked Secret</button>
+          </div>
+        ` : ''}
+      </div>`;
+    }).join('');
+  }
+  container.innerHTML = html;
+}
+
+async function saveDiscovery(discId) {
+  const data = {
+    description: document.getElementById(`disc-desc-${discId}`).value,
+  };
+  const result = await apiFetch(`/discoveries/${discId}`, {method: 'PUT', body: JSON.stringify(data)});
+  if (result !== null) toast('Discovery saved');
+}
+
+async function saveLockedSecret(discId) {
+  const data = {
+    description: document.getElementById(`ls-desc-${discId}`).value,
+  };
+  const result = await apiFetch(`/discoveries/${discId}/locked-secret`, {method: 'PUT', body: JSON.stringify(data)});
+  if (result !== null) toast('Locked secret saved');
+}
+
+// ── Dependency Graph ────────────────────────────────────────────────────
+async function renderGraph() {
+  const graphData = await apiFetch(`/cases/${currentCaseId}/dependency-graph`);
+  if (!graphData) return;
+
+  const container = document.getElementById('graph-container');
+  const {nodes, edges} = graphData;
+
+  // Group nodes by NPC for layout
+  const npcGroups = {};
+  nodes.forEach(n => {
+    const npc = n.npc_slug || 'unknown';
+    if (!npcGroups[npc]) npcGroups[npc] = [];
+    npcGroups[npc].push(n);
+  });
+
+  // Simple grid layout by NPC column
+  const npcList = Object.keys(npcGroups);
+  const colWidth = Math.max(200, (container.clientWidth || 800) / Math.max(npcList.length, 1));
+  const positions = {};
+
+  npcList.forEach((npc, col) => {
+    npcGroups[npc].forEach((node, row) => {
+      positions[node.id] = {
+        x: col * colWidth + 20,
+        y: row * 80 + 60,
+      };
+    });
+  });
+
+  const maxY = Math.max(400, ...Object.values(positions).map(p => p.y + 80));
+  container.style.height = maxY + 'px';
+
+  // Draw SVG lines
+  let svg = `<svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">`;
+  edges.forEach(e => {
+    const from = positions[e.source];
+    const to = positions[e.target];
+    if (from && to) {
+      svg += `<line x1="${from.x+80}" y1="${from.y+20}" x2="${to.x+80}" y2="${to.y+20}"
+        stroke="var(--accent)" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.6"/>`;
+    }
+  });
+  svg += `<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="var(--accent)" opacity="0.6"/></marker></defs></svg>`;
+
+  // Draw nodes
+  let nodesHtml = svg;
+  npcList.forEach((npc, col) => {
+    nodesHtml += `<div style="position:absolute;top:10px;left:${col*colWidth+20}px;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">${npc}</div>`;
+    npcGroups[npc].forEach(node => {
+      const pos = positions[node.id];
+      nodesHtml += `
+        <div class="graph-node" style="left:${pos.x}px;top:${pos.y}px;" title="${esc(node.description)}">
+          <div class="node-label">${node.slug}</div>
+        </div>`;
+    });
+  });
+  container.innerHTML = nodesHtml;
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleCollapsible(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+
+// ── Init ────────────────────────────────────────────────────────────────
+(async function init() {
+  if (token) {
+    // Validate existing token
+    const result = await apiFetch('/cases');
+    if (result !== null) {
+      showApp();
+      return;
+    }
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>

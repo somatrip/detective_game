@@ -12,6 +12,7 @@ from .evidence import (
     DISCOVERY_CATALOG,
     DISCOVERY_GATES,
     EVIDENCE_CATALOG_DESCRIPTIONS,
+    LOCKED_SECRET_DESCRIPTIONS,
     NPC_RELEVANT_EVIDENCE,
     SMOKING_GUN_MAP,
 )
@@ -62,5 +63,6 @@ case_data = CaseData(
     evidence_catalog=EVIDENCE_CATALOG_DESCRIPTIONS,
     discovery_catalog=DISCOVERY_CATALOG,
     discovery_gates=DISCOVERY_GATES,
+    locked_secret_descriptions=LOCKED_SECRET_DESCRIPTIONS,
     intuition_prompt=INTUITION_PROMPT,
 )
