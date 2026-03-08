@@ -29,7 +29,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ECHO_OPENAI_API_KEY", "OPENAI_API_KEY"),
     )
     openai_model: str = Field(
-        default="gpt-3.5-turbo",
+        default="gpt-4o-mini",
         description="Chat model name to use for OpenAI completions.",
     )
     openai_tts_model: str = Field(
