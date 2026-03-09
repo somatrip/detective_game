@@ -501,9 +501,9 @@ async function loadCaseList() {
   if (!cases) return;
   const container = document.getElementById('case-list');
   container.innerHTML = cases.map(c => `
-    <div class="sidebar-item ${c.id === currentCaseId ? 'active' : ''}" onclick="selectCase('${c.id}')">
-      ${c.title}
-      <div class="slug">${c.slug}</div>
+    <div class="sidebar-item ${c.id === currentCaseId ? 'active' : ''}" onclick="selectCase('${esc(c.id)}')">
+      ${esc(c.title)}
+      <div class="slug">${esc(c.slug)}</div>
     </div>
   `).join('');
 }
@@ -595,7 +595,7 @@ function renderNPCs() {
     return `
     <div class="card" id="npc-card-${npc.id}">
       <div class="card-header">
-        <h3>${npc.display_name}</h3>
+        <h3>${esc(npc.display_name)}</h3>
         <div class="card-actions">
           <button class="btn btn-primary btn-sm" onclick="saveNPC('${npc.id}')">Save</button>
         </div>
@@ -603,11 +603,11 @@ function renderNPCs() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div class="form-group">
           <label>Slug</label>
-          <input type="text" value="${npc.npc_slug}" disabled>
+          <input type="text" value="${esc(npc.npc_slug)}" disabled>
         </div>
         <div class="form-group">
           <label>Voice</label>
-          <input type="text" id="npc-voice-${npc.id}" value="${npc.voice || ''}">
+          <input type="text" id="npc-voice-${npc.id}" value="${esc(npc.voice || '')}">
         </div>
         <div class="form-group">
           <label>Gender</label>
@@ -670,11 +670,11 @@ function renderEvidence() {
 
   let html = '';
   for (const [group, items] of Object.entries(groups)) {
-    html += `<h3 style="margin:16px 0 8px;text-transform:capitalize;">${group}</h3>`;
+    html += `<h3 style="margin:16px 0 8px;text-transform:capitalize;">${esc(group)}</h3>`;
     html += items.map(ev => `
       <div class="card">
         <div class="card-header">
-          <h3>${ev.evidence_slug}</h3>
+          <h3>${esc(ev.evidence_slug)}</h3>
           <button class="btn btn-primary btn-sm" onclick="saveEvidence('${ev.id}')">Save</button>
         </div>
         <div class="form-group">
@@ -726,7 +726,7 @@ function renderDiscoveries() {
 
   let html = '';
   for (const [npcName, discs] of Object.entries(byNpc)) {
-    html += `<h3 style="margin:16px 0 8px;">${npcName}</h3>`;
+    html += `<h3 style="margin:16px 0 8px;">${esc(npcName)}</h3>`;
     html += discs.map(d => {
       const discGates = gates.filter(g => g.discovery_id === d.id);
       const lockedSecret = lockedSecrets.find(ls => ls.discovery_id === d.id);
@@ -735,7 +735,7 @@ function renderDiscoveries() {
       return `
       <div class="card">
         <div class="card-header">
-          <h3>${d.discovery_slug}</h3>
+          <h3>${esc(d.discovery_slug)}</h3>
           <div class="card-actions">
             <span class="badge">${evLabel}</span>
             <button class="btn btn-primary btn-sm" onclick="saveDiscovery('${d.id}')">Save</button>
@@ -851,12 +851,12 @@ async function renderGraph() {
   let nodesHtml = '';
   npcList.forEach((npc, col) => {
     const x = col * (colWidth + colGap) + leftPad;
-    nodesHtml += `<div style="position:absolute;top:10px;left:${x}px;width:${colWidth}px;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${npc}</div>`;
+    nodesHtml += `<div style="position:absolute;top:10px;left:${x}px;width:${colWidth}px;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(npc)}</div>`;
     npcGroups[npc].forEach(node => {
       const pos = positions[node.id];
       nodesHtml += `
         <div class="graph-node" style="left:${pos.x}px;top:${pos.y}px;width:${colWidth}px;" title="${esc(node.description)}">
-          <div class="node-label">${node.slug}</div>
+          <div class="node-label">${esc(node.slug)}</div>
         </div>`;
     });
   });

@@ -127,6 +127,9 @@ CREATE TABLE IF NOT EXISTS npc_evidence_relevance (
 
 -- ============================================================================
 -- CASE CONFIG (miscellaneous key-value per case)
+-- Reserved for future use: stores keys like "starting_evidence",
+-- "briefing_keys", etc. No admin API routes yet — manage via Supabase
+-- Dashboard or SQL until CRUD endpoints are added.
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS case_config (
@@ -136,6 +139,21 @@ CREATE TABLE IF NOT EXISTS case_config (
     value    jsonb NOT NULL DEFAULT '{}',
     UNIQUE(case_id, key)
 );
+
+-- ============================================================================
+-- INDEXES on foreign key columns (PostgreSQL does not auto-index FK columns)
+-- ============================================================================
+
+CREATE INDEX IF NOT EXISTS idx_npcs_case_id ON npcs(case_id);
+CREATE INDEX IF NOT EXISTS idx_evidence_case_id ON evidence(case_id);
+CREATE INDEX IF NOT EXISTS idx_discoveries_case_id ON discoveries(case_id);
+CREATE INDEX IF NOT EXISTS idx_discoveries_npc_id ON discoveries(npc_id);
+CREATE INDEX IF NOT EXISTS idx_discoveries_evidence_id ON discoveries(evidence_id);
+CREATE INDEX IF NOT EXISTS idx_discovery_gates_discovery_id ON discovery_gates(discovery_id);
+CREATE INDEX IF NOT EXISTS idx_locked_secret_descriptions_discovery_id ON locked_secret_descriptions(discovery_id);
+CREATE INDEX IF NOT EXISTS idx_npc_evidence_relevance_npc_id ON npc_evidence_relevance(npc_id);
+CREATE INDEX IF NOT EXISTS idx_npc_evidence_relevance_evidence_id ON npc_evidence_relevance(evidence_id);
+CREATE INDEX IF NOT EXISTS idx_case_config_case_id ON case_config(case_id);
 
 -- ============================================================================
 -- ROW LEVEL SECURITY

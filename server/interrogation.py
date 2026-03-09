@@ -517,6 +517,7 @@ def should_show_intuition(
 
 
 __all__ = [
+    "_check_gate",
     "process_turn",
     "build_interrogation_context",
     "pressure_band",

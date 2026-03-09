@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -84,6 +85,13 @@ class GateCreate(BaseModel):
     required_evidence_slugs: Optional[List[str]] = None
     required_discovery_slugs: Optional[List[str]] = None
 
+class GateUpdate(BaseModel):
+    gate_index: Optional[int] = None
+    min_pressure: Optional[int] = None
+    min_rapport: Optional[int] = None
+    required_evidence_slugs: Optional[List[str]] = None
+    required_discovery_slugs: Optional[List[str]] = None
+
 class LockedSecretUpdate(BaseModel):
     description: str
 
@@ -108,12 +116,13 @@ async def list_cases(user_id: str = Depends(require_admin)):
     return result.data
 
 @router.get("/cases/{case_id}")
-async def get_case(case_id: str, user_id: str = Depends(require_admin)):
+async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
     sb = _sb()
-    case = sb.table("cases").select("*").eq("id", case_id).single().execute()
-    npcs = sb.table("npcs").select("*, archetypes(name, label)").eq("case_id", case_id).order("sort_order").execute()
-    evidence = sb.table("evidence").select("*").eq("case_id", case_id).order("sort_order").execute()
-    discoveries = sb.table("discoveries").select("*, npcs(npc_slug, display_name), evidence(evidence_slug, label)").eq("case_id", case_id).execute()
+    case = sb.table("cases").select("*").eq("id", str(case_id)).single().execute()
+    cid = str(case_id)
+    npcs = sb.table("npcs").select("*, archetypes(name, label)").eq("case_id", cid).order("sort_order").execute()
+    evidence = sb.table("evidence").select("*").eq("case_id", cid).order("sort_order").execute()
+    discoveries = sb.table("discoveries").select("*, npcs(npc_slug, display_name), evidence(evidence_slug, label)").eq("case_id", cid).execute()
 
     # Fetch gates and locked secrets for all discoveries in this case
     disc_ids = [d["id"] for d in discoveries.data]
@@ -145,122 +154,123 @@ async def create_case(body: CaseCreate, user_id: str = Depends(require_admin)):
     return result.data[0]
 
 @router.put("/cases/{case_id}")
-async def update_case(case_id: str, body: CaseUpdate, user_id: str = Depends(require_admin)):
+async def update_case(case_id: UUID, body: CaseUpdate, user_id: str = Depends(require_admin)):
     data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("cases").update(data).eq("id", case_id).execute()
+    result = _sb().table("cases").update(data).eq("id", str(case_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/cases/{case_id}")
-async def delete_case(case_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("cases").delete().eq("id", case_id).execute()
+async def delete_case(case_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("cases").delete().eq("id", str(case_id)).execute()
     return {"ok": True}
 
 
 # ── NPCs ─────────────────────────────────────────────────────────────────
 
 @router.post("/cases/{case_id}/npcs")
-async def create_npc(case_id: str, body: NPCCreate, user_id: str = Depends(require_admin)):
+async def create_npc(case_id: UUID, body: NPCCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
-    data["case_id"] = case_id
+    data["case_id"] = str(case_id)
     result = _sb().table("npcs").insert(data).execute()
     return result.data[0]
 
 @router.put("/npcs/{npc_id}")
-async def update_npc(npc_id: str, body: NPCUpdate, user_id: str = Depends(require_admin)):
+async def update_npc(npc_id: UUID, body: NPCUpdate, user_id: str = Depends(require_admin)):
     data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("npcs").update(data).eq("id", npc_id).execute()
+    result = _sb().table("npcs").update(data).eq("id", str(npc_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/npcs/{npc_id}")
-async def delete_npc(npc_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("npcs").delete().eq("id", npc_id).execute()
+async def delete_npc(npc_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("npcs").delete().eq("id", str(npc_id)).execute()
     return {"ok": True}
 
 
 # ── Evidence ─────────────────────────────────────────────────────────────
 
 @router.post("/cases/{case_id}/evidence")
-async def create_evidence(case_id: str, body: EvidenceCreate, user_id: str = Depends(require_admin)):
+async def create_evidence(case_id: UUID, body: EvidenceCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
-    data["case_id"] = case_id
+    data["case_id"] = str(case_id)
     result = _sb().table("evidence").insert(data).execute()
     return result.data[0]
 
 @router.put("/evidence/{evidence_id}")
-async def update_evidence(evidence_id: str, body: EvidenceUpdate, user_id: str = Depends(require_admin)):
+async def update_evidence(evidence_id: UUID, body: EvidenceUpdate, user_id: str = Depends(require_admin)):
     data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("evidence").update(data).eq("id", evidence_id).execute()
+    result = _sb().table("evidence").update(data).eq("id", str(evidence_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/evidence/{evidence_id}")
-async def delete_evidence(evidence_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("evidence").delete().eq("id", evidence_id).execute()
+async def delete_evidence(evidence_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("evidence").delete().eq("id", str(evidence_id)).execute()
     return {"ok": True}
 
 
 # ── Discoveries ──────────────────────────────────────────────────────────
 
 @router.post("/cases/{case_id}/discoveries")
-async def create_discovery(case_id: str, body: DiscoveryCreate, user_id: str = Depends(require_admin)):
+async def create_discovery(case_id: UUID, body: DiscoveryCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
-    data["case_id"] = case_id
+    data["case_id"] = str(case_id)
     result = _sb().table("discoveries").insert(data).execute()
     return result.data[0]
 
 @router.put("/discoveries/{discovery_id}")
-async def update_discovery(discovery_id: str, body: DiscoveryUpdate, user_id: str = Depends(require_admin)):
+async def update_discovery(discovery_id: UUID, body: DiscoveryUpdate, user_id: str = Depends(require_admin)):
     data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("discoveries").update(data).eq("id", discovery_id).execute()
+    result = _sb().table("discoveries").update(data).eq("id", str(discovery_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/discoveries/{discovery_id}")
-async def delete_discovery(discovery_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("discoveries").delete().eq("id", discovery_id).execute()
+async def delete_discovery(discovery_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("discoveries").delete().eq("id", str(discovery_id)).execute()
     return {"ok": True}
 
 
 # ── Discovery Gates ──────────────────────────────────────────────────────
 
 @router.post("/discoveries/{discovery_id}/gates")
-async def create_gate(discovery_id: str, body: GateCreate, user_id: str = Depends(require_admin)):
+async def create_gate(discovery_id: UUID, body: GateCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
-    data["discovery_id"] = discovery_id
+    data["discovery_id"] = str(discovery_id)
     result = _sb().table("discovery_gates").insert(data).execute()
     return result.data[0]
 
 @router.put("/gates/{gate_id}")
-async def update_gate(gate_id: str, body: GateCreate, user_id: str = Depends(require_admin)):
+async def update_gate(gate_id: UUID, body: GateUpdate, user_id: str = Depends(require_admin)):
     data = {k: v for k, v in body.model_dump().items() if v is not None}
-    data.pop("discovery_id", None)
-    result = _sb().table("discovery_gates").update(data).eq("id", gate_id).execute()
+    if not data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    result = _sb().table("discovery_gates").update(data).eq("id", str(gate_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/gates/{gate_id}")
-async def delete_gate(gate_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("discovery_gates").delete().eq("id", gate_id).execute()
+async def delete_gate(gate_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("discovery_gates").delete().eq("id", str(gate_id)).execute()
     return {"ok": True}
 
 
 # ── Locked Secret Descriptions ──────────────────────────────────────────
 
 @router.put("/discoveries/{discovery_id}/locked-secret")
-async def upsert_locked_secret(discovery_id: str, body: LockedSecretUpdate, user_id: str = Depends(require_admin)):
+async def upsert_locked_secret(discovery_id: UUID, body: LockedSecretUpdate, user_id: str = Depends(require_admin)):
     sb = _sb()
-    data = {"discovery_id": discovery_id, "description": body.description}
+    data = {"discovery_id": str(discovery_id), "description": body.description}
     result = sb.table("locked_secret_descriptions").upsert(data, on_conflict="discovery_id").execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/discoveries/{discovery_id}/locked-secret")
-async def delete_locked_secret(discovery_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("locked_secret_descriptions").delete().eq("discovery_id", discovery_id).execute()
+async def delete_locked_secret(discovery_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("locked_secret_descriptions").delete().eq("discovery_id", str(discovery_id)).execute()
     return {"ok": True}
 
 
@@ -274,8 +284,8 @@ async def create_relevance(body: RelevanceUpdate, user_id: str = Depends(require
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/relevance/{relevance_id}")
-async def delete_relevance(relevance_id: str, user_id: str = Depends(require_admin)):
-    _sb().table("npc_evidence_relevance").delete().eq("id", relevance_id).execute()
+async def delete_relevance(relevance_id: UUID, user_id: str = Depends(require_admin)):
+    _sb().table("npc_evidence_relevance").delete().eq("id", str(relevance_id)).execute()
     return {"ok": True}
 
 
@@ -290,13 +300,13 @@ async def list_archetypes(user_id: str = Depends(require_admin)):
 # ── Dependency Graph ─────────────────────────────────────────────────────
 
 @router.get("/cases/{case_id}/dependency-graph")
-async def dependency_graph(case_id: str, user_id: str = Depends(require_admin)):
+async def dependency_graph(case_id: UUID, user_id: str = Depends(require_admin)):
     """Return discovery dependency graph as nodes and edges for visualization."""
     sb = _sb()
 
     discoveries = sb.table("discoveries").select(
         "id, discovery_slug, description, npc_id, evidence_id, npcs(npc_slug, display_name)"
-    ).eq("case_id", case_id).execute()
+    ).eq("case_id", str(case_id)).execute()
 
     disc_ids = [d["id"] for d in discoveries.data]
     gates = []

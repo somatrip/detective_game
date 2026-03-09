@@ -18,6 +18,7 @@ from openai import AsyncOpenAI
 from .cases import get_active_case, load_case
 from .config import settings
 from .interrogation import (
+    _check_gate,
     build_interrogation_context,
     pressure_band as _pressure_band,
     rapport_band as _rapport_band,
@@ -149,34 +150,6 @@ def _extract_intuition(text: str) -> tuple[str, str | None]:
     intuition = m.group(1).strip()
     clean = text[:m.start()] + text[m.end():]
     return clean.strip(), intuition
-
-
-def _check_gate(
-    conditions: List[Dict[str, Any]],
-    pressure: int,
-    rapport: int,
-    player_evidence: List[str],
-    player_discoveries: List[str],
-) -> bool:
-    """Return True if ANY condition in the gate is fully satisfied (OR logic).
-
-    Within each condition dict, ALL requirements must be met (AND logic).
-    """
-    for condition in conditions:
-        satisfied = True
-        if "min_pressure" in condition and pressure < condition["min_pressure"]:
-            satisfied = False
-        if "min_rapport" in condition and rapport < condition["min_rapport"]:
-            satisfied = False
-        if "requires_evidence" in condition:
-            if not all(e in player_evidence for e in condition["requires_evidence"]):
-                satisfied = False
-        if "requires_discovery" in condition:
-            if not all(d in player_discoveries for d in condition["requires_discovery"]):
-                satisfied = False
-        if satisfied:
-            return True
-    return False
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────

@@ -1,4 +1,12 @@
-"""Admin authentication middleware for the detective game."""
+"""Admin authentication middleware for the detective game.
+
+NOTE ON AUTH ARCHITECTURE:
+The server-side Supabase client uses the service role key, which bypasses RLS.
+This means the RLS policies in admin_migration.sql are a defense-in-depth layer
+for direct DB access (e.g. Supabase Dashboard, client-side JS), but the primary
+auth gate for the admin API is this middleware (`require_admin`). All admin
+routes depend on this function to validate the user's JWT and check is_admin.
+"""
 
 from __future__ import annotations
 
