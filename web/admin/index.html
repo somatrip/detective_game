@@ -411,7 +411,7 @@ th { color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-
 
 <script>
 // ── State ───────────────────────────────────────────────────────────────
-let token = localStorage.getItem('admin_token');
+let token = sessionStorage.getItem('admin_token');
 let currentCaseId = null;
 let caseData = null;  // full case response from /api/admin/cases/:id
 
@@ -437,14 +437,14 @@ async function doLogin() {
     }
     const data = await res.json();
     token = data.access_token;
-    localStorage.setItem('admin_token', token);
+    sessionStorage.setItem('admin_token', token);
 
     // Test admin access
     const testRes = await apiFetch('/cases');
     if (testRes === null) {
       errEl.textContent = 'Account does not have admin access';
       token = null;
-      localStorage.removeItem('admin_token');
+      sessionStorage.removeItem('admin_token');
       return;
     }
     showApp();
@@ -455,7 +455,7 @@ async function doLogin() {
 
 function doLogout() {
   token = null;
-  localStorage.removeItem('admin_token');
+  sessionStorage.removeItem('admin_token');
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
 }
@@ -867,7 +867,7 @@ async function renderGraph() {
 // ── Helpers ─────────────────────────────────────────────────────────────
 function esc(str) {
   if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function toggleCollapsible(el) {

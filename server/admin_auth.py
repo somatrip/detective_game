@@ -47,7 +47,9 @@ def require_admin(authorization: Optional[str] = Header(default=None)) -> str:
         raise HTTPException(status_code=401, detail="Invalid session")
 
     user = user_resp.user
-    metadata = user.user_metadata or {}
+    # Use app_metadata (server-only) instead of user_metadata (user-writable)
+    # to prevent privilege escalation via supabase.auth.updateUser()
+    metadata = user.app_metadata or {}
     if not metadata.get("is_admin", False):
         raise HTTPException(status_code=403, detail="Admin access required")
 

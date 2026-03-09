@@ -8,7 +8,7 @@ Add an admin interface for reviewing and editing all case content (NPCs, evidenc
 
 - **Architecture**: Server-rendered admin page in FastAPI (vanilla JS, no build step)
 - **Database**: Supabase (already integrated)
-- **Auth**: Role-based via Supabase `is_admin` user metadata
+- **Auth**: Role-based via Supabase `is_admin` in `app_metadata` (server-only, not user-writable)
 - **UI structure**: Case-centric tree view — select case, drill into NPCs/evidence/discoveries
 - **Discovery chain visualization**: Dependency graph derived from discovery gates (DAG)
 - **Localization**: English-only for now; skip i18n management in admin
@@ -154,8 +154,14 @@ This is done via a new `load_case_from_db()` function in `server/cases/__init__.
 1. Create branch `admin`
 2. Write Supabase migration SQL for all tables
 3. Write seed script to populate DB from existing Python modules
-4. Add admin auth middleware (check `is_admin` in user metadata)
+4. Add admin auth middleware (check `is_admin` in `app_metadata`)
 5. Build admin API routes (FastAPI router)
 6. Build admin frontend HTML page
 7. Wire `load_case` to read from DB when available
 8. Test end-to-end
+
+## Future Work (Not Yet Implemented)
+
+- **Gate condition editor** — Currently gates are displayed read-only in the discoveries tab. A future iteration should allow inline editing of gate conditions (min_pressure, min_rapport, required evidence/discovery slugs).
+- **NPC Evidence Relevance matrix** — The API endpoints exist (`POST /relevance`, `DELETE /relevance/:id`) but there is no UI. A matrix or checklist view should be added to the admin frontend.
+- **Delete confirmation in UI** — The API now requires `?confirm=true` for cascade deletes, but the admin UI does not yet expose delete buttons. When added, they should show a confirmation dialog listing what will be cascade-deleted.

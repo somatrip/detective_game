@@ -155,14 +155,20 @@ async def create_case(body: CaseCreate, user_id: str = Depends(require_admin)):
 
 @router.put("/cases/{case_id}")
 async def update_case(case_id: UUID, body: CaseUpdate, user_id: str = Depends(require_admin)):
-    data = {k: v for k, v in body.model_dump().items() if v is not None}
+    data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = _sb().table("cases").update(data).eq("id", str(case_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/cases/{case_id}")
-async def delete_case(case_id: UUID, user_id: str = Depends(require_admin)):
+async def delete_case(case_id: UUID, confirm: bool = False, user_id: str = Depends(require_admin)):
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Deleting a case cascades to all NPCs, evidence, discoveries, gates, and locked secrets. "
+                   "Pass ?confirm=true to proceed.",
+        )
     _sb().table("cases").delete().eq("id", str(case_id)).execute()
     return {"ok": True}
 
@@ -178,14 +184,20 @@ async def create_npc(case_id: UUID, body: NPCCreate, user_id: str = Depends(requ
 
 @router.put("/npcs/{npc_id}")
 async def update_npc(npc_id: UUID, body: NPCUpdate, user_id: str = Depends(require_admin)):
-    data = {k: v for k, v in body.model_dump().items() if v is not None}
+    data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = _sb().table("npcs").update(data).eq("id", str(npc_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/npcs/{npc_id}")
-async def delete_npc(npc_id: UUID, user_id: str = Depends(require_admin)):
+async def delete_npc(npc_id: UUID, confirm: bool = False, user_id: str = Depends(require_admin)):
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Deleting an NPC cascades to its discoveries, gates, and relevance entries. "
+                   "Pass ?confirm=true to proceed.",
+        )
     _sb().table("npcs").delete().eq("id", str(npc_id)).execute()
     return {"ok": True}
 
@@ -201,14 +213,20 @@ async def create_evidence(case_id: UUID, body: EvidenceCreate, user_id: str = De
 
 @router.put("/evidence/{evidence_id}")
 async def update_evidence(evidence_id: UUID, body: EvidenceUpdate, user_id: str = Depends(require_admin)):
-    data = {k: v for k, v in body.model_dump().items() if v is not None}
+    data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = _sb().table("evidence").update(data).eq("id", str(evidence_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/evidence/{evidence_id}")
-async def delete_evidence(evidence_id: UUID, user_id: str = Depends(require_admin)):
+async def delete_evidence(evidence_id: UUID, confirm: bool = False, user_id: str = Depends(require_admin)):
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Deleting evidence cascades to discoveries and relevance entries that reference it. "
+                   "Pass ?confirm=true to proceed.",
+        )
     _sb().table("evidence").delete().eq("id", str(evidence_id)).execute()
     return {"ok": True}
 
@@ -224,14 +242,20 @@ async def create_discovery(case_id: UUID, body: DiscoveryCreate, user_id: str = 
 
 @router.put("/discoveries/{discovery_id}")
 async def update_discovery(discovery_id: UUID, body: DiscoveryUpdate, user_id: str = Depends(require_admin)):
-    data = {k: v for k, v in body.model_dump().items() if v is not None}
+    data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = _sb().table("discoveries").update(data).eq("id", str(discovery_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/discoveries/{discovery_id}")
-async def delete_discovery(discovery_id: UUID, user_id: str = Depends(require_admin)):
+async def delete_discovery(discovery_id: UUID, confirm: bool = False, user_id: str = Depends(require_admin)):
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Deleting a discovery cascades to its gates and locked secret. "
+                   "Pass ?confirm=true to proceed.",
+        )
     _sb().table("discoveries").delete().eq("id", str(discovery_id)).execute()
     return {"ok": True}
 
@@ -247,7 +271,7 @@ async def create_gate(discovery_id: UUID, body: GateCreate, user_id: str = Depen
 
 @router.put("/gates/{gate_id}")
 async def update_gate(gate_id: UUID, body: GateUpdate, user_id: str = Depends(require_admin)):
-    data = {k: v for k, v in body.model_dump().items() if v is not None}
+    data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = _sb().table("discovery_gates").update(data).eq("id", str(gate_id)).execute()

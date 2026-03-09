@@ -162,11 +162,6 @@ def seed():
 
     # ── 6. Discovery gates ───────────────────────────────────────────────
     log.info("Seeding discovery gates...")
-    # Delete existing gates for this case's discoveries to avoid duplicates
-    disc_ids = list(disc_map.values())
-    if disc_ids:
-        sb.table("discovery_gates").delete().in_("discovery_id", disc_ids).execute()
-
     gate_rows = []
     for disc_slug, conditions in DISCOVERY_GATES.items():
         disc_uuid = disc_map.get(disc_slug)
@@ -183,15 +178,13 @@ def seed():
                 "required_discovery_slugs": cond.get("requires_discovery"),
             })
     if gate_rows:
-        sb.table("discovery_gates").insert(gate_rows).execute()
+        sb.table("discovery_gates").upsert(
+            gate_rows, on_conflict="discovery_id,gate_index"
+        ).execute()
     log.info("  %d gate conditions seeded", len(gate_rows))
 
     # ── 7. Locked secret descriptions ────────────────────────────────────
     log.info("Seeding locked secret descriptions...")
-    # Delete existing for this case
-    if disc_ids:
-        sb.table("locked_secret_descriptions").delete().in_("discovery_id", disc_ids).execute()
-
     lsd_rows = []
     for disc_slug, desc in LOCKED_SECRET_DESCRIPTIONS.items():
         disc_uuid = disc_map.get(disc_slug)
@@ -202,15 +195,13 @@ def seed():
             "description": desc,
         })
     if lsd_rows:
-        sb.table("locked_secret_descriptions").insert(lsd_rows).execute()
+        sb.table("locked_secret_descriptions").upsert(
+            lsd_rows, on_conflict="discovery_id"
+        ).execute()
     log.info("  %d locked secret descriptions seeded", len(lsd_rows))
 
     # ── 8. NPC evidence relevance ────────────────────────────────────────
     log.info("Seeding NPC evidence relevance...")
-    npc_ids_list = list(npc_map.values())
-    if npc_ids_list:
-        sb.table("npc_evidence_relevance").delete().in_("npc_id", npc_ids_list).execute()
-
     rel_rows = []
     for npc_slug, ev_slugs in NPC_RELEVANT_EVIDENCE.items():
         npc_uuid = npc_map.get(npc_slug)
@@ -227,7 +218,9 @@ def seed():
                 "is_smoking_gun": ev_slug in smoking_guns,
             })
     if rel_rows:
-        sb.table("npc_evidence_relevance").insert(rel_rows).execute()
+        sb.table("npc_evidence_relevance").upsert(
+            rel_rows, on_conflict="npc_id,evidence_id"
+        ).execute()
     log.info("  %d relevance entries seeded", len(rel_rows))
 
     log.info("Seeding complete!")

@@ -100,7 +100,10 @@ CREATE TABLE IF NOT EXISTS discovery_gates (
     min_pressure             int,
     min_rapport              int,
     required_evidence_slugs  text[],
-    required_discovery_slugs text[]
+    required_discovery_slugs text[],
+    created_at               timestamptz NOT NULL DEFAULT now(),
+    updated_at               timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(discovery_id, gate_index)
 );
 
 -- ============================================================================
@@ -110,7 +113,9 @@ CREATE TABLE IF NOT EXISTS discovery_gates (
 CREATE TABLE IF NOT EXISTS locked_secret_descriptions (
     id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     discovery_id  uuid NOT NULL REFERENCES discoveries(id) ON DELETE CASCADE UNIQUE,
-    description   text NOT NULL DEFAULT ''
+    description   text NOT NULL DEFAULT '',
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now()
 );
 
 -- ============================================================================
@@ -122,6 +127,8 @@ CREATE TABLE IF NOT EXISTS npc_evidence_relevance (
     npc_id        uuid NOT NULL REFERENCES npcs(id) ON DELETE CASCADE,
     evidence_id   uuid NOT NULL REFERENCES evidence(id) ON DELETE CASCADE,
     is_smoking_gun boolean NOT NULL DEFAULT false,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now(),
     UNIQUE(npc_id, evidence_id)
 );
 
@@ -133,10 +140,12 @@ CREATE TABLE IF NOT EXISTS npc_evidence_relevance (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS case_config (
-    id       uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id  uuid NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    key      text NOT NULL,
-    value    jsonb NOT NULL DEFAULT '{}',
+    id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id    uuid NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+    key        text NOT NULL,
+    value      jsonb NOT NULL DEFAULT '{}',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE(case_id, key)
 );
 
@@ -164,7 +173,7 @@ CREATE OR REPLACE FUNCTION is_admin()
 RETURNS boolean AS $$
 BEGIN
     RETURN coalesce(
-        (current_setting('request.jwt.claims', true)::json -> 'user_metadata' ->> 'is_admin')::boolean,
+        (current_setting('request.jwt.claims', true)::json -> 'app_metadata' ->> 'is_admin')::boolean,
         false
     );
 END;
@@ -217,3 +226,7 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON cases FOR EACH ROW EXECUTE FUNCTI
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON npcs FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON evidence FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON discoveries FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON discovery_gates FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON locked_secret_descriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON npc_evidence_relevance FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON case_config FOR EACH ROW EXECUTE FUNCTION update_updated_at();
