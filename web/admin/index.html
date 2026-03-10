@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Detective Game — Admin</title>
 <style>
 :root {
@@ -593,11 +594,11 @@ function renderNPCs() {
   container.innerHTML = npcs.map(npc => {
     const arch = npc.archetypes;
     return `
-    <div class="card" id="npc-card-${npc.id}">
+    <div class="card" id="npc-card-${esc(npc.id)}">
       <div class="card-header">
         <h3>${esc(npc.display_name)}</h3>
         <div class="card-actions">
-          <button class="btn btn-primary btn-sm" onclick="saveNPC('${npc.id}')">Save</button>
+          <button class="btn btn-primary btn-sm" onclick="saveNPC('${esc(npc.id)}')">Save</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
@@ -607,11 +608,11 @@ function renderNPCs() {
         </div>
         <div class="form-group">
           <label>Voice</label>
-          <input type="text" id="npc-voice-${npc.id}" value="${esc(npc.voice || '')}">
+          <input type="text" id="npc-voice-${esc(npc.id)}" value="${esc(npc.voice || '')}">
         </div>
         <div class="form-group">
           <label>Gender</label>
-          <select id="npc-gender-${npc.id}">
+          <select id="npc-gender-${esc(npc.id)}">
             <option value="male" ${npc.gender==='male'?'selected':''}>Male</option>
             <option value="female" ${npc.gender==='female'?'selected':''}>Female</option>
           </select>
@@ -619,25 +620,25 @@ function renderNPCs() {
       </div>
       <div class="form-group">
         <label>Display Name</label>
-        <input type="text" id="npc-name-${npc.id}" value="${esc(npc.display_name)}">
+        <input type="text" id="npc-name-${esc(npc.id)}" value="${esc(npc.display_name)}">
       </div>
       <div class="form-group">
         <label>Voice Instruction</label>
-        <input type="text" id="npc-voiceinst-${npc.id}" value="${esc(npc.voice_instruction || '')}">
+        <input type="text" id="npc-voiceinst-${esc(npc.id)}" value="${esc(npc.voice_instruction || '')}">
       </div>
       <div class="form-group">
-        <label>Archetype: ${arch ? arch.label : 'None'}</label>
+        <label>Archetype: ${esc(arch ? arch.label : 'None')}</label>
       </div>
       <div class="collapsible-header" onclick="toggleCollapsible(this)">System Prompt</div>
       <div class="collapsible-body">
         <div class="form-group">
-          <textarea id="npc-prompt-${npc.id}" class="tall">${esc(npc.system_prompt)}</textarea>
+          <textarea id="npc-prompt-${esc(npc.id)}" class="tall">${esc(npc.system_prompt)}</textarea>
         </div>
       </div>
       <div class="collapsible-header" onclick="toggleCollapsible(this)">Timeline</div>
       <div class="collapsible-body">
         <div class="form-group">
-          <textarea id="npc-timeline-${npc.id}" class="tall">${esc(npc.timeline)}</textarea>
+          <textarea id="npc-timeline-${esc(npc.id)}" class="tall">${esc(npc.timeline)}</textarea>
         </div>
       </div>
     </div>`;
@@ -675,19 +676,19 @@ function renderEvidence() {
       <div class="card">
         <div class="card-header">
           <h3>${esc(ev.evidence_slug)}</h3>
-          <button class="btn btn-primary btn-sm" onclick="saveEvidence('${ev.id}')">Save</button>
+          <button class="btn btn-primary btn-sm" onclick="saveEvidence('${esc(ev.id)}')">Save</button>
         </div>
         <div class="form-group">
           <label>Label</label>
-          <input type="text" id="ev-label-${ev.id}" value="${esc(ev.label)}">
+          <input type="text" id="ev-label-${esc(ev.id)}" value="${esc(ev.label)}">
         </div>
         <div class="form-group">
           <label>Description</label>
-          <textarea id="ev-desc-${ev.id}">${esc(ev.description)}</textarea>
+          <textarea id="ev-desc-${esc(ev.id)}">${esc(ev.description)}</textarea>
         </div>
         <div class="form-group">
           <label>Group</label>
-          <select id="ev-group-${ev.id}">
+          <select id="ev-group-${esc(ev.id)}">
             ${['physical','documentary','testimony','access','motive'].map(g =>
               `<option value="${g}" ${ev.evidence_group===g?'selected':''}>${g}</option>`
             ).join('')}
@@ -737,13 +738,13 @@ function renderDiscoveries() {
         <div class="card-header">
           <h3>${esc(d.discovery_slug)}</h3>
           <div class="card-actions">
-            <span class="badge">${evLabel}</span>
-            <button class="btn btn-primary btn-sm" onclick="saveDiscovery('${d.id}')">Save</button>
+            <span class="badge">${esc(evLabel)}</span>
+            <button class="btn btn-primary btn-sm" onclick="saveDiscovery('${esc(d.id)}')">Save</button>
           </div>
         </div>
         <div class="form-group">
           <label>Description (what NPC must reveal)</label>
-          <textarea id="disc-desc-${d.id}">${esc(d.description)}</textarea>
+          <textarea id="disc-desc-${esc(d.id)}">${esc(d.description)}</textarea>
         </div>
         ${discGates.length ? `
           <div style="margin-top:8px;">
@@ -752,11 +753,11 @@ function renderDiscoveries() {
               <tr><th>#</th><th>Min Pressure</th><th>Min Rapport</th><th>Req. Evidence</th><th>Req. Discoveries</th></tr>
               ${discGates.map(g => `
                 <tr>
-                  <td>${g.gate_index}</td>
-                  <td>${g.min_pressure ?? '—'}</td>
-                  <td>${g.min_rapport ?? '—'}</td>
-                  <td>${(g.required_evidence_slugs || []).join(', ') || '—'}</td>
-                  <td>${(g.required_discovery_slugs || []).join(', ') || '—'}</td>
+                  <td>${esc(String(g.gate_index))}</td>
+                  <td>${g.min_pressure != null ? esc(String(g.min_pressure)) : '—'}</td>
+                  <td>${g.min_rapport != null ? esc(String(g.min_rapport)) : '—'}</td>
+                  <td>${(g.required_evidence_slugs || []).map(s => esc(s)).join(', ') || '—'}</td>
+                  <td>${(g.required_discovery_slugs || []).map(s => esc(s)).join(', ') || '—'}</td>
                 </tr>
               `).join('')}
             </table>
@@ -766,9 +767,9 @@ function renderDiscoveries() {
           <div class="collapsible-header" onclick="toggleCollapsible(this)">Locked Secret Prompt</div>
           <div class="collapsible-body">
             <div class="form-group">
-              <textarea id="ls-desc-${d.id}">${esc(lockedSecret.description)}</textarea>
+              <textarea id="ls-desc-${esc(d.id)}">${esc(lockedSecret.description)}</textarea>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="saveLockedSecret('${d.id}')">Save Locked Secret</button>
+            <button class="btn btn-primary btn-sm" onclick="saveLockedSecret('${esc(d.id)}')">Save Locked Secret</button>
           </div>
         ` : ''}
       </div>`;

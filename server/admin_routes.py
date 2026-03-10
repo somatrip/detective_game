@@ -9,10 +9,33 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+try:
+    from postgrest.exceptions import APIError
+except ImportError:
+    # Fallback: if postgrest not available, use a base Exception subclass
+    # so the except clauses still work (they just won't match anything specific).
+    APIError = type("APIError", (Exception,), {})  # type: ignore[misc,assignment]
+
 from .admin_auth import require_admin
 from .supabase_client import get_supabase
 
 log = logging.getLogger(__name__)
+
+
+def _handle_supabase_error(exc: APIError, entity: str = "resource") -> HTTPException:
+    """Convert Supabase APIError to an appropriate HTTPException."""
+    msg = str(exc)
+    # .single() with 0 rows → PGRST116
+    if "PGRST116" in msg or "0 rows" in msg:
+        return HTTPException(status_code=404, detail=f"{entity} not found")
+    # Unique constraint violation
+    if "duplicate key" in msg or "23505" in msg:
+        return HTTPException(status_code=409, detail=f"{entity} already exists (duplicate slug or key)")
+    # FK constraint violation
+    if "violates foreign key" in msg or "23503" in msg:
+        return HTTPException(status_code=400, detail=f"Referenced {entity} does not exist")
+    log.warning("Supabase error on %s: %s", entity, msg)
+    return HTTPException(status_code=500, detail=f"Database error on {entity}")
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -118,7 +141,10 @@ async def list_cases(user_id: str = Depends(require_admin)):
 @router.get("/cases/{case_id}")
 async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
     sb = _sb()
-    case = sb.table("cases").select("*").eq("id", str(case_id)).single().execute()
+    try:
+        case = sb.table("cases").select("*").eq("id", str(case_id)).single().execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Case") from exc
     cid = str(case_id)
     npcs = sb.table("npcs").select("*, archetypes(name, label)").eq("case_id", cid).order("sort_order").execute()
     evidence = sb.table("evidence").select("*").eq("case_id", cid).order("sort_order").execute()
@@ -150,7 +176,10 @@ async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
 
 @router.post("/cases")
 async def create_case(body: CaseCreate, user_id: str = Depends(require_admin)):
-    result = _sb().table("cases").insert(body.model_dump()).execute()
+    try:
+        result = _sb().table("cases").insert(body.model_dump()).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Case") from exc
     return result.data[0]
 
 @router.put("/cases/{case_id}")
@@ -179,7 +208,10 @@ async def delete_case(case_id: UUID, confirm: bool = False, user_id: str = Depen
 async def create_npc(case_id: UUID, body: NPCCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
     data["case_id"] = str(case_id)
-    result = _sb().table("npcs").insert(data).execute()
+    try:
+        result = _sb().table("npcs").insert(data).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "NPC") from exc
     return result.data[0]
 
 @router.put("/npcs/{npc_id}")
@@ -208,7 +240,10 @@ async def delete_npc(npc_id: UUID, confirm: bool = False, user_id: str = Depends
 async def create_evidence(case_id: UUID, body: EvidenceCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
     data["case_id"] = str(case_id)
-    result = _sb().table("evidence").insert(data).execute()
+    try:
+        result = _sb().table("evidence").insert(data).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Evidence") from exc
     return result.data[0]
 
 @router.put("/evidence/{evidence_id}")
@@ -237,7 +272,10 @@ async def delete_evidence(evidence_id: UUID, confirm: bool = False, user_id: str
 async def create_discovery(case_id: UUID, body: DiscoveryCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
     data["case_id"] = str(case_id)
-    result = _sb().table("discoveries").insert(data).execute()
+    try:
+        result = _sb().table("discoveries").insert(data).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Discovery") from exc
     return result.data[0]
 
 @router.put("/discoveries/{discovery_id}")
@@ -266,7 +304,10 @@ async def delete_discovery(discovery_id: UUID, confirm: bool = False, user_id: s
 async def create_gate(discovery_id: UUID, body: GateCreate, user_id: str = Depends(require_admin)):
     data = body.model_dump()
     data["discovery_id"] = str(discovery_id)
-    result = _sb().table("discovery_gates").insert(data).execute()
+    try:
+        result = _sb().table("discovery_gates").insert(data).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Gate") from exc
     return result.data[0]
 
 @router.put("/gates/{gate_id}")
@@ -289,7 +330,10 @@ async def delete_gate(gate_id: UUID, user_id: str = Depends(require_admin)):
 async def upsert_locked_secret(discovery_id: UUID, body: LockedSecretUpdate, user_id: str = Depends(require_admin)):
     sb = _sb()
     data = {"discovery_id": str(discovery_id), "description": body.description}
-    result = sb.table("locked_secret_descriptions").upsert(data, on_conflict="discovery_id").execute()
+    try:
+        result = sb.table("locked_secret_descriptions").upsert(data, on_conflict="discovery_id").execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Locked secret") from exc
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/discoveries/{discovery_id}/locked-secret")
@@ -302,9 +346,12 @@ async def delete_locked_secret(discovery_id: UUID, user_id: str = Depends(requir
 
 @router.post("/relevance")
 async def create_relevance(body: RelevanceUpdate, user_id: str = Depends(require_admin)):
-    result = _sb().table("npc_evidence_relevance").upsert(
-        body.model_dump(), on_conflict="npc_id,evidence_id"
-    ).execute()
+    try:
+        result = _sb().table("npc_evidence_relevance").upsert(
+            body.model_dump(), on_conflict="npc_id,evidence_id"
+        ).execute()
+    except APIError as exc:
+        raise _handle_supabase_error(exc, "Relevance") from exc
     return result.data[0] if result.data else {"ok": True}
 
 @router.delete("/relevance/{relevance_id}")

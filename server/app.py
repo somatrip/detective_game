@@ -81,6 +81,11 @@ if _cors_env:
     allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 else:
     allow_origins = ["*"]
+    log.warning(
+        "CORS allow_origins is wildcard '*'. "
+        "Set ECHO_CORS_ORIGINS to your deployment domain in production "
+        "(e.g. ECHO_CORS_ORIGINS=https://yourdomain.com)."
+    )
 
 app.add_middleware(
     CORSMiddleware,
