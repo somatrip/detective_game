@@ -29,6 +29,7 @@
     .player-notes-textarea::placeholder {
       color: var(--text-faint);
       font-style: italic;
+    }
 
     /* ── NPC Grid (5 + 4 staggered rows) ───────────────────── */
     .npc-grid-container {
@@ -814,6 +815,21 @@
       text-transform: uppercase;
       border-bottom: 1px solid rgba(80,200,80,0.12);
     }
+
+    /* ── Hidden-by-default modals (toggle via .visible class) ── */
+    #accusation-modal,
+    #case-ready-modal,
+    #keycard-modal {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 200;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    #accusation-modal.visible,
+    #case-ready-modal.visible,
+    #keycard-modal.visible { display: flex; }
 
     @media (max-width: 600px) {
       .kc-row, .kc-header {
