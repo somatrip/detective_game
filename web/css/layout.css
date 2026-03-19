@@ -1,0 +1,110 @@
+/* ── Layout: Hub Screen, Manila Tabs, Panel Structure ─── */
+
+    /* ── Hub Screen (unified — always visible once game starts) ── */
+    #hub-screen {
+      display: none;
+      height: 100vh;
+      flex-direction: column;
+      background: var(--bg-dark);
+      overflow: hidden;
+    }
+    #hub-screen.active { display: flex; }
+
+    /* ── Manila Folder Tabs ────────────────────────────────── */
+    .manila-tabs {
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+      padding: 0 2rem;
+      padding-top: 0.75rem;
+      background: var(--bg-dark);
+      flex-shrink: 0;
+    }
+    .manila-tab {
+      position: relative;
+      padding: 0.7rem 2rem 0.6rem;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 8px 8px 0 0;
+      clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+      background: var(--bg-panel-alt);
+      color: var(--text-faint);
+      transition: background 0.2s, color 0.2s, filter 0.2s;
+      min-width: 180px;
+      text-align: center;
+      align-self: flex-end;
+      filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.35));
+    }
+    .manila-tab.active {
+      background: var(--manila-tab-active);
+      color: var(--manila-tab-text);
+      z-index: 2;
+      filter: drop-shadow(0 -3px 5px rgba(0,0,0,0.5));
+    }
+    .manila-tab:not(.active):hover {
+      background: var(--bg-input);
+      color: var(--text-dim);
+    }
+    .manila-tab .manila-tab-label { pointer-events: none; }
+    .manila-tab .tab-flash {
+      color: var(--gold);
+    }
+    .manila-tabs-spacer { flex: 1; }
+    .manila-tab-icon {
+      min-width: auto;
+      width: auto;
+      padding: 0.7rem 1rem;
+      display: flex; align-items: center; justify-content: center;
+      clip-path: none;
+      border-radius: 8px 8px 0 0;
+      margin-left: 0.25rem;
+    }
+    .manila-tab-icon svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none;
+    }
+    /* Dynamic NPC sub-tab — shorter, smaller, overlaps Persons of Interest */
+    .manila-tab-npc {
+      min-width: auto;
+      padding: 0.35rem 1.3rem 0.35rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.04em;
+      margin-left: -18px;
+      z-index: 1;
+      border-left: none;
+    }
+    .manila-tab-npc.active {
+      z-index: 3;
+    }
+    /* Utility: hide icon buttons */
+    .hidden-icon { display: none !important; }
+
+    .hub-content {
+      flex: 1;
+      overflow-y: auto;
+      border-top: 3px solid var(--manila-border);
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .hub-panel { display: none; }
+    .hub-panel.active { display: block; }
+    #hub-chat.active {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Responsive: Layout ──────────────────────────────── */
+    @media (max-width: 768px) {
+      .manila-tabs { padding: 0 0.75rem; padding-top: 0.5rem; }
+      .manila-tab { min-width: auto; font-size: 0.65rem; padding: 0.55rem 0.7rem 0.45rem; }
+      .manila-tab-npc { padding: 0.3rem 0.6rem 0.3rem; font-size: 0.52rem; margin-left: -12px; }
+      .manila-tab-icon { padding: 0.55rem 0.7rem; }
+    }

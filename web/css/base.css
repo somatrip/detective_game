@@ -1,0 +1,63 @@
+/* ── Base: Reset, Variables, Typography, Scrollbar ─── */
+
+/* ── Reset & Variables ─────────────────────────────────── */
+:root {
+  /* ── Noir theme palette (source of truth) ── */
+  --noir-warm: #1a1510;
+  --noir-panel: #1c1712;
+  --noir-panel-alt: #231e17;
+  --noir-input: #2a2319;
+  --noir-text: #e8dcc8;
+  --noir-text-dim: #b8a88e;
+  --noir-text-faint: #7a6b55;
+  --noir-amber: #d4a050;
+  --noir-amber-glow: rgba(212,160,80,0.15);
+  --noir-amber-border: rgba(212,160,80,0.35);
+  --noir-smoke: rgba(26,21,16,0.85);
+  --font-noir: "Playfair Display", "Georgia", serif;
+  --font-typewriter: "Special Elite", "Courier New", monospace;
+  --font-body-serif: "Source Serif 4", "Georgia", serif;
+  /* ── Legacy aliases → noir remap ──────── */
+  --bg-dark: var(--noir-warm);
+  --bg-panel: var(--noir-panel);
+  --bg-panel-alt: var(--noir-panel-alt);
+  --bg-input: var(--noir-input);
+  --border: rgba(212,160,80,0.15);
+  --border-active: var(--noir-amber);
+  --text: var(--noir-text);
+  --text-dim: var(--noir-text-dim);
+  --text-faint: var(--noir-text-faint);
+  --accent: var(--noir-amber);
+  --accent-glow: var(--noir-amber-glow);
+  --danger: #f87171;
+  --success: #a8b88e;
+  --gold: var(--noir-amber);
+  --font: var(--font-body-serif);
+  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  /* Manila folder palette */
+  --manila-bg: #f5e6c8;
+  --manila-tab: #e8d5a8;
+  --manila-tab-active: #f5e6c8;
+  --manila-tab-text: #2a2318;
+  --manila-tab-inactive-text: #6b5b3e;
+  --manila-border: #c4a96a;
+  --manila-fold-highlight: #faf0db;
+  --screen-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --noir-shadow: rgba(0,0,0,0.4);
+  --gold-dim: rgba(212,160,80,0.12);
+  --gold-border: rgba(212,160,80,0.3);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg-dark);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* ── Scrollbar Styling ─────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212,160,80,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212,160,80,0.3); }
