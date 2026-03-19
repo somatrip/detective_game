@@ -6,7 +6,7 @@ that the engine loads at startup.
 
 from __future__ import annotations
 
-from ..import CaseData
+from .. import CaseData
 from .archetypes import NPC_ARCHETYPE_MAP
 from .evidence import (
     DISCOVERY_CATALOG,
@@ -28,7 +28,6 @@ INTUITION_PROMPT = (
     "at the Lyric Atrium Hotel, a refurbished 1920s art deco landmark. "
     "Write ONE brief sentence (max 15 words). "
     "No quotation marks. No game mechanics. Just a raw thought.\n\n"
-
     "ATMOSPHERIC MODE (when no moment_type is provided):\n"
     "Write scene observations, character impressions, or detective self-reflection. "
     "Examples of good atmospheric lines:\n"
@@ -40,7 +39,6 @@ INTUITION_PROMPT = (
     "Do NOT comment on what just happened in the conversation. "
     "Do NOT evaluate whether a question worked or failed. "
     "Just atmosphere.\n\n"
-
     "MAJOR MOMENT MODE (when moment_type IS provided):\n"
     "- dead_end: The detective senses there's nothing left to learn from this "
     "person. Suggest moving on, in-world. Example: Nothing left to shake "

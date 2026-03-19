@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Header, Query
+from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from .supabase_client import get_supabase, is_supabase_configured
@@ -17,13 +18,16 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 # ── Request / Response schemas ────────────────────────────────────────────
 
+
 class SignupRequest(BaseModel):
     email: str = Field(..., min_length=3)
     password: str = Field(..., min_length=6)
 
+
 class LoginRequest(BaseModel):
     email: str = Field(..., min_length=3)
     password: str = Field(..., min_length=6)
+
 
 class AuthResponse(BaseModel):
     user_id: str
@@ -31,15 +35,18 @@ class AuthResponse(BaseModel):
     access_token: str
     refresh_token: str
 
+
 class SaveStateRequest(BaseModel):
-    state: Dict[str, Any] = Field(..., description="Full game state JSON blob")
+    state: dict[str, Any] = Field(..., description="Full game state JSON blob")
+
 
 class GameStateResponse(BaseModel):
-    state: Optional[Dict[str, Any]] = None
-    updated_at: Optional[str] = None
+    state: dict[str, Any] | None = None
+    updated_at: str | None = None
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────
+
 
 def _require_supabase():
     sb = get_supabase()
@@ -63,6 +70,7 @@ def _extract_token(authorization: str | None) -> str:
 
 # ── Status endpoint ──────────────────────────────────────────────────────
 
+
 @router.get("/status")
 async def auth_status():
     """Check whether Supabase auth is available."""
@@ -71,6 +79,7 @@ async def auth_status():
 
 # ── Sign up ──────────────────────────────────────────────────────────────
 
+
 @router.post("/signup", response_model=AuthResponse)
 async def signup(body: SignupRequest):
     sb = _require_supabase()
@@ -78,7 +87,9 @@ async def signup(body: SignupRequest):
         result = sb.auth.sign_up({"email": body.email, "password": body.password})
     except Exception as exc:
         log.exception("Signup failed")
-        raise HTTPException(status_code=400, detail="Signup failed. Please check your email and try again.") from exc
+        raise HTTPException(
+            status_code=400, detail="Signup failed. Please check your email and try again."
+        ) from exc
 
     user = result.user
     session = result.session
@@ -102,13 +113,12 @@ async def signup(body: SignupRequest):
 
 # ── Log in ───────────────────────────────────────────────────────────────
 
+
 @router.post("/login", response_model=AuthResponse)
 async def login(body: LoginRequest):
     sb = _require_supabase()
     try:
-        result = sb.auth.sign_in_with_password(
-            {"email": body.email, "password": body.password}
-        )
+        result = sb.auth.sign_in_with_password({"email": body.email, "password": body.password})
     except Exception as exc:
         log.exception("Login failed")
         raise HTTPException(status_code=401, detail="Invalid email or password.") from exc
@@ -127,8 +137,10 @@ async def login(body: LoginRequest):
 
 # ── Refresh ──────────────────────────────────────────────────────────────
 
+
 class RefreshRequest(BaseModel):
     refresh_token: str
+
 
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh(body: RefreshRequest):
@@ -137,7 +149,9 @@ async def refresh(body: RefreshRequest):
         result = sb.auth._refresh_access_token(body.refresh_token)
     except Exception as exc:
         log.exception("Token refresh failed")
-        raise HTTPException(status_code=401, detail="Session expired. Please log in again.") from exc
+        raise HTTPException(
+            status_code=401, detail="Session expired. Please log in again."
+        ) from exc
 
     user = result.user
     session = result.session
@@ -153,19 +167,19 @@ async def refresh(body: RefreshRequest):
 
 # ── Log out ──────────────────────────────────────────────────────────────
 
+
 @router.post("/logout")
 async def logout(authorization: str | None = Header(default=None)):
     sb = _require_supabase()
     token = _extract_token(authorization)
-    try:
-        # Sign out on Supabase's side
+    with contextlib.suppress(Exception):
+        # Sign out on Supabase's side (best-effort)
         sb.auth.sign_out(token)
-    except Exception:
-        pass  # best-effort
     return {"ok": True}
 
 
 # ── Validate session (check if token is still valid) ─────────────────────
+
 
 @router.get("/session")
 async def check_session(authorization: str | None = Header(default=None)):
@@ -176,8 +190,8 @@ async def check_session(authorization: str | None = Header(default=None)):
     sb = _require_supabase()
     try:
         user = sb.auth.get_user(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid or expired session.") from exc
     email = user.user.email if user and user.user else ""
     return {"user_id": user_id, "email": email}
 
@@ -217,7 +231,7 @@ async def save_state(
     user_id = _get_user_id_from_token(authorization)
 
     try:
-        result = (
+        (
             sb.table("game_saves")
             .upsert(
                 {"user_id": user_id, "state": body.state},

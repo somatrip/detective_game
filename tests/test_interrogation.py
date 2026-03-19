@@ -6,20 +6,19 @@ from server.interrogation import (
     ARCHETYPES,
     BASE_DELTAS,
     EVIDENCE_MULTIPLIERS,
-    ACCELERATED_DECAY_MULTIPLIER,
     PressureBand,
     RapportBand,
-    compute_deltas,
     apply_update,
+    compute_deltas,
     pressure_band,
-    rapport_band,
     process_turn,
+    rapport_band,
 )
-
 
 # ---------------------------------------------------------------------------
 # Band mapping
 # ---------------------------------------------------------------------------
+
 
 class TestPressureBand:
     def test_calm(self):
@@ -61,6 +60,7 @@ class TestRapportBand:
 # Delta computation
 # ---------------------------------------------------------------------------
 
+
 class TestComputeDeltas:
     """Verify pressure/rapport delta math against known archetype values."""
 
@@ -80,31 +80,31 @@ class TestComputeDeltas:
         dp, dr = compute_deltas("open_ended", "none", proud_exec)
         # base: +3, +5 | evidence_mult=1.0 | p_scale=0.8, r_scale=0.7
         assert dp == round(3 * 1.0 * 0.8)  # 2
-        assert dr == round(5 * 0.7)         # 4 (rounds to 4)
+        assert dr == round(5 * 0.7)  # 4 (rounds to 4)
 
     def test_direct_accusation_smoking_gun(self, anxious):
         dp, dr = compute_deltas("direct_accusation", "smoking_gun", anxious)
         # base: +28, -12 | evidence_mult=3.0 | p_scale=1.3, r_scale=1.2
-        assert dp == round(28 * 3.0 * 1.3)   # 109
-        assert dr == round(-12 * 1.2)          # -14
+        assert dp == round(28 * 3.0 * 1.3)  # 109
+        assert dr == round(-12 * 1.2)  # -14
 
     def test_empathy_adds_bonus(self, anxious):
         dp, dr = compute_deltas("empathy", "none", anxious)
         # base: -6, +15 | p_scale=1.3, r_scale=1.2, empathy_bonus=10
-        assert dp == round(-6 * 1.0 * 1.3)         # -8
-        assert dr == round(15 * 1.2 + 10.0)         # 28
+        assert dp == round(-6 * 1.0 * 1.3)  # -8
+        assert dr == round(15 * 1.2 + 10.0)  # 28
 
     def test_contradiction_adds_bonus(self, fixer):
         dp, dr = compute_deltas("point_out_contradiction", "none", fixer)
         # base: +22, -7 | p_scale=0.9, r_scale=0.8, contradiction_bonus=10
-        assert dp == round(22 * 1.0 * 0.9 + 10.0)   # 30
-        assert dr == round(-7 * 0.8)                  # -6
+        assert dp == round(22 * 1.0 * 0.9 + 10.0)  # 30
+        assert dr == round(-7 * 0.8)  # -6
 
     def test_evidence_multiplier_strong(self, proud_exec):
         dp, dr = compute_deltas("present_evidence", "strong", proud_exec)
         # base: +15, +0 | evidence_mult=2.0 | p_scale=0.8
         assert dp == round(15 * 2.0 * 0.8)  # 24
-        assert dr == round(0 * 0.7)          # 0
+        assert dr == round(0 * 0.7)  # 0
 
     def test_unknown_tactic_uses_fallback(self, proud_exec):
         dp, dr = compute_deltas("nonexistent_tactic", "none", proud_exec)
@@ -125,6 +125,7 @@ class TestComputeDeltas:
 # ---------------------------------------------------------------------------
 # Apply update (clamping + decay)
 # ---------------------------------------------------------------------------
+
 
 class TestApplyUpdate:
     @pytest.fixture
@@ -175,6 +176,7 @@ class TestApplyUpdate:
 # ---------------------------------------------------------------------------
 # Full turn processing
 # ---------------------------------------------------------------------------
+
 
 class TestProcessTurn:
     def test_returns_all_expected_fields(self):

@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 from ...npc_registry import NPCProfile
 from .timelines import (
     NOAH_COVER_STORY,
     TIMELINE_AMELIA,
     TIMELINE_CELESTE,
     TIMELINE_EDDIE,
-    TIMELINE_MATTHIAS,
     TIMELINE_LILA,
     TIMELINE_MATTHEW,
+    TIMELINE_MATTHIAS,
     TIMELINE_MIRA,
     TIMELINE_PRIYA,
 )
 
-
-NPC_PROFILES: Dict[str, NPCProfile] = {
+NPC_PROFILES: dict[str, NPCProfile] = {
     "lila-chen": NPCProfile(
         npc_id="lila-chen",
         display_name="Detective Lila Chen",

@@ -29,7 +29,11 @@ class TestCaseDataValidation:
             smoking_gun_map={"npc-a": ["clue-1"]},
             evidence_catalog={"clue-1": "A clue"},
             discovery_catalog={
-                "disc-1": {"npc_id": "npc-a", "evidence_id": "clue-1", "description": "A discovery"},
+                "disc-1": {
+                    "npc_id": "npc-a",
+                    "evidence_id": "clue-1",
+                    "description": "A discovery",
+                },
             },
         )
         defaults.update(overrides)

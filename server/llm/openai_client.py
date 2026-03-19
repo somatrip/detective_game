@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import httpx
 from openai import AsyncOpenAI
 
-from .base import ChatMessage, LLMClient, LLM_TIMEOUT_SECONDS
+from .base import LLM_TIMEOUT_SECONDS, ChatMessage, LLMClient
 
 
 class OpenAILLMClient(LLMClient):

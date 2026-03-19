@@ -7,33 +7,40 @@ import logging
 import pathlib
 import re
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List
+from functools import lru_cache as _lru_cache
+from typing import Any
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import AsyncOpenAI
 
+from .admin_routes import router as admin_router
+from .auth_routes import router as auth_router
+from .auth_routes import state_router
 from .cases import get_active_case, load_case
 from .config import settings
+from .feedback_routes import router as feedback_router
 from .interrogation import (
     _check_gate,
     build_interrogation_context,
-    pressure_band as _pressure_band,
-    rapport_band as _rapport_band,
     process_turn,
     should_show_intuition,
 )
+from .interrogation import (
+    pressure_band as _pressure_band,
+)
+from .interrogation import (
+    rapport_band as _rapport_band,
+)
+from .llm.base import ChatMessage, LLMClient
 from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import get_llm_client
-from .llm.base import ChatMessage, LLMClient
 from .npc_registry import get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
-from .auth_routes import router as auth_router, state_router
-from .tracking_routes import router as tracking_router, log_chat_event
-from .feedback_routes import router as feedback_router
-from .admin_routes import router as admin_router
+from .tracking_routes import log_chat_event
+from .tracking_routes import router as tracking_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +53,7 @@ _WEB_DIR = pathlib.Path(__file__).resolve().parent.parent / "web"
 
 
 # ── Lifespan: replaces deprecated @app.on_event("startup") ──────────────
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -114,8 +122,6 @@ async def _get_llm_client() -> LLMClient:
 
 # ── Shared OpenAI client for audio operations ────────────────────────────
 
-from functools import lru_cache as _lru_cache
-
 
 @_lru_cache(maxsize=1)
 def _get_openai_client() -> AsyncOpenAI:
@@ -130,7 +136,7 @@ def _get_openai_client() -> AsyncOpenAI:
 # occasionally produce stray tags.  Strip them from the displayed response.
 
 _STRAY_TAG_RE = re.compile(
-    r'\[(?:EVIDENCE|EVIDENCIJA|DOKAZ|EXPRESSION|IZRAŽAJ|IZRAZAJ|IZRAZ):\s*[^\]]*\]',
+    r"\[(?:EVIDENCE|EVIDENCIJA|DOKAZ|EXPRESSION|IZRAŽAJ|IZRAZAJ|IZRAZ):\s*[^\]]*\]",
     re.IGNORECASE,
 )
 
@@ -141,7 +147,7 @@ def _strip_stray_tags(text: str) -> str:
 
 
 # ── Intuition tag parsing ─────────────────────────────────────────────────
-_INTUITION_RE = re.compile(r'\n?\[INTUITION\]\s*(.+)', re.IGNORECASE)
+_INTUITION_RE = re.compile(r"\n?\[INTUITION\]\s*(.+)", re.IGNORECASE)
 
 
 def _extract_intuition(text: str) -> tuple[str, str | None]:
@@ -153,11 +159,12 @@ def _extract_intuition(text: str) -> tuple[str, str | None]:
     if not m:
         return text, None
     intuition = m.group(1).strip()
-    clean = text[:m.start()] + text[m.end():]
+    clean = text[: m.start()] + text[m.end() :]
     return clean.strip(), intuition
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────
+
 
 @app.get("/api/npcs")
 async def list_available_npcs():
@@ -178,7 +185,7 @@ async def list_available_npcs():
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) -> ChatResponse:
+async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) -> ChatResponse:  # noqa: B008
     """Send the player's message to the LLM and return the NPC's reply.
 
     Pipeline per turn:
@@ -198,7 +205,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     case = get_active_case()
     archetype_id = case.npc_archetype_map.get(request.npc_id, "professional_fixer")
 
-    history: List[ChatTurn] = list(request.history)
+    history: list[ChatTurn] = list(request.history)
     history.append(ChatTurn(role="user", content=request.message))
 
     # ── Step 1: Classify the player's turn (secondary LLM) ──────────────
@@ -218,14 +225,23 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     classifier_degraded = classification.get("degraded", False)
     if classifier_degraded:
         log.warning("[chat] Step 1: classifier degraded — using defaults")
-    log.info("[chat] Step 1 result: tactic=%s evidence=%s degraded=%s", tactic_type, evidence_strength, classifier_degraded)
+    log.info(
+        "[chat] Step 1 result: tactic=%s evidence=%s degraded=%s",
+        tactic_type,
+        evidence_strength,
+        classifier_degraded,
+    )
 
     # ── Pre-Step 2: Capture old bands for intuition trigger detection ───
-    old_p_band = _pressure_band(request.pressure).value
-    old_r_band = _rapport_band(request.rapport).value
+    _pressure_band(request.pressure)  # evaluated for side-effect / validation
+    _rapport_band(request.rapport)
 
     # ── Step 2: Compute pressure/rapport deltas ─────────────────────────
-    log.info("[chat] Step 2: computing deltas (pressure=%d, rapport=%d)", request.pressure, request.rapport)
+    log.info(
+        "[chat] Step 2: computing deltas (pressure=%d, rapport=%d)",
+        request.pressure,
+        request.rapport,
+    )
     try:
         interrogation_result = process_turn(
             tactic_type=tactic_type,
@@ -239,9 +255,13 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     except Exception as exc:
         log.exception("[chat] Step 2 FAILED: process_turn")
         raise HTTPException(status_code=500, detail="Interrogation engine error") from exc
-    log.info("[chat] Step 2 result: pressure=%d->%s, rapport=%d->%s",
-             interrogation_result["pressure"], interrogation_result["pressure_band"],
-             interrogation_result["rapport"], interrogation_result["rapport_band"])
+    log.info(
+        "[chat] Step 2 result: pressure=%d->%s, rapport=%d->%s",
+        interrogation_result["pressure"],
+        interrogation_result["pressure_band"],
+        interrogation_result["rapport"],
+        interrogation_result["rapport_band"],
+    )
 
     # ── Step 3: Build interrogation context prompt ──────────────────────
     try:
@@ -261,7 +281,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 
     # ── Step 4: Generate NPC response (main LLM) ───────────────────────
     log.info("[chat] Step 4: generating NPC response via %s", settings.llm_provider)
-    system_messages: List[ChatMessage] = [
+    system_messages: list[ChatMessage] = [
         {"role": "system", "content": case.world_context_prompt},
     ]
     if npc_profile.timeline:
@@ -273,20 +293,22 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 
     if request.language == "sr":
         gender_sr = "ženskog" if npc_profile.gender == "female" else "muškog"
-        system_messages.append({
-            "role": "system",
-            "content": (
-                f"IMPORTANT: The player has chosen Serbian as their language. "
-                f"You MUST respond entirely in Serbian (Latin script). "
-                f"Your character is {npc_profile.gender} — use correct {gender_sr} roda "
-                f"grammatical forms (verb conjugations, adjective agreements, past tense). "
-                f"For example, a female character says 'bila sam' not 'bio sam'. "
-                f"Stay in character and maintain the same personality, secrets, "
-                f"and conversational rules, but speak Serbian with proper gender grammar."
-            ),
-        })
+        system_messages.append(
+            {
+                "role": "system",
+                "content": (
+                    f"IMPORTANT: The player has chosen Serbian as their language. "
+                    f"You MUST respond entirely in Serbian (Latin script). "
+                    f"Your character is {npc_profile.gender} — use correct {gender_sr} roda "
+                    f"grammatical forms (verb conjugations, adjective agreements, past tense). "
+                    f"For example, a female character says 'bila sam' not 'bio sam'. "
+                    f"Stay in character and maintain the same personality, secrets, "
+                    f"and conversational rules, but speak Serbian with proper gender grammar."
+                ),
+            }
+        )
 
-    llm_messages: List[ChatMessage] = [
+    llm_messages: list[ChatMessage] = [
         *system_messages,
         *(_turn.model_dump() for _turn in history),
     ]
@@ -327,35 +349,46 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     except Exception as exc:
         log.exception("[chat] Step 5 FAILED: detect_evidence")
         raise HTTPException(status_code=502, detail="Evidence detector unavailable") from exc
-    evidence_ids: List[str] = detection["evidence_ids"]
-    discovery_ids: List[str] = detection["discovery_ids"]
+    evidence_ids: list[str] = detection["evidence_ids"]
+    discovery_ids: list[str] = detection["discovery_ids"]
     discovery_summaries: dict = detection.get("discovery_summaries", {})
     expression: str = detection["expression"]
     detection_degraded = detection.get("degraded", False)
     if detection_degraded:
         log.warning("[chat] Step 5: evidence detection degraded — using defaults")
-    log.info("[chat] Step 5 result: discoveries=%s evidence=%s expression=%s degraded=%s",
-             discovery_ids, evidence_ids, expression, detection_degraded)
+    log.info(
+        "[chat] Step 5 result: discoveries=%s evidence=%s expression=%s degraded=%s",
+        discovery_ids,
+        evidence_ids,
+        expression,
+        detection_degraded,
+    )
 
     # ── Step 5b: Apply mechanical gates to detected discoveries ────────
-    gated_discovery_ids: List[str] = []
-    blocked_discovery_ids: List[str] = []
+    gated_discovery_ids: list[str] = []
+    blocked_discovery_ids: list[str] = []
     for did in discovery_ids:
         gates = case.discovery_gates.get(did)
         if gates is None:
             # No gate defined — discovery passes through unconditionally
             gated_discovery_ids.append(did)
             continue
-        if _check_gate(gates,
-                       pressure=interrogation_result["pressure"],
-                       rapport=interrogation_result["rapport"],
-                       player_evidence=request.player_evidence_ids,
-                       player_discoveries=request.player_discovery_ids):
+        if _check_gate(
+            gates,
+            pressure=interrogation_result["pressure"],
+            rapport=interrogation_result["rapport"],
+            player_evidence=request.player_evidence_ids,
+            player_discoveries=request.player_discovery_ids,
+        ):
             gated_discovery_ids.append(did)
         else:
             blocked_discovery_ids.append(did)
-            log.info("[chat] Gate blocked discovery %s (pressure=%d, rapport=%d)",
-                     did, interrogation_result["pressure"], interrogation_result["rapport"])
+            log.info(
+                "[chat] Gate blocked discovery %s (pressure=%d, rapport=%d)",
+                did,
+                interrogation_result["pressure"],
+                interrogation_result["rapport"],
+            )
 
     discovery_ids = gated_discovery_ids
     # Recompute evidence_ids from the surviving discoveries only
@@ -372,7 +405,11 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     intuition_line = None
     if _should_intuit and case.intuition_prompt:
         try:
-            npc_name = npc_profile.display_name.split(" — ")[0] if npc_profile.display_name else request.npc_id
+            npc_name = (
+                npc_profile.display_name.split(" — ")[0]
+                if npc_profile.display_name
+                else request.npc_id
+            )
 
             # Build a short conversation recap (fewer lines for atmospheric)
             convo_lines = []
@@ -392,10 +429,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
             else:
                 # Atmospheric: NPC name + last 2 lines only, no gameplay state
                 convo_recap = "\n".join(convo_lines[-2:])
-                user_content = (
-                    f"Interrogating: {npc_name}\n\n"
-                    f"Recent conversation:\n{convo_recap}"
-                )
+                user_content = f"Interrogating: {npc_name}\n\nRecent conversation:\n{convo_recap}"
 
             intuition_line = await llm.generate(
                 npc_id="intuition",
@@ -452,8 +486,8 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 
 @app.post("/api/transcribe")
 async def transcribe(
-    file: UploadFile = File(...),
-    language: str = Form(default="en"),
+    file: UploadFile = File(...),  # noqa: B008
+    language: str = Form(default="en"),  # noqa: B008
 ):
     """Transcribe an audio file to text using OpenAI Whisper."""
 
@@ -493,8 +527,17 @@ async def speak(request: SpeakRequest):
     client = _get_openai_client()
 
     allowed_voices = {
-        "alloy", "ash", "ballad", "coral", "echo", "fable",
-        "onyx", "nova", "sage", "shimmer", "verse",
+        "alloy",
+        "ash",
+        "ballad",
+        "coral",
+        "echo",
+        "fable",
+        "onyx",
+        "nova",
+        "sage",
+        "shimmer",
+        "verse",
     }
     voice = request.voice if request.voice in allowed_voices else "alloy"
     text = request.text[:4096]
@@ -531,7 +574,7 @@ async def speak(request: SpeakRequest):
 # the string board is also persisted inside the main cloud save blob; these
 # endpoints provide a lightweight local-only fallback for unauthenticated play.
 
-_stringboard_store: Dict[str, Any] = {}
+_stringboard_store: dict[str, Any] = {}
 
 
 @app.post("/api/state/stringboard")
@@ -561,7 +604,6 @@ async def healthcheck():
 # ── Admin page ───────────────────────────────────────────────────────────
 _ADMIN_DIR = pathlib.Path(__file__).resolve().parent.parent / "web" / "admin"
 
-from fastapi.responses import FileResponse
 
 @app.get("/admin")
 @app.get("/admin/")

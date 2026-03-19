@@ -8,7 +8,6 @@ delegate to ``get_active_case()``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 
 @dataclass(frozen=True)
@@ -28,6 +27,7 @@ def get_npc_profile(npc_id: str) -> NPCProfile:
     """Retrieve an NPC profile by its identifier."""
 
     from .cases import get_active_case
+
     profiles = get_active_case().npc_profiles
     try:
         return profiles[npc_id]
@@ -35,10 +35,11 @@ def get_npc_profile(npc_id: str) -> NPCProfile:
         raise ValueError(f"Unknown NPC id '{npc_id}'.") from exc
 
 
-def list_npcs() -> Dict[str, NPCProfile]:
+def list_npcs() -> dict[str, NPCProfile]:
     """Return a shallow copy of the NPC registry."""
 
     from .cases import get_active_case
+
     return dict(get_active_case().npc_profiles)
 
 

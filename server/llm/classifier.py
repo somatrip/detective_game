@@ -10,12 +10,11 @@ from __future__ import annotations
 import json
 import logging
 from functools import lru_cache
-from typing import Any, Dict, List, TypedDict
+from typing import Any, TypedDict
 
 import httpx
 
 from ..config import settings
-from .base import LLM_TIMEOUT_SECONDS
 
 # Classifier calls should be faster than main generation — use a shorter timeout.
 _CLASSIFIER_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
@@ -34,10 +33,10 @@ class ClassificationResult(TypedDict):
 
 
 class DetectionResult(TypedDict):
-    discovery_ids: List[str]
-    evidence_ids: List[str]
+    discovery_ids: list[str]
+    evidence_ids: list[str]
     expression: str
-    discovery_summaries: Dict[str, str]
+    discovery_summaries: dict[str, str]
     degraded: bool  # True when detection call failed and defaults were used
 
 
@@ -46,18 +45,28 @@ class DetectionResult(TypedDict):
 # ---------------------------------------------------------------------------
 
 VALID_TACTIC_TYPES = {
-    "open_ended", "specific_factual", "empathy", "present_evidence",
-    "point_out_contradiction", "direct_accusation", "repeat_pressure",
+    "open_ended",
+    "specific_factual",
+    "empathy",
+    "present_evidence",
+    "point_out_contradiction",
+    "direct_accusation",
+    "repeat_pressure",
     "topic_change",
 }
 
 VALID_EVIDENCE_STRENGTHS = {"none", "weak", "strong", "smoking_gun"}
 
 VALID_EXPRESSIONS = {
-    "neutral", "guarded", "distressed", "angry", "contemplative", "smirking",
+    "neutral",
+    "guarded",
+    "distressed",
+    "angry",
+    "contemplative",
+    "smirking",
 }
 
-_LANGUAGE_NAMES: Dict[str, str] = {
+_LANGUAGE_NAMES: dict[str, str] = {
     "en": "English",
     "sr": "Serbian (srpski, Latin script)",
 }
@@ -146,6 +155,7 @@ NPC response: \"{response}\""""
 # NPC name resolution — derives from active case data (case-agnostic)
 # ---------------------------------------------------------------------------
 
+
 def _get_npc_display_name(npc_id: str) -> str:
     """Return a human-readable NPC display name from the active case data.
 
@@ -154,6 +164,7 @@ def _get_npc_display_name(npc_id: str) -> str:
     """
     try:
         from ..cases import get_active_case
+
         profile = get_active_case().npc_profiles.get(npc_id)
         if profile is not None:
             return profile.display_name
@@ -166,10 +177,12 @@ def _get_npc_display_name(npc_id: str) -> str:
 # Cached classifier clients (one per process lifetime)
 # ---------------------------------------------------------------------------
 
+
 @lru_cache(maxsize=1)
 def _get_openai_classifier():
     """Return a cached AsyncOpenAI client for classifier calls."""
     from openai import AsyncOpenAI
+
     return AsyncOpenAI(api_key=settings.openai_api_key or "", timeout=_CLASSIFIER_TIMEOUT)
 
 
@@ -177,14 +190,18 @@ def _get_openai_classifier():
 def _get_anthropic_classifier():
     """Return a cached AsyncAnthropic client for classifier calls."""
     import anthropic
-    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key or "", timeout=_CLASSIFIER_TIMEOUT)
+
+    return anthropic.AsyncAnthropic(
+        api_key=settings.anthropic_api_key or "", timeout=_CLASSIFIER_TIMEOUT
+    )
 
 
 # ---------------------------------------------------------------------------
 # Provider-specific LLM calls
 # ---------------------------------------------------------------------------
 
-async def _call_openai_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+
+async def _call_openai_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
     """Call OpenAI classifier model and parse JSON response."""
     client = _get_openai_classifier()
     response = await client.chat.completions.create(
@@ -201,7 +218,7 @@ async def _call_openai_json(system_prompt: str, user_prompt: str) -> Dict[str, A
     return json.loads(text)
 
 
-async def _call_anthropic_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+async def _call_anthropic_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
     """Call Anthropic classifier model and parse JSON response."""
     client = _get_anthropic_classifier()
     response = await client.messages.create(
@@ -214,13 +231,11 @@ async def _call_anthropic_json(system_prompt: str, user_prompt: str) -> Dict[str
     # Extract JSON from potential markdown fencing
     if text.startswith("```"):
         lines = text.split("\n")
-        text = "\n".join(
-            l for l in lines if not l.startswith("```")
-        ).strip()
+        text = "\n".join(line for line in lines if not line.startswith("```")).strip()
     return json.loads(text)
 
 
-async def _call_classifier_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+async def _call_classifier_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
     """Route to the correct provider for classifier calls."""
     provider = settings.llm_provider.lower()
     if provider == "openai":
@@ -236,17 +251,19 @@ async def _call_classifier_json(system_prompt: str, user_prompt: str) -> Dict[st
 # Public API
 # ---------------------------------------------------------------------------
 
+
 async def classify_player_turn(
     message: str,
     npc_id: str,
-    player_evidence_ids: List[str],
-    conversation_history: List[Dict[str, str]],
+    player_evidence_ids: list[str],
+    conversation_history: list[dict[str, str]],
 ) -> ClassificationResult:
     """Classify the player's interrogation tactic and evidence strength.
 
     Returns a ``ClassificationResult`` with tactic_type and evidence_strength.
     """
     from ..cases import get_active_case
+
     case = get_active_case()
     relevant = case.npc_relevant_evidence.get(npc_id, [])
     smoking = case.smoking_gun_map.get(npc_id, [])
@@ -284,12 +301,16 @@ async def classify_player_turn(
     # Validate and default
     tactic = result.get("tactic_type", "open_ended")
     if tactic not in VALID_TACTIC_TYPES:
-        log.warning("Classifier returned invalid tactic_type '%s', defaulting to open_ended", tactic)
+        log.warning(
+            "Classifier returned invalid tactic_type '%s', defaulting to open_ended", tactic
+        )
         tactic = "open_ended"
 
     strength = result.get("evidence_strength", "none")
     if strength not in VALID_EVIDENCE_STRENGTHS:
-        log.warning("Classifier returned invalid evidence_strength '%s', defaulting to none", strength)
+        log.warning(
+            "Classifier returned invalid evidence_strength '%s', defaulting to none", strength
+        )
         strength = "none"
 
     return ClassificationResult(tactic_type=tactic, evidence_strength=strength, degraded=degraded)
@@ -298,7 +319,7 @@ async def classify_player_turn(
 async def detect_evidence(
     npc_response: str,
     npc_id: str,
-    already_collected: List[str],
+    already_collected: list[str],
     player_message: str = "",
     language: str = "en",
 ) -> DetectionResult:
@@ -318,14 +339,14 @@ async def detect_evidence(
     expression, and discovery_summaries.
     """
     from ..cases import get_active_case
+
     case = get_active_case()
     npc_name = _get_npc_display_name(npc_id)
     language_name = _LANGUAGE_NAMES.get(language, "English")
 
     # Filter discovery catalog to current NPC
     npc_discoveries = {
-        did: info for did, info in case.discovery_catalog.items()
-        if info["npc_id"] == npc_id
+        did: info for did, info in case.discovery_catalog.items() if info["npc_id"] == npc_id
     }
 
     if not npc_discoveries:
@@ -368,16 +389,13 @@ async def detect_evidence(
     if not isinstance(raw_ids, list):
         raw_ids = []
     valid_ids = [
-        did for did in raw_ids
-        if isinstance(did, str) and did in npc_discoveries
-        and did not in already_collected
+        did
+        for did in raw_ids
+        if isinstance(did, str) and did in npc_discoveries and did not in already_collected
     ]
 
     # Derive evidence IDs from discoveries
-    evidence_ids = list({
-        case.discovery_catalog[did]["evidence_id"]
-        for did in valid_ids
-    })
+    evidence_ids = list({case.discovery_catalog[did]["evidence_id"] for did in valid_ids})
 
     # Validate discovery summaries
     raw_summaries = result.get("discovery_summaries", {})
@@ -403,5 +421,4 @@ async def detect_evidence(
     )
 
 
-__all__ = ["classify_player_turn", "detect_evidence",
-           "ClassificationResult", "DetectionResult"]
+__all__ = ["classify_player_turn", "detect_evidence", "ClassificationResult", "DetectionResult"]

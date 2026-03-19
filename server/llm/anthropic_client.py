@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List
+from collections.abc import Iterable
 
 import anthropic
 import httpx
 
-from .base import ChatMessage, LLMClient, LLM_TIMEOUT_SECONDS
+from .base import LLM_TIMEOUT_SECONDS, ChatMessage, LLMClient
 
 
 class AnthropicLLMClient(LLMClient):
@@ -15,7 +15,9 @@ class AnthropicLLMClient(LLMClient):
 
     def __init__(self, *, api_key: str, model: str) -> None:
         if not api_key:
-            raise ValueError("Anthropic API key must be provided when using the Anthropic provider.")
+            raise ValueError(
+                "Anthropic API key must be provided when using the Anthropic provider."
+            )
 
         self._client = anthropic.AsyncAnthropic(
             api_key=api_key,
@@ -24,7 +26,7 @@ class AnthropicLLMClient(LLMClient):
         self._model = model
 
     async def generate(self, *, npc_id: str, messages: Iterable[ChatMessage]) -> str:
-        all_msgs: List[ChatMessage] = list(messages)
+        all_msgs: list[ChatMessage] = list(messages)
 
         # Extract system messages and combine them into a single system prompt.
         # The Anthropic API takes system as a top-level parameter, not in messages.

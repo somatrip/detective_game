@@ -7,13 +7,13 @@ LLM-based turn classification; this module applies the mechanical results.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Dict, List, Tuple, TypedDict
-
+from enum import StrEnum
+from typing import Any, TypedDict
 
 # ---------------------------------------------------------------------------
 # Typed return shape
 # ---------------------------------------------------------------------------
+
 
 class TurnResult(TypedDict):
     pressure: int
@@ -30,23 +30,25 @@ class TurnResult(TypedDict):
 # Enums
 # ---------------------------------------------------------------------------
 
-class PressureBand(str, Enum):
-    CALM = "calm"          # 0-24
-    TENSE = "tense"        # 25-49
-    SHAKEN = "shaken"      # 50-74
+
+class PressureBand(StrEnum):
+    CALM = "calm"  # 0-24
+    TENSE = "tense"  # 25-49
+    SHAKEN = "shaken"  # 50-74
     CORNERED = "cornered"  # 75-100
 
 
-class RapportBand(str, Enum):
-    COLD = "cold"          # 0-24
-    NEUTRAL = "neutral"    # 25-49
-    OPEN = "open"          # 50-74
+class RapportBand(StrEnum):
+    COLD = "cold"  # 0-24
+    NEUTRAL = "neutral"  # 25-49
+    OPEN = "open"  # 50-74
     TRUSTING = "trusting"  # 75-100
 
 
 # ---------------------------------------------------------------------------
 # Archetype profiles
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class ArchetypeProfile:
@@ -60,7 +62,7 @@ class ArchetypeProfile:
     empathy_bonus: float
 
 
-ARCHETYPES: Dict[str, ArchetypeProfile] = {
+ARCHETYPES: dict[str, ArchetypeProfile] = {
     "proud_executive": ArchetypeProfile(
         archetype_id="proud_executive",
         label="Proud Executive",
@@ -99,22 +101,22 @@ ARCHETYPES: Dict[str, ArchetypeProfile] = {
 # ---------------------------------------------------------------------------
 
 #: (pressure_delta, rapport_delta) for each tactic type.
-BASE_DELTAS: Dict[str, Tuple[int, int]] = {
-    "open_ended":              (+3,   +5),
-    "specific_factual":        (+8,   +2),
-    "empathy":                 (-6,  +15),
-    "present_evidence":        (+15,   +0),
-    "point_out_contradiction": (+22,   -7),
-    "direct_accusation":       (+28,  -12),
-    "repeat_pressure":         (+12,   -4),
-    "topic_change":            (-10,   +4),
+BASE_DELTAS: dict[str, tuple[int, int]] = {
+    "open_ended": (+3, +5),
+    "specific_factual": (+8, +2),
+    "empathy": (-6, +15),
+    "present_evidence": (+15, +0),
+    "point_out_contradiction": (+22, -7),
+    "direct_accusation": (+28, -12),
+    "repeat_pressure": (+12, -4),
+    "topic_change": (-10, +4),
 }
 
 #: Evidence-strength multiplier applied to the pressure delta.
-EVIDENCE_MULTIPLIERS: Dict[str, float] = {
-    "none":        1.0,
-    "weak":        1.4,
-    "strong":      2.0,
+EVIDENCE_MULTIPLIERS: dict[str, float] = {
+    "none": 1.0,
+    "weak": 1.4,
+    "strong": 2.0,
     "smoking_gun": 3.0,
 }
 
@@ -127,6 +129,7 @@ ACCELERATED_DECAY_MULTIPLIER: float = 4.0
 # ---------------------------------------------------------------------------
 # Band mapping
 # ---------------------------------------------------------------------------
+
 
 def pressure_band(value: int) -> PressureBand:
     if value < 25:
@@ -152,11 +155,12 @@ def rapport_band(value: int) -> RapportBand:
 # Delta computation
 # ---------------------------------------------------------------------------
 
+
 def compute_deltas(
     tactic_type: str,
     evidence_strength: str,
     archetype: ArchetypeProfile,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Compute (pressure_delta, rapport_delta) for this turn."""
     base_p, base_r = BASE_DELTAS.get(tactic_type, (2, 3))
     evidence_mult = EVIDENCE_MULTIPLIERS.get(evidence_strength, 1.0)
@@ -179,7 +183,7 @@ def apply_update(
     delta_r: int,
     archetype: ArchetypeProfile,
     peak_pressure: int = 0,
-) -> Tuple[int, int, int]:
+) -> tuple[int, int, int]:
     """Apply deltas (with decay) and clamp to 0-100.
 
     Returns ``(new_pressure, new_rapport, new_peak_pressure)``.
@@ -215,6 +219,7 @@ def apply_update(
 # Public entry point
 # ---------------------------------------------------------------------------
 
+
 def process_turn(
     tactic_type: str,
     evidence_strength: str,
@@ -235,6 +240,7 @@ def process_turn(
     """
     if archetype_id is None:
         from .cases import get_active_case
+
         archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES.get(archetype_id)
     if archetype is None:
@@ -242,7 +248,11 @@ def process_turn(
 
     delta_p, delta_r = compute_deltas(tactic_type, evidence_strength, archetype)
     new_p, new_r, new_peak = apply_update(
-        current_pressure, current_rapport, delta_p, delta_r, archetype,
+        current_pressure,
+        current_rapport,
+        delta_p,
+        delta_r,
+        archetype,
         peak_pressure=peak_pressure,
     )
 
@@ -262,14 +272,14 @@ def process_turn(
 # Prompt builder -- injected into the main LLM context each turn
 # ---------------------------------------------------------------------------
 
-_BAND_GUIDANCE: Dict[str, str] = {
+_BAND_GUIDANCE: dict[str, str] = {
     "calm": "You're relaxed. Answer easily, maybe even a little dismissive — this doesn't faze you.",
     "tense": "You're getting uncomfortable. Keep it together but let cracks show — shorter answers, a deflection here and there.",
     "shaken": "You're rattled. Trip over words, lose your train of thought, maybe say something you didn't mean to.",
     "cornered": "You're desperate. Snap at the detective, blurt things out, start giving ground you wouldn't normally give.",
 }
 
-_RAPPORT_GUIDANCE: Dict[str, str] = {
+_RAPPORT_GUIDANCE: dict[str, str] = {
     "cold": "You don't trust this detective at all. Give as little as possible. One-word answers are fine.",
     "neutral": "You're cooperating, barely. Answer what's asked but don't offer anything extra.",
     "open": "You're warming up to this detective. You'll share more freely — still careful, but willing to talk.",
@@ -281,7 +291,7 @@ _RAPPORT_GUIDANCE: Dict[str, str] = {
 # incriminating information at higher rapport levels.
 # ---------------------------------------------------------------------------
 
-_HIGH_RAPPORT_HELPFULNESS: Dict[str, str] = {
+_HIGH_RAPPORT_HELPFULNESS: dict[str, str] = {
     "open": (
         "RAPPORT-DRIVEN HELPFULNESS (OPEN level):\n"
         "You genuinely want to help the detective make progress. When answering "
@@ -322,11 +332,11 @@ _HIGH_RAPPORT_HELPFULNESS: Dict[str, str] = {
 
 
 def _check_gate(
-    conditions: List[Dict[str, Any]],
+    conditions: list[dict[str, Any]],
     pressure: int,
     rapport: int,
-    player_evidence: List[str],
-    player_discoveries: List[str],
+    player_evidence: list[str],
+    player_discoveries: list[str],
 ) -> bool:
     """Return True if ANY condition in the gate is fully satisfied (OR logic).
 
@@ -338,12 +348,14 @@ def _check_gate(
             satisfied = False
         if "min_rapport" in condition and rapport < condition["min_rapport"]:
             satisfied = False
-        if "requires_evidence" in condition:
-            if not all(e in player_evidence for e in condition["requires_evidence"]):
-                satisfied = False
-        if "requires_discovery" in condition:
-            if not all(d in player_discoveries for d in condition["requires_discovery"]):
-                satisfied = False
+        if "requires_evidence" in condition and not all(
+            e in player_evidence for e in condition["requires_evidence"]
+        ):
+            satisfied = False
+        if "requires_discovery" in condition and not all(
+            d in player_discoveries for d in condition["requires_discovery"]
+        ):
+            satisfied = False
         if satisfied:
             return True
     return False
@@ -353,9 +365,9 @@ def get_locked_secret_descriptions(
     npc_id: str,
     pressure: int,
     rapport: int,
-    player_evidence: List[str],
-    player_discoveries: List[str],
-) -> List[str]:
+    player_evidence: list[str],
+    player_discoveries: list[str],
+) -> list[str]:
     """Return locked-secret prompt lines for this NPC's unmet gates."""
     from .cases import get_active_case
 
@@ -364,14 +376,13 @@ def get_locked_secret_descriptions(
     # Use CaseData.locked_secret_descriptions (populated from DB or Python module)
     locked_descs = case.locked_secret_descriptions
 
-    locked: List[str] = []
+    locked: list[str] = []
     for discovery_id, gate_conditions in case.discovery_gates.items():
         # Only include gates that belong to this NPC
         if case.discovery_catalog.get(discovery_id, {}).get("npc_id") != npc_id:
             continue
         # If the gate is NOT satisfied, the secret is locked
-        if not _check_gate(gate_conditions, pressure, rapport,
-                           player_evidence, player_discoveries):
+        if not _check_gate(gate_conditions, pressure, rapport, player_evidence, player_discoveries):
             desc = locked_descs.get(discovery_id)
             if desc:
                 locked.append(desc)
@@ -385,8 +396,8 @@ def build_interrogation_context(
     tactic_type: str,
     evidence_strength: str,
     archetype_id: str | None = None,
-    player_evidence: List[str] | None = None,
-    player_discoveries: List[str] | None = None,
+    player_evidence: list[str] | None = None,
+    player_discoveries: list[str] | None = None,
 ) -> str:
     """Build the system-prompt paragraph injected per turn.
 
@@ -404,6 +415,7 @@ def build_interrogation_context(
 
     if archetype_id is None:
         from .cases import get_active_case
+
         archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES.get(archetype_id, ARCHETYPES["professional_fixer"])
 
@@ -471,10 +483,10 @@ def should_show_intuition(
     *,
     npc_id: str,
     evidence_strength: str,
-    discovery_ids: List[str],
-    player_discovery_ids: List[str],
-    discovery_catalog: Dict[str, Dict[str, Any]],
-) -> Tuple[bool, str | None]:
+    discovery_ids: list[str],
+    player_discovery_ids: list[str],
+    discovery_catalog: dict[str, dict[str, Any]],
+) -> tuple[bool, str | None]:
     """Decide whether to show an intuition line and what kind.
 
     Returns ``(should_fire, moment_type)`` where *moment_type* is ``None``
@@ -492,7 +504,8 @@ def should_show_intuition(
     # First discovery with this NPC (breakthrough)
     if discovery_ids:
         prior_npc_discoveries = {
-            did for did in player_discovery_ids
+            did
+            for did in player_discovery_ids
             if discovery_catalog.get(did, {}).get("npc_id") == npc_id
             and did not in discovery_ids  # exclude what was just found
         }
@@ -500,10 +513,7 @@ def should_show_intuition(
             return True, "breakthrough"
 
     # All discoveries exhausted for this NPC (dead end)
-    npc_total = {
-        did for did, info in discovery_catalog.items()
-        if info.get("npc_id") == npc_id
-    }
+    npc_total = {did for did, info in discovery_catalog.items() if info.get("npc_id") == npc_id}
     if npc_total:
         player_npc = npc_total & (set(player_discovery_ids) | set(discovery_ids))
         if player_npc == npc_total:

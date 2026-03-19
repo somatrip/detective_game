@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from .supabase_client import get_supabase, is_supabase_configured
+from .supabase_client import get_supabase
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +15,7 @@ router = APIRouter(prefix="/api/track", tags=["tracking"])
 
 
 # ── Request schemas ──────────────────────────────────────────────────────
+
 
 class TrackSessionRequest(BaseModel):
     session_id: str
@@ -25,7 +25,7 @@ class TrackSessionRequest(BaseModel):
 class TrackDiscoveryRequest(BaseModel):
     session_id: str
     evidence_id: str
-    npc_id: Optional[str] = None
+    npc_id: str | None = None
 
 
 class TrackAccusationRequest(BaseModel):
@@ -38,6 +38,7 @@ class TrackAccusationRequest(BaseModel):
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
+
 def _get_sb():
     sb = get_supabase()
     if sb is None:
@@ -47,14 +48,17 @@ def _get_sb():
 
 # ── Endpoints ────────────────────────────────────────────────────────────
 
+
 @router.post("/session")
 async def track_session(body: TrackSessionRequest):
     sb = _get_sb()
     try:
-        sb.table("game_sessions").insert({
-            "session_id": body.session_id,
-            "language": body.language,
-        }).execute()
+        sb.table("game_sessions").insert(
+            {
+                "session_id": body.session_id,
+                "language": body.language,
+            }
+        ).execute()
     except Exception as exc:
         log.warning("Failed to track session: %s", exc)
     return {"ok": True}
@@ -64,11 +68,13 @@ async def track_session(body: TrackSessionRequest):
 async def track_discovery(body: TrackDiscoveryRequest):
     sb = _get_sb()
     try:
-        sb.table("discovery_events").insert({
-            "session_id": body.session_id,
-            "evidence_id": body.evidence_id,
-            "npc_id": body.npc_id,
-        }).execute()
+        sb.table("discovery_events").insert(
+            {
+                "session_id": body.session_id,
+                "evidence_id": body.evidence_id,
+                "npc_id": body.npc_id,
+            }
+        ).execute()
     except Exception as exc:
         log.warning("Failed to track discovery: %s", exc)
     return {"ok": True}
@@ -78,13 +84,15 @@ async def track_discovery(body: TrackDiscoveryRequest):
 async def track_accusation(body: TrackAccusationRequest):
     sb = _get_sb()
     try:
-        sb.table("accusation_events").insert({
-            "session_id": body.session_id,
-            "target_npc_id": body.target_npc_id,
-            "correct": body.correct,
-            "evidence_count": body.evidence_count,
-            "interview_count": body.interview_count,
-        }).execute()
+        sb.table("accusation_events").insert(
+            {
+                "session_id": body.session_id,
+                "target_npc_id": body.target_npc_id,
+                "correct": body.correct,
+                "evidence_count": body.evidence_count,
+                "interview_count": body.interview_count,
+            }
+        ).execute()
     except Exception as exc:
         log.warning("Failed to track accusation: %s", exc)
     return {"ok": True}
@@ -102,26 +110,28 @@ def log_chat_event(
     pressure_band: str | None = None,
     rapport_band: str | None = None,
     expression: str | None = None,
-    evidence_ids: List[str] | None = None,
+    evidence_ids: list[str] | None = None,
 ) -> None:
     """Insert a chat_events row. Called from the /api/chat endpoint."""
     sb = get_supabase()
     if sb is None:
         return
     try:
-        sb.table("chat_events").insert({
-            "session_id": session_id,
-            "npc_id": npc_id,
-            "player_message": player_message,
-            "npc_reply": npc_reply,
-            "tactic_type": tactic_type,
-            "evidence_strength": evidence_strength,
-            "pressure": pressure,
-            "rapport": rapport,
-            "pressure_band": pressure_band,
-            "rapport_band": rapport_band,
-            "expression": expression,
-            "evidence_ids": evidence_ids or [],
-        }).execute()
+        sb.table("chat_events").insert(
+            {
+                "session_id": session_id,
+                "npc_id": npc_id,
+                "player_message": player_message,
+                "npc_reply": npc_reply,
+                "tactic_type": tactic_type,
+                "evidence_strength": evidence_strength,
+                "pressure": pressure,
+                "rapport": rapport,
+                "pressure_band": pressure_band,
+                "rapport_band": rapport_band,
+                "expression": expression,
+                "evidence_ids": evidence_ids or [],
+            }
+        ).execute()
     except Exception as exc:
         log.warning("Failed to track chat event: %s", exc)

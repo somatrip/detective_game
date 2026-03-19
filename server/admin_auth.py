@@ -11,16 +11,15 @@ routes depend on this function to validate the user's JWT and check is_admin.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from fastapi import HTTPException, Header
+from fastapi import Header, HTTPException
 
 from .supabase_client import get_supabase
 
 log = logging.getLogger(__name__)
 
 
-def require_admin(authorization: Optional[str] = Header(default=None)) -> str:
+def require_admin(authorization: str | None = Header(default=None)) -> str:
     """FastAPI dependency that validates the user is an admin.
 
     Returns the user_id on success. Raises 401/403 on failure.

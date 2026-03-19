@@ -11,11 +11,8 @@ from __future__ import annotations
 import logging
 import sys
 
-from .supabase_client import get_supabase
-from .interrogation import ARCHETYPES
-from .cases.echoes_in_the_atrium.npc_profiles import NPC_PROFILES
+from .cases.echoes_in_the_atrium import INTUITION_PROMPT
 from .cases.echoes_in_the_atrium.archetypes import NPC_ARCHETYPE_MAP
-from .cases.echoes_in_the_atrium.world_context import WORLD_CONTEXT_PROMPT
 from .cases.echoes_in_the_atrium.evidence import (
     DISCOVERY_CATALOG,
     DISCOVERY_GATES,
@@ -24,7 +21,10 @@ from .cases.echoes_in_the_atrium.evidence import (
     NPC_RELEVANT_EVIDENCE,
     SMOKING_GUN_MAP,
 )
-from .cases.echoes_in_the_atrium import INTUITION_PROMPT
+from .cases.echoes_in_the_atrium.npc_profiles import NPC_PROFILES
+from .cases.echoes_in_the_atrium.world_context import WORLD_CONTEXT_PROMPT
+from .interrogation import ARCHETYPES
+from .supabase_client import get_supabase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -62,16 +62,18 @@ def seed():
     log.info("Seeding archetypes...")
     archetype_rows = []
     for arch in ARCHETYPES.values():
-        archetype_rows.append({
-            "name": arch.archetype_id,
-            "label": arch.label,
-            "pressure_scale": arch.pressure_scale,
-            "rapport_scale": arch.rapport_scale,
-            "pressure_decay": arch.pressure_decay,
-            "rapport_decay": arch.rapport_decay,
-            "contradiction_bonus": arch.contradiction_bonus,
-            "empathy_bonus": arch.empathy_bonus,
-        })
+        archetype_rows.append(
+            {
+                "name": arch.archetype_id,
+                "label": arch.label,
+                "pressure_scale": arch.pressure_scale,
+                "rapport_scale": arch.rapport_scale,
+                "pressure_decay": arch.pressure_decay,
+                "rapport_decay": arch.rapport_decay,
+                "contradiction_bonus": arch.contradiction_bonus,
+                "empathy_bonus": arch.empathy_bonus,
+            }
+        )
     sb.table("archetypes").upsert(archetype_rows, on_conflict="name").execute()
 
     # Fetch archetype IDs
@@ -99,18 +101,20 @@ def seed():
     npc_rows = []
     for i, (npc_slug, profile) in enumerate(NPC_PROFILES.items()):
         arch_name = NPC_ARCHETYPE_MAP.get(npc_slug, "professional_fixer")
-        npc_rows.append({
-            "case_id": case_id,
-            "npc_slug": npc_slug,
-            "display_name": profile.display_name,
-            "system_prompt": profile.system_prompt,
-            "timeline": profile.timeline or "",
-            "archetype_id": arch_map.get(arch_name),
-            "voice": profile.voice or "alloy",
-            "voice_instruction": profile.voice_instruction or "",
-            "gender": profile.gender or "male",
-            "sort_order": i,
-        })
+        npc_rows.append(
+            {
+                "case_id": case_id,
+                "npc_slug": npc_slug,
+                "display_name": profile.display_name,
+                "system_prompt": profile.system_prompt,
+                "timeline": profile.timeline or "",
+                "archetype_id": arch_map.get(arch_name),
+                "voice": profile.voice or "alloy",
+                "voice_instruction": profile.voice_instruction or "",
+                "gender": profile.gender or "male",
+                "sort_order": i,
+            }
+        )
     sb.table("npcs").upsert(npc_rows, on_conflict="case_id,npc_slug").execute()
 
     # Fetch NPC IDs
@@ -122,14 +126,16 @@ def seed():
     log.info("Seeding evidence...")
     evidence_rows = []
     for i, (ev_slug, desc) in enumerate(EVIDENCE_CATALOG_DESCRIPTIONS.items()):
-        evidence_rows.append({
-            "case_id": case_id,
-            "evidence_slug": ev_slug,
-            "label": ev_slug.replace("-", " ").title(),
-            "description": desc,
-            "evidence_group": EVIDENCE_GROUPS.get(ev_slug, "physical"),
-            "sort_order": i,
-        })
+        evidence_rows.append(
+            {
+                "case_id": case_id,
+                "evidence_slug": ev_slug,
+                "label": ev_slug.replace("-", " ").title(),
+                "description": desc,
+                "evidence_group": EVIDENCE_GROUPS.get(ev_slug, "physical"),
+                "sort_order": i,
+            }
+        )
     sb.table("evidence").upsert(evidence_rows, on_conflict="case_id,evidence_slug").execute()
 
     # Fetch evidence IDs
@@ -146,17 +152,21 @@ def seed():
         if not npc_uuid or not ev_uuid:
             log.warning("  Skipping discovery %s: missing NPC or evidence", disc_slug)
             continue
-        disc_rows.append({
-            "case_id": case_id,
-            "discovery_slug": disc_slug,
-            "npc_id": npc_uuid,
-            "evidence_id": ev_uuid,
-            "description": info["description"],
-        })
+        disc_rows.append(
+            {
+                "case_id": case_id,
+                "discovery_slug": disc_slug,
+                "npc_id": npc_uuid,
+                "evidence_id": ev_uuid,
+                "description": info["description"],
+            }
+        )
     sb.table("discoveries").upsert(disc_rows, on_conflict="case_id,discovery_slug").execute()
 
     # Fetch discovery IDs
-    disc_resp = sb.table("discoveries").select("id, discovery_slug").eq("case_id", case_id).execute()
+    disc_resp = (
+        sb.table("discoveries").select("id, discovery_slug").eq("case_id", case_id).execute()
+    )
     disc_map = {r["discovery_slug"]: r["id"] for r in disc_resp.data}
     log.info("  %d discoveries seeded", len(disc_map))
 
@@ -169,14 +179,16 @@ def seed():
             log.warning("  Skipping gate for %s: discovery not found", disc_slug)
             continue
         for i, cond in enumerate(conditions):
-            gate_rows.append({
-                "discovery_id": disc_uuid,
-                "gate_index": i,
-                "min_pressure": cond.get("min_pressure"),
-                "min_rapport": cond.get("min_rapport"),
-                "required_evidence_slugs": cond.get("requires_evidence"),
-                "required_discovery_slugs": cond.get("requires_discovery"),
-            })
+            gate_rows.append(
+                {
+                    "discovery_id": disc_uuid,
+                    "gate_index": i,
+                    "min_pressure": cond.get("min_pressure"),
+                    "min_rapport": cond.get("min_rapport"),
+                    "required_evidence_slugs": cond.get("requires_evidence"),
+                    "required_discovery_slugs": cond.get("requires_discovery"),
+                }
+            )
     if gate_rows:
         sb.table("discovery_gates").upsert(
             gate_rows, on_conflict="discovery_id,gate_index"
@@ -190,10 +202,12 @@ def seed():
         disc_uuid = disc_map.get(disc_slug)
         if not disc_uuid:
             continue
-        lsd_rows.append({
-            "discovery_id": disc_uuid,
-            "description": desc,
-        })
+        lsd_rows.append(
+            {
+                "discovery_id": disc_uuid,
+                "description": desc,
+            }
+        )
     if lsd_rows:
         sb.table("locked_secret_descriptions").upsert(
             lsd_rows, on_conflict="discovery_id"
@@ -212,11 +226,13 @@ def seed():
             ev_uuid = ev_map.get(ev_slug)
             if not ev_uuid:
                 continue
-            rel_rows.append({
-                "npc_id": npc_uuid,
-                "evidence_id": ev_uuid,
-                "is_smoking_gun": ev_slug in smoking_guns,
-            })
+            rel_rows.append(
+                {
+                    "npc_id": npc_uuid,
+                    "evidence_id": ev_uuid,
+                    "is_smoking_gun": ev_slug in smoking_guns,
+                }
+            )
     if rel_rows:
         sb.table("npc_evidence_relevance").upsert(
             rel_rows, on_conflict="npc_id,evidence_id"

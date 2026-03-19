@@ -12,7 +12,7 @@ import importlib
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..npc_registry import NPCProfile
@@ -27,15 +27,23 @@ class CaseData:
     case_id: str
     title: str
     world_context_prompt: str
-    npc_profiles: Dict[str, NPCProfile]    # npc_id → NPCProfile
-    npc_archetype_map: Dict[str, str]      # npc_id → archetype_id
-    npc_relevant_evidence: Dict[str, List[str]]
-    smoking_gun_map: Dict[str, List[str]]
-    evidence_catalog: Dict[str, str]       # evidence_id → description
-    discovery_catalog: Dict[str, Dict[str, Any]]  # discovery_id → {npc_id, evidence_id, description}
-    discovery_gates: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)  # discovery_id → list of gate conditions
-    locked_secret_descriptions: Dict[str, str] = field(default_factory=dict)  # discovery_id → locked prompt text
-    intuition_prompt: str | None = None  # per-case system prompt for detective intuition; None disables intuition
+    npc_profiles: dict[str, NPCProfile]  # npc_id → NPCProfile
+    npc_archetype_map: dict[str, str]  # npc_id → archetype_id
+    npc_relevant_evidence: dict[str, list[str]]
+    smoking_gun_map: dict[str, list[str]]
+    evidence_catalog: dict[str, str]  # evidence_id → description
+    discovery_catalog: dict[
+        str, dict[str, Any]
+    ]  # discovery_id → {npc_id, evidence_id, description}
+    discovery_gates: dict[str, list[dict[str, Any]]] = field(
+        default_factory=dict
+    )  # discovery_id → list of gate conditions
+    locked_secret_descriptions: dict[str, str] = field(
+        default_factory=dict
+    )  # discovery_id → locked prompt text
+    intuition_prompt: str | None = (
+        None  # per-case system prompt for detective intuition; None disables intuition
+    )
 
     def validate(self) -> None:
         """Check referential integrity across all case data maps.
@@ -58,14 +66,18 @@ class CaseData:
                 warnings.append(f"npc_relevant_evidence references unknown NPC '{npc_id}'")
             for eid in self.npc_relevant_evidence[npc_id]:
                 if eid not in self.evidence_catalog:
-                    errors.append(f"npc_relevant_evidence['{npc_id}'] references unknown evidence '{eid}'")
+                    errors.append(
+                        f"npc_relevant_evidence['{npc_id}'] references unknown evidence '{eid}'"
+                    )
 
         for npc_id in self.smoking_gun_map:
             if npc_id not in npc_ids:
                 warnings.append(f"smoking_gun_map references unknown NPC '{npc_id}'")
             for eid in self.smoking_gun_map[npc_id]:
                 if eid not in self.evidence_catalog:
-                    errors.append(f"smoking_gun_map['{npc_id}'] references unknown evidence '{eid}'")
+                    errors.append(
+                        f"smoking_gun_map['{npc_id}'] references unknown evidence '{eid}'"
+                    )
 
         # Every discovery must reference a valid NPC and evidence
         for did, info in self.discovery_catalog.items():
@@ -127,13 +139,20 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
 
     try:
         # Fetch NPCs with their archetype (include id for relevance lookup later)
-        npcs_rows = sb.table("npcs").select(
-            "id, npc_slug, display_name, system_prompt, timeline, voice, voice_instruction, gender, archetype_id, archetypes(name)"
-        ).eq("case_id", case_id_db).order("sort_order").execute().data
+        npcs_rows = (
+            sb.table("npcs")
+            .select(
+                "id, npc_slug, display_name, system_prompt, timeline, voice, voice_instruction, gender, archetype_id, archetypes(name)"
+            )
+            .eq("case_id", case_id_db)
+            .order("sort_order")
+            .execute()
+            .data
+        )
 
-        npc_profiles: Dict[str, NPCProfile] = {}
-        npc_archetype_map: Dict[str, str] = {}
-        npc_db_id_to_slug: Dict[str, str] = {}
+        npc_profiles: dict[str, NPCProfile] = {}
+        npc_archetype_map: dict[str, str] = {}
+        npc_db_id_to_slug: dict[str, str] = {}
         for row in npcs_rows:
             slug = row["npc_slug"]
             npc_db_id_to_slug[row["id"]] = slug
@@ -152,18 +171,30 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
                 npc_archetype_map[slug] = arch_name
 
         # Fetch evidence
-        ev_rows = sb.table("evidence").select("evidence_slug, description").eq("case_id", case_id_db).execute().data
-        evidence_catalog: Dict[str, str] = {
+        ev_rows = (
+            sb.table("evidence")
+            .select("evidence_slug, description")
+            .eq("case_id", case_id_db)
+            .execute()
+            .data
+        )
+        evidence_catalog: dict[str, str] = {
             row["evidence_slug"]: row["description"] or "" for row in ev_rows
         }
 
         # Fetch discoveries
-        disc_rows = sb.table("discoveries").select(
-            "id, discovery_slug, description, npc_id, evidence_id, npcs(npc_slug), evidence(evidence_slug)"
-        ).eq("case_id", case_id_db).execute().data
+        disc_rows = (
+            sb.table("discoveries")
+            .select(
+                "id, discovery_slug, description, npc_id, evidence_id, npcs(npc_slug), evidence(evidence_slug)"
+            )
+            .eq("case_id", case_id_db)
+            .execute()
+            .data
+        )
 
-        discovery_catalog: Dict[str, Dict[str, Any]] = {}
-        disc_id_to_slug: Dict[str, str] = {}
+        discovery_catalog: dict[str, dict[str, Any]] = {}
+        disc_id_to_slug: dict[str, str] = {}
         for row in disc_rows:
             slug = row["discovery_slug"]
             disc_id_to_slug[row["id"]] = slug
@@ -179,16 +210,21 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
         disc_ids = [row["id"] for row in disc_rows]
         gates_rows = []
         if disc_ids:
-            gates_rows = sb.table("discovery_gates").select("*").in_(
-                "discovery_id", disc_ids
-            ).order("gate_index").execute().data
+            gates_rows = (
+                sb.table("discovery_gates")
+                .select("*")
+                .in_("discovery_id", disc_ids)
+                .order("gate_index")
+                .execute()
+                .data
+            )
 
-        discovery_gates: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        discovery_gates: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for gate in gates_rows:
             disc_slug = disc_id_to_slug.get(gate["discovery_id"], "")
             if not disc_slug:
                 continue
-            condition: Dict[str, Any] = {}
+            condition: dict[str, Any] = {}
             if gate.get("min_pressure") is not None:
                 condition["min_pressure"] = gate["min_pressure"]
             if gate.get("min_rapport") is not None:
@@ -202,11 +238,15 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
         # Fetch locked secret descriptions
         locked_secrets_rows = []
         if disc_ids:
-            locked_secrets_rows = sb.table("locked_secret_descriptions").select(
-                "discovery_id, description"
-            ).in_("discovery_id", disc_ids).execute().data
+            locked_secrets_rows = (
+                sb.table("locked_secret_descriptions")
+                .select("discovery_id, description")
+                .in_("discovery_id", disc_ids)
+                .execute()
+                .data
+            )
 
-        locked_secret_descriptions: Dict[str, str] = {}
+        locked_secret_descriptions: dict[str, str] = {}
         for row in locked_secrets_rows:
             disc_slug = disc_id_to_slug.get(row["discovery_id"], "")
             if disc_slug:
@@ -215,13 +255,17 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
         # Fetch NPC evidence relevance and smoking gun map (reuse npcs_rows, no redundant query)
         npc_db_ids = list(npc_db_id_to_slug.keys())
 
-        npc_relevant_evidence: Dict[str, List[str]] = defaultdict(list)
-        smoking_gun_map: Dict[str, List[str]] = defaultdict(list)
+        npc_relevant_evidence: dict[str, list[str]] = defaultdict(list)
+        smoking_gun_map: dict[str, list[str]] = defaultdict(list)
 
         if npc_db_ids:
-            rel_rows = sb.table("npc_evidence_relevance").select(
-                "npc_id, is_smoking_gun, evidence(evidence_slug)"
-            ).in_("npc_id", npc_db_ids).execute().data
+            rel_rows = (
+                sb.table("npc_evidence_relevance")
+                .select("npc_id, is_smoking_gun, evidence(evidence_slug)")
+                .in_("npc_id", npc_db_ids)
+                .execute()
+                .data
+            )
 
             for row in rel_rows:
                 npc_slug = npc_db_id_to_slug.get(row["npc_id"], "")
@@ -275,7 +319,9 @@ def load_case(case_id: str) -> CaseData:
         return _active_case
 
     # Fall back to Python module
-    log.info("[load-case] Loading '%s' from Python modules (DB not available or case not found)", case_id)
+    log.info(
+        "[load-case] Loading '%s' from Python modules (DB not available or case not found)", case_id
+    )
     module = importlib.import_module(f".{case_id}", package=__name__)
     _active_case = module.case_data
     _active_case.validate()

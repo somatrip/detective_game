@@ -5,17 +5,16 @@ Clients are cached as singletons — one instance per process lifetime.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Callable, Dict
 
 from ..config import settings
-from .base import LLMClient
 from .anthropic_client import AnthropicLLMClient
+from .base import LLMClient
 from .local_stub import LocalEchoLLMClient
 from .openai_client import OpenAILLMClient
 
-
-_PROVIDER_BUILDERS: Dict[str, Callable[[], LLMClient]] = {
+_PROVIDER_BUILDERS: dict[str, Callable[[], LLMClient]] = {
     "openai": lambda: OpenAILLMClient(
         api_key=settings.openai_api_key or "",
         model=settings.openai_model,

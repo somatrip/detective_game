@@ -4,23 +4,23 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import Optional
+
+from .config import settings
 
 log = logging.getLogger(__name__)
 
 # Lazy import so the server still starts when supabase is not installed
 _supabase_available = True
 try:
-    from supabase import create_client, Client as SupabaseClient
+    from supabase import Client as SupabaseClient
+    from supabase import create_client
 except ImportError:
     _supabase_available = False
     SupabaseClient = None  # type: ignore[misc]
 
-from .config import settings
-
 
 @lru_cache
-def get_supabase() -> Optional["SupabaseClient"]:
+def get_supabase() -> SupabaseClient | None:
     """Return a cached Supabase client, or None if not configured."""
     if not _supabase_available:
         log.warning("supabase-py is not installed — Supabase features disabled.")

@@ -2,23 +2,32 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Evidence knowledge base (used by tactic classifier for strength scoring)
 # ---------------------------------------------------------------------------
 
 #: Evidence relevant to each NPC (for evidence-strength scoring).
-NPC_RELEVANT_EVIDENCE: Dict[str, List[str]] = {
+NPC_RELEVANT_EVIDENCE: dict[str, list[str]] = {
     "noah-sterling": [
-        "financial-misconduct", "encrypted-schedule",
-        "key-trail", "surveillance", "burned-notebook",
+        "financial-misconduct",
+        "encrypted-schedule",
+        "key-trail",
+        "surveillance",
+        "burned-notebook",
         "murder-confession",
     ],
     "amelia-reyes": ["key-trail", "lockpick-marks", "power-outage", "hotel-sale", "conspiracy"],
     "eddie-voss": ["key-trail"],
     "celeste-ward": ["secret-affair", "audio-recording", "surveillance"],
-    "matthias-holt": ["data-sales", "blackmail", "burned-notebook", "surveillance", "financial-misconduct"],
+    "matthias-holt": [
+        "data-sales",
+        "blackmail",
+        "burned-notebook",
+        "surveillance",
+        "financial-misconduct",
+    ],
     "mira-kline": ["plagiarism", "encrypted-schedule", "nda-ip", "conspiracy"],
     "priya-shah": ["surveillance", "blackmail", "plagiarism", "encrypted-schedule"],
     "matthew-vale": ["stage-timing", "conspiracy"],
@@ -26,7 +35,7 @@ NPC_RELEVANT_EVIDENCE: Dict[str, List[str]] = {
 }
 
 #: Evidence that constitutes a "smoking gun" for a specific NPC.
-SMOKING_GUN_MAP: Dict[str, List[str]] = {
+SMOKING_GUN_MAP: dict[str, list[str]] = {
     "matthias-holt": ["data-sales"],
     "amelia-reyes": ["lockpick-marks"],
     "celeste-ward": ["audio-recording"],
@@ -35,7 +44,7 @@ SMOKING_GUN_MAP: Dict[str, List[str]] = {
 
 #: Full evidence catalog with descriptions (used by classify_player_turn
 #: for evidence-strength scoring).
-EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
+EVIDENCE_CATALOG_DESCRIPTIONS: dict[str, str] = {
     "burned-notebook": "A burned notebook fragment or threat list found in the incinerator",
     "keycard-logs": "Rooftop keycard access logs showing only four entry events after 10 PM: Holt (10:01), Tanaka (10:43), Mercer (11:08), Holt (11:44)",
     "key-trail": "The maintenance-room key and engineering keycard (ENGR-0001) were lent from Amelia to Eddie, then pressured from Eddie to Noah",
@@ -63,7 +72,7 @@ EVIDENCE_CATALOG_DESCRIPTIONS: Dict[str, str] = {
 # evidence category, and a specific description of what the NPC must
 # EXPLICITLY reveal for this discovery to fire.
 
-DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
+DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
     # Amelia Reyes
     "amelia-key-loan": {
         "npc_id": "amelia-reyes",
@@ -231,7 +240,7 @@ DISCOVERY_CATALOG: Dict[str, Dict[str, str]] = {
 # Within each condition dict, ALL requirements must be met (AND).
 # ---------------------------------------------------------------------------
 
-DISCOVERY_GATES: Dict[str, List[Dict[str, Any]]] = {
+DISCOVERY_GATES: dict[str, list[dict[str, Any]]] = {
     "noah-embezzlement": [
         {"min_pressure": 70},
         {"requires_evidence": ["financial-misconduct"]},
@@ -275,8 +284,10 @@ DISCOVERY_GATES: Dict[str, List[Dict[str, Any]]] = {
     "amelia-conspiracy-admission": [
         {"requires_discovery": ["amelia-breaker"], "min_pressure": 60},
         {"requires_discovery": ["amelia-breaker"], "min_rapport": 85},
-        {"requires_discovery": ["amelia-breaker"], "min_pressure": 40},       # "we" slip path
-        {"requires_discovery": ["amelia-breaker", "matthew-amelia-direction"]},  # timeline contradiction
+        {"requires_discovery": ["amelia-breaker"], "min_pressure": 40},  # "we" slip path
+        {
+            "requires_discovery": ["amelia-breaker", "matthew-amelia-direction"]
+        },  # timeline contradiction
         {"requires_discovery": ["mira-suite-search"]},
     ],
     "mira-conspiracy-admission": [
@@ -291,7 +302,7 @@ DISCOVERY_GATES: Dict[str, List[Dict[str, Any]]] = {
 # so the LLM avoids revealing gated secrets prematurely.
 # ---------------------------------------------------------------------------
 
-LOCKED_SECRET_DESCRIPTIONS: Dict[str, str] = {
+LOCKED_SECRET_DESCRIPTIONS: dict[str, str] = {
     "noah-embezzlement": (
         "Do NOT admit to or hint at embezzlement, skimming funds, financial misconduct, "
         "or gambling debts. If the detective accuses you of financial crimes, deny it firmly "
