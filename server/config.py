@@ -86,6 +86,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ECHO_SUPABASE_KEY", "SUPABASE_KEY"),
     )
 
+    # ── Timeouts ───────────────────────────────────────────────────────────
+    classifier_timeout: float = Field(
+        default=30.0,
+        description="Timeout in seconds for classifier LLM calls.",
+    )
+    classifier_connect_timeout: float = Field(
+        default=10.0,
+        description="Connection timeout in seconds for classifier LLM calls.",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

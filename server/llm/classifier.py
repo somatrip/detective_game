@@ -17,7 +17,9 @@ import httpx
 from ..config import settings
 
 # Classifier calls should be faster than main generation — use a shorter timeout.
-_CLASSIFIER_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+_CLASSIFIER_TIMEOUT = httpx.Timeout(
+    settings.classifier_timeout, connect=settings.classifier_connect_timeout
+)
 
 log = logging.getLogger(__name__)
 
