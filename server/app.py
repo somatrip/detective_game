@@ -38,7 +38,7 @@ from .llm.base import ChatMessage, LLMClient
 from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import get_llm_client
 from .npc_registry import get_npc_profile, list_npcs
-from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest
+from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest, StringboardState
 from .tracking_routes import log_chat_event
 from .tracking_routes import router as tracking_router
 
@@ -118,6 +118,11 @@ async def _get_llm_client() -> LLMClient:
         return get_llm_client()
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+async def _get_openai_for_audio() -> AsyncOpenAI:
+    """Dependency that provides the OpenAI client for audio endpoints."""
+    return _get_openai_client()
 
 
 # ── Shared OpenAI client for audio operations ────────────────────────────
@@ -488,10 +493,9 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 async def transcribe(
     file: UploadFile = File(...),  # noqa: B008
     language: str = Form(default="en"),  # noqa: B008
+    client: AsyncOpenAI = Depends(_get_openai_for_audio),  # noqa: B008
 ):
     """Transcribe an audio file to text using OpenAI Whisper."""
-
-    client = _get_openai_client()
     lang_map = {"en": "en", "sr": "sr"}
     whisper_lang = lang_map.get(language, "en")
 
@@ -521,10 +525,11 @@ async def transcribe(
 
 
 @app.post("/api/speak")
-async def speak(request: SpeakRequest):
+async def speak(
+    request: SpeakRequest,
+    client: AsyncOpenAI = Depends(_get_openai_for_audio),  # noqa: B008
+):
     """Convert text to speech using OpenAI TTS and return audio/mpeg."""
-
-    client = _get_openai_client()
 
     allowed_voices = {
         "alloy",
@@ -578,10 +583,9 @@ _stringboard_store: dict[str, Any] = {}
 
 
 @app.post("/api/state/stringboard")
-async def save_stringboard(request: Request):
+async def save_stringboard(state: StringboardState):
     """Save the string board state (card positions + links)."""
-    body = await request.json()
-    _stringboard_store["default"] = body
+    _stringboard_store["default"] = state.model_dump(by_alias=True)
     return {"ok": True}
 
 
