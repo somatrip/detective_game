@@ -15,6 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import AsyncOpenAI
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from .admin_routes import router as admin_router
 from .auth_routes import router as auth_router
@@ -66,6 +69,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Detective Game Backend", version="0.1.0", lifespan=lifespan)
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 @app.exception_handler(Exception)
 async def _global_exception_handler(request: Request, exc: Exception):
@@ -90,11 +97,17 @@ if _cors_env:
     allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 else:
     allow_origins = ["*"]
-    log.warning(
-        "CORS allow_origins is wildcard '*'. "
-        "Set ECHO_CORS_ORIGINS to your deployment domain in production "
-        "(e.g. ECHO_CORS_ORIGINS=https://yourdomain.com)."
-    )
+    if settings.llm_provider == "local":
+        log.info(
+            "CORS allow_origins is wildcard '*' (local provider). "
+            "This is expected for local development."
+        )
+    else:
+        log.warning(
+            "CORS allow_origins is wildcard '*'. "
+            "Set ECHO_CORS_ORIGINS to your deployment domain in production "
+            "(e.g. ECHO_CORS_ORIGINS=https://yourdomain.com)."
+        )
 
 app.add_middleware(
     CORSMiddleware,
@@ -191,7 +204,10 @@ async def list_available_npcs():
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) -> ChatResponse:  # noqa: B008
+@limiter.limit("30/minute")
+async def chat(
+    request: Request, body: ChatRequest, llm: LLMClient = Depends(_get_llm_client)
+) -> ChatResponse:  # noqa: B008
     """Send the player's message to the LLM and return the NPC's reply.
 
     Pipeline per turn:
@@ -204,24 +220,24 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     """
 
     try:
-        npc_profile = get_npc_profile(request.npc_id)
+        npc_profile = get_npc_profile(body.npc_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     case = get_active_case()
-    archetype_id = case.npc_archetype_map.get(request.npc_id, "professional_fixer")
+    archetype_id = case.npc_archetype_map.get(body.npc_id, "professional_fixer")
 
-    history: list[ChatTurn] = list(request.history)
-    history.append(ChatTurn(role="user", content=request.message))
+    history: list[ChatTurn] = list(body.history)
+    history.append(ChatTurn(role="user", content=body.message))
 
     # ── Step 1: Classify the player's turn (secondary LLM) ──────────────
-    log.info("[chat] Step 1: classifying turn for npc=%s", request.npc_id)
+    log.info("[chat] Step 1: classifying turn for npc=%s", body.npc_id)
     try:
         classification = await classify_player_turn(
-            message=request.message,
-            npc_id=request.npc_id,
-            player_evidence_ids=list(request.player_evidence_ids),
-            conversation_history=[t.model_dump() for t in request.history],
+            message=body.message,
+            npc_id=body.npc_id,
+            player_evidence_ids=list(body.player_evidence_ids),
+            conversation_history=[t.model_dump() for t in body.history],
         )
     except Exception as exc:
         log.exception("[chat] Step 1 FAILED: classify_player_turn")
@@ -239,23 +255,23 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     )
 
     # ── Pre-Step 2: Capture old bands for intuition trigger detection ───
-    _pressure_band(request.pressure)  # evaluated for side-effect / validation
-    _rapport_band(request.rapport)
+    _pressure_band(body.pressure)  # evaluated for side-effect / validation
+    _rapport_band(body.rapport)
 
     # ── Step 2: Compute pressure/rapport deltas ─────────────────────────
     log.info(
         "[chat] Step 2: computing deltas (pressure=%d, rapport=%d)",
-        request.pressure,
-        request.rapport,
+        body.pressure,
+        body.rapport,
     )
     try:
         interrogation_result = process_turn(
             tactic_type=tactic_type,
             evidence_strength=evidence_strength,
-            npc_id=request.npc_id,
-            current_pressure=request.pressure,
-            current_rapport=request.rapport,
-            peak_pressure=request.peak_pressure,
+            npc_id=body.npc_id,
+            current_pressure=body.pressure,
+            current_rapport=body.rapport,
+            peak_pressure=body.peak_pressure,
             archetype_id=archetype_id,
         )
     except Exception as exc:
@@ -272,14 +288,14 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     # ── Step 3: Build interrogation context prompt ──────────────────────
     try:
         interrogation_prompt = build_interrogation_context(
-            npc_id=request.npc_id,
+            npc_id=body.npc_id,
             pressure_val=interrogation_result["pressure"],
             rapport_val=interrogation_result["rapport"],
             tactic_type=tactic_type,
             evidence_strength=evidence_strength,
             archetype_id=archetype_id,
-            player_evidence=list(request.player_evidence_ids),
-            player_discoveries=list(request.player_discovery_ids),
+            player_evidence=list(body.player_evidence_ids),
+            player_discoveries=list(body.player_discovery_ids),
         )
     except Exception as exc:
         log.exception("[chat] Step 3 FAILED: build_interrogation_context")
@@ -297,7 +313,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
         {"role": "system", "content": interrogation_prompt},
     ]
 
-    if request.language == "sr":
+    if body.language == "sr":
         gender_sr = "ženskog" if npc_profile.gender == "female" else "muškog"
         system_messages.append(
             {
@@ -320,7 +336,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     ]
 
     try:
-        raw_reply = await llm.generate(npc_id=request.npc_id, messages=llm_messages)
+        raw_reply = await llm.generate(npc_id=body.npc_id, messages=llm_messages)
     except Exception as exc:
         detail = str(exc)
         log.error("[chat] Step 4 FAILED: LLM generate — %s", detail)
@@ -347,10 +363,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     try:
         detection = await detect_evidence(
             npc_response=clean_reply,
-            npc_id=request.npc_id,
-            already_collected=list(request.player_discovery_ids),
-            player_message=request.message,
-            language=request.language,
+            npc_id=body.npc_id,
+            already_collected=list(body.player_discovery_ids),
+            player_message=body.message,
+            language=body.language,
         )
     except Exception as exc:
         log.exception("[chat] Step 5 FAILED: detect_evidence")
@@ -383,8 +399,8 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
             gates,
             pressure=interrogation_result["pressure"],
             rapport=interrogation_result["rapport"],
-            player_evidence=request.player_evidence_ids,
-            player_discoveries=request.player_discovery_ids,
+            player_evidence=body.player_evidence_ids,
+            player_discoveries=body.player_discovery_ids,
         ):
             gated_discovery_ids.append(did)
         else:
@@ -402,10 +418,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 
     # ── Step 5c: Generate intuition line if triggers are met ─────────────
     _should_intuit, moment_type = should_show_intuition(
-        npc_id=request.npc_id,
+        npc_id=body.npc_id,
         evidence_strength=evidence_strength,
         discovery_ids=discovery_ids,
-        player_discovery_ids=request.player_discovery_ids,
+        player_discovery_ids=body.player_discovery_ids,
         discovery_catalog=case.discovery_catalog,
     )
     intuition_line = None
@@ -414,7 +430,7 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
             npc_name = (
                 npc_profile.display_name.split(" — ")[0]
                 if npc_profile.display_name
-                else request.npc_id
+                else body.npc_id
             )
 
             # Build a short conversation recap (fewer lines for atmospheric)
@@ -452,11 +468,11 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
     history.append(ChatTurn(role="assistant", content=clean_reply))
 
     # ── Step 6: Track & return combined response ────────────────────────
-    if request.session_id:
+    if body.session_id:
         log_chat_event(
-            session_id=request.session_id,
-            npc_id=request.npc_id,
-            player_message=request.message,
+            session_id=body.session_id,
+            npc_id=body.npc_id,
+            player_message=body.message,
             npc_reply=clean_reply,
             tactic_type=tactic_type,
             evidence_strength=evidence_strength,
@@ -468,10 +484,10 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
             evidence_ids=evidence_ids,
         )
 
-    log.info("[chat] Step 6: returning response for npc=%s", request.npc_id)
+    log.info("[chat] Step 6: returning response for npc=%s", body.npc_id)
     return ChatResponse(
         reply=clean_reply,
-        npc_id=request.npc_id,
+        npc_id=body.npc_id,
         history=history,
         evidence_ids=evidence_ids,
         discovery_ids=discovery_ids,
@@ -491,7 +507,9 @@ async def chat(request: ChatRequest, llm: LLMClient = Depends(_get_llm_client)) 
 
 
 @app.post("/api/transcribe")
+@limiter.limit("10/minute")
 async def transcribe(
+    request: Request,
     file: UploadFile = File(...),  # noqa: B008
     language: str = Form(default="en"),  # noqa: B008
     client: AsyncOpenAI = Depends(_get_openai_for_audio),  # noqa: B008
@@ -526,8 +544,10 @@ async def transcribe(
 
 
 @app.post("/api/speak")
+@limiter.limit("10/minute")
 async def speak(
-    request: SpeakRequest,
+    request: Request,
+    body: SpeakRequest,
     client: AsyncOpenAI = Depends(_get_openai_for_audio),  # noqa: B008
 ):
     """Convert text to speech using OpenAI TTS and return audio/mpeg."""
@@ -545,8 +565,8 @@ async def speak(
         "shimmer",
         "verse",
     }
-    voice = request.voice if request.voice in allowed_voices else "alloy"
-    text = request.text[:4096]
+    voice = body.voice if body.voice in allowed_voices else "alloy"
+    text = body.text[:4096]
 
     tts_kwargs: dict = {
         "model": settings.openai_tts_model,
@@ -554,8 +574,8 @@ async def speak(
         "input": text,
         "response_format": "mp3",
     }
-    if request.instructions:
-        tts_kwargs["instructions"] = request.instructions
+    if body.instructions:
+        tts_kwargs["instructions"] = body.instructions
 
     try:
         response = await client.audio.speech.create(**tts_kwargs)
