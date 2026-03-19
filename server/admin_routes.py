@@ -16,7 +16,7 @@ except ImportError:
     APIError = type("APIError", (Exception,), {})  # type: ignore[misc,assignment]
 
 from .admin_auth import require_admin
-from .supabase_client import get_supabase
+from .supabase_helpers import require_supabase
 
 log = logging.getLogger(__name__)
 
@@ -138,25 +138,18 @@ class RelevanceUpdate(BaseModel):
     is_smoking_gun: bool = False
 
 
-def _sb():
-    sb = get_supabase()
-    if sb is None:
-        raise HTTPException(status_code=503, detail="Supabase not configured")
-    return sb
-
-
 # ── Cases ────────────────────────────────────────────────────────────────
 
 
 @router.get("/cases")
 async def list_cases(user_id: str = Depends(require_admin)):
-    result = _sb().table("cases").select("*").order("created_at").execute()
+    result = require_supabase().table("cases").select("*").order("created_at").execute()
     return result.data
 
 
 @router.get("/cases/{case_id}")
 async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
-    sb = _sb()
+    sb = require_supabase()
     try:
         case = sb.table("cases").select("*").eq("id", str(case_id)).single().execute()
     except APIError as exc:
@@ -224,7 +217,7 @@ async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
 @router.post("/cases")
 async def create_case(body: CaseCreate, user_id: str = Depends(require_admin)):
     try:
-        result = _sb().table("cases").insert(body.model_dump()).execute()
+        result = require_supabase().table("cases").insert(body.model_dump()).execute()
     except APIError as exc:
         raise _handle_supabase_error(exc, "Case") from exc
     return result.data[0]
@@ -235,7 +228,7 @@ async def update_case(case_id: UUID, body: CaseUpdate, user_id: str = Depends(re
     data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("cases").update(data).eq("id", str(case_id)).execute()
+    result = require_supabase().table("cases").update(data).eq("id", str(case_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 
@@ -247,7 +240,7 @@ async def delete_case(case_id: UUID, confirm: bool = False, user_id: str = Depen
             detail="Deleting a case cascades to all NPCs, evidence, discoveries, gates, and locked secrets. "
             "Pass ?confirm=true to proceed.",
         )
-    _sb().table("cases").delete().eq("id", str(case_id)).execute()
+    require_supabase().table("cases").delete().eq("id", str(case_id)).execute()
     return {"ok": True}
 
 
@@ -259,7 +252,7 @@ async def create_npc(case_id: UUID, body: NPCCreate, user_id: str = Depends(requ
     data = body.model_dump()
     data["case_id"] = str(case_id)
     try:
-        result = _sb().table("npcs").insert(data).execute()
+        result = require_supabase().table("npcs").insert(data).execute()
     except APIError as exc:
         raise _handle_supabase_error(exc, "NPC") from exc
     return result.data[0]
@@ -270,7 +263,7 @@ async def update_npc(npc_id: UUID, body: NPCUpdate, user_id: str = Depends(requi
     data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("npcs").update(data).eq("id", str(npc_id)).execute()
+    result = require_supabase().table("npcs").update(data).eq("id", str(npc_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 
@@ -282,7 +275,7 @@ async def delete_npc(npc_id: UUID, confirm: bool = False, user_id: str = Depends
             detail="Deleting an NPC cascades to its discoveries, gates, and relevance entries. "
             "Pass ?confirm=true to proceed.",
         )
-    _sb().table("npcs").delete().eq("id", str(npc_id)).execute()
+    require_supabase().table("npcs").delete().eq("id", str(npc_id)).execute()
     return {"ok": True}
 
 
@@ -296,7 +289,7 @@ async def create_evidence(
     data = body.model_dump()
     data["case_id"] = str(case_id)
     try:
-        result = _sb().table("evidence").insert(data).execute()
+        result = require_supabase().table("evidence").insert(data).execute()
     except APIError as exc:
         raise _handle_supabase_error(exc, "Evidence") from exc
     return result.data[0]
@@ -309,7 +302,7 @@ async def update_evidence(
     data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("evidence").update(data).eq("id", str(evidence_id)).execute()
+    result = require_supabase().table("evidence").update(data).eq("id", str(evidence_id)).execute()
     return result.data[0] if result.data else {"ok": True}
 
 
@@ -323,7 +316,7 @@ async def delete_evidence(
             detail="Deleting evidence cascades to discoveries and relevance entries that reference it. "
             "Pass ?confirm=true to proceed.",
         )
-    _sb().table("evidence").delete().eq("id", str(evidence_id)).execute()
+    require_supabase().table("evidence").delete().eq("id", str(evidence_id)).execute()
     return {"ok": True}
 
 
@@ -337,7 +330,7 @@ async def create_discovery(
     data = body.model_dump()
     data["case_id"] = str(case_id)
     try:
-        result = _sb().table("discoveries").insert(data).execute()
+        result = require_supabase().table("discoveries").insert(data).execute()
     except APIError as exc:
         raise _handle_supabase_error(exc, "Discovery") from exc
     return result.data[0]
@@ -350,7 +343,9 @@ async def update_discovery(
     data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("discoveries").update(data).eq("id", str(discovery_id)).execute()
+    result = (
+        require_supabase().table("discoveries").update(data).eq("id", str(discovery_id)).execute()
+    )
     return result.data[0] if result.data else {"ok": True}
 
 
@@ -364,7 +359,7 @@ async def delete_discovery(
             detail="Deleting a discovery cascades to its gates and locked secret. "
             "Pass ?confirm=true to proceed.",
         )
-    _sb().table("discoveries").delete().eq("id", str(discovery_id)).execute()
+    require_supabase().table("discoveries").delete().eq("id", str(discovery_id)).execute()
     return {"ok": True}
 
 
@@ -376,7 +371,7 @@ async def create_gate(discovery_id: UUID, body: GateCreate, user_id: str = Depen
     data = body.model_dump()
     data["discovery_id"] = str(discovery_id)
     try:
-        result = _sb().table("discovery_gates").insert(data).execute()
+        result = require_supabase().table("discovery_gates").insert(data).execute()
     except APIError as exc:
         raise _handle_supabase_error(exc, "Gate") from exc
     return result.data[0]
@@ -387,13 +382,15 @@ async def update_gate(gate_id: UUID, body: GateUpdate, user_id: str = Depends(re
     data = body.model_dump(exclude_unset=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = _sb().table("discovery_gates").update(data).eq("id", str(gate_id)).execute()
+    result = (
+        require_supabase().table("discovery_gates").update(data).eq("id", str(gate_id)).execute()
+    )
     return result.data[0] if result.data else {"ok": True}
 
 
 @router.delete("/gates/{gate_id}")
 async def delete_gate(gate_id: UUID, user_id: str = Depends(require_admin)):
-    _sb().table("discovery_gates").delete().eq("id", str(gate_id)).execute()
+    require_supabase().table("discovery_gates").delete().eq("id", str(gate_id)).execute()
     return {"ok": True}
 
 
@@ -404,7 +401,7 @@ async def delete_gate(gate_id: UUID, user_id: str = Depends(require_admin)):
 async def upsert_locked_secret(
     discovery_id: UUID, body: LockedSecretUpdate, user_id: str = Depends(require_admin)
 ):
-    sb = _sb()
+    sb = require_supabase()
     data = {"discovery_id": str(discovery_id), "description": body.description}
     try:
         result = (
@@ -419,7 +416,7 @@ async def upsert_locked_secret(
 
 @router.delete("/discoveries/{discovery_id}/locked-secret")
 async def delete_locked_secret(discovery_id: UUID, user_id: str = Depends(require_admin)):
-    _sb().table("locked_secret_descriptions").delete().eq(
+    require_supabase().table("locked_secret_descriptions").delete().eq(
         "discovery_id", str(discovery_id)
     ).execute()
     return {"ok": True}
@@ -432,7 +429,7 @@ async def delete_locked_secret(discovery_id: UUID, user_id: str = Depends(requir
 async def create_relevance(body: RelevanceUpdate, user_id: str = Depends(require_admin)):
     try:
         result = (
-            _sb()
+            require_supabase()
             .table("npc_evidence_relevance")
             .upsert(body.model_dump(), on_conflict="npc_id,evidence_id")
             .execute()
@@ -444,7 +441,9 @@ async def create_relevance(body: RelevanceUpdate, user_id: str = Depends(require
 
 @router.delete("/relevance/{relevance_id}")
 async def delete_relevance(relevance_id: UUID, user_id: str = Depends(require_admin)):
-    _sb().table("npc_evidence_relevance").delete().eq("id", str(relevance_id)).execute()
+    require_supabase().table("npc_evidence_relevance").delete().eq(
+        "id", str(relevance_id)
+    ).execute()
     return {"ok": True}
 
 
@@ -453,7 +452,7 @@ async def delete_relevance(relevance_id: UUID, user_id: str = Depends(require_ad
 
 @router.get("/archetypes")
 async def list_archetypes(user_id: str = Depends(require_admin)):
-    result = _sb().table("archetypes").select("*").order("name").execute()
+    result = require_supabase().table("archetypes").select("*").order("name").execute()
     return result.data
 
 
@@ -463,7 +462,7 @@ async def list_archetypes(user_id: str = Depends(require_admin)):
 @router.get("/cases/{case_id}/dependency-graph")
 async def dependency_graph(case_id: UUID, user_id: str = Depends(require_admin)):
     """Return discovery dependency graph as nodes and edges for visualization."""
-    sb = _sb()
+    sb = require_supabase()
 
     discoveries = (
         sb.table("discoveries")

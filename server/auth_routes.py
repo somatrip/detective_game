@@ -9,7 +9,8 @@ from typing import Any
 from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from .supabase_client import get_supabase, is_supabase_configured
+from .supabase_client import is_supabase_configured
+from .supabase_helpers import require_supabase
 
 log = logging.getLogger(__name__)
 
@@ -48,16 +49,6 @@ class GameStateResponse(BaseModel):
 # ── Helpers ───────────────────────────────────────────────────────────────
 
 
-def _require_supabase():
-    sb = get_supabase()
-    if sb is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Supabase is not configured. Set SUPABASE_URL and SUPABASE_KEY in .env",
-        )
-    return sb
-
-
 def _extract_token(authorization: str | None) -> str:
     """Pull the Bearer token from the Authorization header."""
     if not authorization:
@@ -82,7 +73,7 @@ async def auth_status():
 
 @router.post("/signup", response_model=AuthResponse)
 async def signup(body: SignupRequest):
-    sb = _require_supabase()
+    sb = require_supabase()
     try:
         result = sb.auth.sign_up({"email": body.email, "password": body.password})
     except Exception as exc:
@@ -116,7 +107,7 @@ async def signup(body: SignupRequest):
 
 @router.post("/login", response_model=AuthResponse)
 async def login(body: LoginRequest):
-    sb = _require_supabase()
+    sb = require_supabase()
     try:
         result = sb.auth.sign_in_with_password({"email": body.email, "password": body.password})
     except Exception as exc:
@@ -144,7 +135,7 @@ class RefreshRequest(BaseModel):
 
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh(body: RefreshRequest):
-    sb = _require_supabase()
+    sb = require_supabase()
     try:
         result = sb.auth._refresh_access_token(body.refresh_token)
     except Exception as exc:
@@ -170,7 +161,7 @@ async def refresh(body: RefreshRequest):
 
 @router.post("/logout")
 async def logout(authorization: str | None = Header(default=None)):
-    sb = _require_supabase()
+    sb = require_supabase()
     token = _extract_token(authorization)
     with contextlib.suppress(Exception):
         # Sign out on Supabase's side (best-effort)
@@ -183,11 +174,11 @@ async def logout(authorization: str | None = Header(default=None)):
 
 @router.get("/session")
 async def check_session(authorization: str | None = Header(default=None)):
-    _require_supabase()
+    require_supabase()
     user_id = _get_user_id_from_token(authorization)
     # Re-fetch email from token (lightweight — already validated above)
     token = _extract_token(authorization)
-    sb = _require_supabase()
+    sb = require_supabase()
     try:
         user = sb.auth.get_user(token)
     except Exception as exc:
@@ -205,7 +196,7 @@ state_router = APIRouter(prefix="/api/state", tags=["state"])
 
 def _get_user_id_from_token(authorization: str | None) -> str:
     """Validate the Bearer token and return the user_id."""
-    sb = _require_supabase()
+    sb = require_supabase()
     token = _extract_token(authorization)
     try:
         user_resp = sb.auth.get_user(token)
@@ -224,7 +215,7 @@ async def save_state(
     token: str | None = Query(default=None),
 ):
     """Upsert the user's game state (single save slot per user)."""
-    sb = _require_supabase()
+    sb = require_supabase()
     # Accept token from query param (for sendBeacon which can't set headers)
     if not authorization and token:
         authorization = f"Bearer {token}"
@@ -249,7 +240,7 @@ async def save_state(
 @state_router.get("/load", response_model=GameStateResponse)
 async def load_state(authorization: str | None = Header(default=None)):
     """Load the user's saved game state."""
-    sb = _require_supabase()
+    sb = require_supabase()
     user_id = _get_user_id_from_token(authorization)
 
     try:
@@ -276,7 +267,7 @@ async def load_state(authorization: str | None = Header(default=None)):
 @state_router.delete("/delete")
 async def delete_state(authorization: str | None = Header(default=None)):
     """Delete the user's saved game state (for restart)."""
-    sb = _require_supabase()
+    sb = require_supabase()
     user_id = _get_user_id_from_token(authorization)
 
     try:

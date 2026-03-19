@@ -8,7 +8,7 @@ import uuid
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from .supabase_client import get_supabase
+from .supabase_helpers import require_supabase
 
 log = logging.getLogger(__name__)
 
@@ -27,16 +27,6 @@ class FeedbackRequest(BaseModel):
     screenshot_url: str | None = None
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────
-
-
-def _get_sb():
-    sb = get_supabase()
-    if sb is None:
-        raise HTTPException(status_code=503, detail="Supabase not configured")
-    return sb
-
-
 BUCKET = "feedback-screenshots"
 
 
@@ -45,7 +35,7 @@ BUCKET = "feedback-screenshots"
 
 @router.post("")
 async def submit_feedback(body: FeedbackRequest):
-    sb = _get_sb()
+    sb = require_supabase()
     try:
         sb.table("feedback").insert(
             {
@@ -61,7 +51,7 @@ async def submit_feedback(body: FeedbackRequest):
 
 @router.post("/upload")
 async def upload_screenshot(file: UploadFile = File(...)):  # noqa: B008
-    sb = _get_sb()
+    sb = require_supabase()
     ext = (file.filename or "img.png").rsplit(".", 1)[-1].lower() or "png"
     if ext not in _ALLOWED_EXTENSIONS:
         raise HTTPException(
