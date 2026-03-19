@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 try:
@@ -142,8 +142,19 @@ class RelevanceUpdate(BaseModel):
 
 
 @router.get("/cases")
-async def list_cases(user_id: str = Depends(require_admin)):
-    result = require_supabase().table("cases").select("*").order("created_at").execute()
+async def list_cases(
+    limit: int = Query(default=50, le=200),
+    offset: int = Query(default=0, ge=0),
+    user_id: str = Depends(require_admin),
+):
+    result = (
+        require_supabase()
+        .table("cases")
+        .select("*")
+        .order("created_at")
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
     return result.data
 
 
@@ -451,8 +462,19 @@ async def delete_relevance(relevance_id: UUID, user_id: str = Depends(require_ad
 
 
 @router.get("/archetypes")
-async def list_archetypes(user_id: str = Depends(require_admin)):
-    result = require_supabase().table("archetypes").select("*").order("name").execute()
+async def list_archetypes(
+    limit: int = Query(default=50, le=200),
+    offset: int = Query(default=0, ge=0),
+    user_id: str = Depends(require_admin),
+):
+    result = (
+        require_supabase()
+        .table("archetypes")
+        .select("*")
+        .order("name")
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
     return result.data
 
 
