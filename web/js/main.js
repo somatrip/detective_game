@@ -3,6 +3,10 @@
    ================================================================ */
 import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside } from "./utils.js";
 import { initApiClient, apiFetch, apiPost } from "./api.js";
+import {
+  buildStateObject as _buildStateObject,
+  applyStateObject as _applyStateObject,
+} from "./state.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
@@ -741,65 +745,49 @@ function stateRichness(s) {
   return count;
 }
 
-/** Build a plain object from current game state (used for both localStorage and cloud). */
-function buildStateObject() {
+/** Collect the storage-key constants needed by state serialization. */
+function _stateOpts() {
   return {
     caseId: CASE.id,
-    conversations,
-    evidence,
-    activeNpcId,
-    discoveries,
-    npcInterrogation,
-    discoveryMessageIndices,
-    playerNotes,
-    caseReadyPromptShown,
-    briefingOpen,
-    stringBoard,
-    // Also persist tutorial / UI flags for full cloud restore
-    tutorialDone: localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true",
-    titleSeen: !!localStorage.getItem(TITLE_STORAGE_KEY),
-    lilaHintSeen: !!localStorage.getItem(LILA_HINT_STORAGE_KEY),
-    audioEnabled,
-    language: window.currentLang || "en",
-    gameId,
-    savedAt: new Date().toISOString(),
+    tutorialStorageKey: TUTORIAL_STORAGE_KEY,
+    titleStorageKey: TITLE_STORAGE_KEY,
+    lilaHintStorageKey: LILA_HINT_STORAGE_KEY,
   };
+}
+
+/** Snapshot the module-level state variables into a plain object. */
+function _currentState() {
+  return {
+    conversations, evidence, activeNpcId, discoveries,
+    npcInterrogation, discoveryMessageIndices, playerNotes,
+    caseReadyPromptShown, briefingOpen, stringBoard,
+    audioEnabled, gameId,
+  };
+}
+
+function buildStateObject() {
+  return _buildStateObject(_currentState(), _stateOpts());
 }
 
 /** Apply a state object (from cloud or localStorage) to the running game variables. */
 function applyStateObject(s) {
-  if (!s) return;
-  // Skip state from a different case
-  if (s.caseId && s.caseId !== CASE.id) return;
-  if (s.conversations) conversations = s.conversations;
-  if (s.evidence) evidence = s.evidence;
-  if ("activeNpcId" in s) activeNpcId = s.activeNpcId; // may be null (on hub)
-  if (s.discoveries) discoveries = s.discoveries;
-  if (s.npcInterrogation) npcInterrogation = s.npcInterrogation;
-  if (s.discoveryMessageIndices) discoveryMessageIndices = s.discoveryMessageIndices;
-  if (s.playerNotes !== undefined) {
-    playerNotes = s.playerNotes;
-    const notesEl = document.getElementById("player-notes");
-    if (notesEl) notesEl.value = playerNotes;
+  const restored = _applyStateObject(s, _stateOpts());
+  if (!restored) return;
+  if ("conversations" in restored)           conversations = restored.conversations;
+  if ("evidence" in restored)                evidence = restored.evidence;
+  if ("activeNpcId" in restored)             activeNpcId = restored.activeNpcId;
+  if ("discoveries" in restored)             discoveries = restored.discoveries;
+  if ("npcInterrogation" in restored)        npcInterrogation = restored.npcInterrogation;
+  if ("discoveryMessageIndices" in restored) discoveryMessageIndices = restored.discoveryMessageIndices;
+  if ("playerNotes" in restored)             playerNotes = restored.playerNotes;
+  if ("caseReadyPromptShown" in restored)    caseReadyPromptShown = restored.caseReadyPromptShown;
+  if ("briefingOpen" in restored)            briefingOpen = restored.briefingOpen;
+  if ("stringBoard" in restored) {
+    stringBoard.cardPositions = restored.stringBoard.cardPositions;
+    stringBoard.links = restored.stringBoard.links;
   }
-  if (s.caseReadyPromptShown !== undefined) caseReadyPromptShown = s.caseReadyPromptShown;
-  if (s.briefingOpen !== undefined) briefingOpen = s.briefingOpen;
-  if (s.stringBoard) {
-    stringBoard.cardPositions = s.stringBoard.cardPositions || {};
-    stringBoard.links = s.stringBoard.links || [];
-  }
-  // Restore tutorial flags
-  if (s.tutorialDone) localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
-  if (s.titleSeen) localStorage.setItem(TITLE_STORAGE_KEY, "1");
-  if (s.lilaHintSeen) localStorage.setItem(LILA_HINT_STORAGE_KEY, "1");
-  if (s.language && typeof switchLanguage === "function") {
-    window.currentLang = s.language;
-  }
-  if (s.gameId) { gameId = s.gameId; localStorage.setItem("echoes_game_id", gameId); }
-  if (s.audioEnabled !== undefined) {
-    audioEnabled = s.audioEnabled;
-    localStorage.setItem("echoes_audio", String(audioEnabled));
-  }
+  if ("gameId" in restored)       gameId = restored.gameId;
+  if ("audioEnabled" in restored) audioEnabled = restored.audioEnabled;
 }
 
 function saveState() {
