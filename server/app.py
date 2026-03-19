@@ -39,6 +39,7 @@ from .llm.classifier import classify_player_turn, detect_evidence
 from .llm.factory import get_llm_client
 from .npc_registry import get_npc_profile, list_npcs
 from .schemas import ChatRequest, ChatResponse, ChatTurn, SpeakRequest, StringboardState
+from .supabase_client import get_supabase
 from .tracking_routes import log_chat_event
 from .tracking_routes import router as tracking_router
 
@@ -600,9 +601,26 @@ async def load_stringboard():
 
 @app.get("/health")
 async def healthcheck():
-    """Simple health endpoint for monitoring."""
+    """Health endpoint that verifies dependency connectivity."""
+    deps = {"llm_provider": settings.llm_provider}
 
-    return {"status": "ok", "llm_provider": settings.llm_provider}
+    # Check Supabase
+    sb = get_supabase()
+    if sb is not None:
+        try:
+            sb.table("game_sessions").select("session_id").limit(1).execute()
+            deps["supabase"] = "ok"
+        except Exception:
+            deps["supabase"] = "error"
+    else:
+        deps["supabase"] = "not_configured"
+
+    all_ok = deps.get("supabase") != "error"
+    status_code = 200 if all_ok else 503
+    return JSONResponse(
+        content={"status": "ok" if all_ok else "degraded", **deps},
+        status_code=status_code,
+    )
 
 
 # ── Admin page ───────────────────────────────────────────────────────────
