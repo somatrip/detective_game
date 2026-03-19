@@ -206,8 +206,8 @@ async def list_available_npcs():
 @app.post("/api/chat", response_model=ChatResponse)
 @limiter.limit("30/minute")
 async def chat(
-    request: Request, body: ChatRequest, llm: LLMClient = Depends(_get_llm_client)
-) -> ChatResponse:  # noqa: B008
+    request: Request, body: ChatRequest, llm: LLMClient = Depends(_get_llm_client)  # noqa: B008
+) -> ChatResponse:
     """Send the player's message to the LLM and return the NPC's reply.
 
     Pipeline per turn:
