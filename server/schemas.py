@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ChatTurn(BaseModel):
@@ -58,6 +58,13 @@ class ChatRequest(BaseModel):
         default=None,
         description="Client-generated session UUID for gameplay tracking.",
     )
+
+    @field_validator("history")
+    @classmethod
+    def limit_history(cls, v):
+        if len(v) > 100:
+            return v[-100:]  # Keep most recent 100 messages
+        return v
 
 
 class ChatResponse(BaseModel):
