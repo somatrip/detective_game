@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 from .supabase_client import is_supabase_configured
 from .supabase_helpers import require_supabase
@@ -21,12 +21,12 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class SignupRequest(BaseModel):
-    email: str = Field(..., min_length=3)
+    email: EmailStr
     password: str = Field(..., min_length=6)
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., min_length=3)
+    email: EmailStr
     password: str = Field(..., min_length=6)
 
 
