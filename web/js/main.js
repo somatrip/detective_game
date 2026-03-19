@@ -2,6 +2,7 @@
    ECHOES IN THE ATRIUM — Game Frontend
    ================================================================ */
 import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside } from "./utils.js";
+import { initApiClient, apiFetch, apiPost } from "./api.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
@@ -28,6 +29,7 @@ const SUPABASE_URL = "https://hnfrnqizlahwxlootoho.supabase.co";
 
 // Auth state
 let authUser = null;          // { user_id, email, access_token, refresh_token }
+initApiClient(() => authUser);
 let cloudSaveTimer = null;
 let cloudSavePending = false;
 let _cloudMergePromise = null; // set during boot so init() can await it
@@ -83,9 +85,8 @@ async function authLogin(email, password) {
 async function authLogout() {
   if (!authUser?.access_token) return;
   try {
-    await fetch(`${API_BASE}/api/auth/logout`, {
+    await apiFetch(`${API_BASE}/api/auth/logout`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${authUser.access_token}` },
     });
   } catch {}
 }
@@ -125,24 +126,10 @@ async function tryRefreshAccessToken() {
 // ── Cloud state API calls ─────────────────────────────────────
 async function cloudSaveState(stateObj) {
   if (!authUser?.access_token) return;
-  let res = await fetch(`${API_BASE}/api/state/save`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authUser.access_token}`,
-    },
-    body: JSON.stringify({ state: stateObj }),
-  });
+  let res = await apiPost(`${API_BASE}/api/state/save`, { state: stateObj });
   // Retry once with refreshed token on 401
   if (res.status === 401 && await tryRefreshAccessToken()) {
-    res = await fetch(`${API_BASE}/api/state/save`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authUser.access_token}`,
-      },
-      body: JSON.stringify({ state: stateObj }),
-    });
+    res = await apiPost(`${API_BASE}/api/state/save`, { state: stateObj });
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -153,14 +140,10 @@ async function cloudSaveState(stateObj) {
 
 async function cloudLoadState() {
   if (!authUser?.access_token) return null;
-  let res = await fetch(`${API_BASE}/api/state/load`, {
-    headers: { Authorization: `Bearer ${authUser.access_token}` },
-  });
+  let res = await apiFetch(`${API_BASE}/api/state/load`);
   // Retry once with refreshed token on 401
   if (res.status === 401 && await tryRefreshAccessToken()) {
-    res = await fetch(`${API_BASE}/api/state/load`, {
-      headers: { Authorization: `Bearer ${authUser.access_token}` },
-    });
+    res = await apiFetch(`${API_BASE}/api/state/load`);
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -171,15 +154,13 @@ async function cloudLoadState() {
 
 async function cloudDeleteState() {
   if (!authUser?.access_token) return;
-  let res = await fetch(`${API_BASE}/api/state/delete`, {
+  let res = await apiFetch(`${API_BASE}/api/state/delete`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${authUser.access_token}` },
   });
   // Retry once with refreshed token on 401
   if (res.status === 401 && await tryRefreshAccessToken()) {
-    await fetch(`${API_BASE}/api/state/delete`, {
+    await apiFetch(`${API_BASE}/api/state/delete`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${authUser.access_token}` },
     });
   }
 }
@@ -3248,12 +3229,9 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden" && authUser?.access_token && cloudSavePending) {
     try {
       const stateObj = buildStateObject();
-      fetch(`${API_BASE}/api/state/save`, {
+      apiFetch(`${API_BASE}/api/state/save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authUser.access_token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state: stateObj }),
         keepalive: true, // survives page hide
       }).then(() => { cloudSavePending = false; }).catch(() => {});
