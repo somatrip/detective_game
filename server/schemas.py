@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatTurn(BaseModel):
@@ -134,4 +134,29 @@ class SpeakRequest(BaseModel):
     )
 
 
-__all__ = ["ChatTurn", "ChatRequest", "ChatResponse", "SpeakRequest"]
+class StringboardCardPosition(BaseModel):
+    x: float = 0
+    y: float = 0
+
+
+class StringboardLink(BaseModel):
+    from_id: str = Field(..., alias="from")
+    to_id: str = Field(..., alias="to")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class StringboardState(BaseModel):
+    cardPositions: dict[str, StringboardCardPosition] = {}
+    links: list[StringboardLink] = []
+
+
+__all__ = [
+    "ChatTurn",
+    "ChatRequest",
+    "ChatResponse",
+    "SpeakRequest",
+    "StringboardCardPosition",
+    "StringboardLink",
+    "StringboardState",
+]
