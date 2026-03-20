@@ -17,6 +17,7 @@ class Settings(BaseSettings):
         env_prefix="ECHO_",
         env_file=".env",
         case_sensitive=False,
+        extra="ignore",
     )
 
     llm_provider: str = Field(
