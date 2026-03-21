@@ -42,6 +42,9 @@ import {
   initLanguage, switchLanguage,
 } from "./settings.js";
 import {
+  initAccusation, openAccusationModal, closeAccusationModal, resolveAccusation,
+} from "./accusation.js";
+import {
   initEvidence,
   seedStartingEvidence, checkEndgameTrigger,
   gradeArrest, detectEvidence, detectNewDiscoveries,
@@ -60,7 +63,7 @@ const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
 // Evidence constants moved to evidence.js (reads from window.CASE directly)
 const PARTNER_NPC_ID = CASE.partnerNpcId;
-const CULPRIT_ID = CASE.culpritNpcId;
+// CULPRIT_ID moved to accusation.js (reads from window.CASE directly)
 
 // Create toast container dynamically (avoids HTML parser issues)
 const _toastContainer = document.createElement("div");
@@ -157,7 +160,6 @@ let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, r
 let playerNotes = "";
 // caseReadyPromptShown → evidence.js (use getter/setter)
 let sending = false;
-let accusationTarget = null;
 let subpoenaToastShown = false;
 
 /* ── Gameplay tracking ─────────────────────────────────── */
@@ -202,16 +204,7 @@ const cancelBtn         = $("#cancel-btn");
 
 // Case Board (hub) — evidence list DOM refs moved to evidence.js
 
-// Modals
-const accusationModal   = $("#accusation-modal");
-const suspectGrid       = $("#suspect-grid");
-const cancelAccuse      = $("#cancel-accuse");
-const confirmAccuse     = $("#confirm-accuse");
-const outcomeScreen     = $("#outcome-screen");
-const outcomeCard       = $("#outcome-card");
-const outcomeTitle      = $("#outcome-title");
-const outcomeText       = $("#outcome-text");
-const restartBtn        = $("#restart-btn");
+// Modals — accusation/outcome DOM refs moved to accusation.js
 
 /* ── Helpers ────────────────────────────────────────────── */
 
@@ -911,81 +904,7 @@ function autoResize() {
   chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
 }
 
-/* ── Accusation System ──────────────────────────────────── */
-function openAccusationModal() {
-  accusationTarget = null;
-  confirmAccuse.disabled = true;
-  suspectGrid.innerHTML = "";
-
-  const suspects = npcs.filter(n => n.npc_id !== PARTNER_NPC_ID);
-  for (const s of suspects) {
-    const btn = document.createElement("div");
-    btn.className = "suspect-option";
-    const img = buildPortraitImg(s.npc_id, "neutral", 48);
-    img.className = "suspect-portrait";
-    btn.appendChild(img);
-    btn.appendChild(document.createTextNode(npcDisplayName(s.display_name)));
-    btn.dataset.npcId = s.npc_id;
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".suspect-option").forEach(el => el.classList.remove("selected"));
-      btn.classList.add("selected");
-      accusationTarget = s.npc_id;
-      confirmAccuse.disabled = false;
-    });
-    suspectGrid.appendChild(btn);
-  }
-  accusationModal.classList.add("visible");
-}
-
-function closeAccusationModal() {
-  accusationModal.classList.remove("visible");
-  accusationTarget = null;
-}
-
-function resolveAccusation() {
-  if (!accusationTarget) return;
-  const target = accusationTarget;
-  closeAccusationModal();
-
-  const correct = target === CULPRIT_ID;
-  const accusedName = npcDisplayName(npcs.find(n => n.npc_id === target)?.display_name) || target;
-
-  const interviewCount = Object.keys(conversations).filter(k => conversations[k].length > 0).length;
-
-  if (correct) {
-    const grade = gradeArrest();
-    outcomeCard.className = "outcome-card " + grade.replace(/_/g, "-");
-    trackEvent("arrest", {
-      session_id: gameId,
-      case_id: CASE.id,
-      target_npc_id: target,
-      correct: true,
-      grade,
-      evidence_count: getEvidence().length,
-      interview_count: interviewCount,
-    });
-    outcomeTitle.textContent = t("outcome." + grade + "_title");
-    outcomeText.innerHTML = t("outcome." + grade + "_text", {
-      name: escapeHtml(accusedName),
-      evidenceCount: getEvidence().length,
-      interviewCount: interviewCount,
-    });
-  } else {
-    outcomeCard.className = "outcome-card wrong";
-    trackEvent("arrest", {
-      session_id: gameId,
-      case_id: CASE.id,
-      target_npc_id: target,
-      correct: false,
-      grade: "wrong",
-      evidence_count: getEvidence().length,
-      interview_count: interviewCount,
-    });
-    outcomeTitle.textContent = t("outcome.wrong_title");
-    outcomeText.innerHTML = t("outcome.wrong_text", { name: escapeHtml(accusedName) });
-  }
-  outcomeScreen.classList.add("visible");
-}
+// Accusation System → accusation.js
 
 /* ── Event Listeners ────────────────────────────────────── */
 // Intro screen removed — game starts on Case Board directly
@@ -1110,23 +1029,7 @@ document.getElementById("lila-hint-btn").addEventListener("click", () => {
   sendMessage(t("chat.hint_prompt"), t(displayKey));
 });
 
-cancelAccuse.addEventListener("click", closeAccusationModal);
-confirmAccuse.addEventListener("click", resolveAccusation);
-
-restartBtn.addEventListener("click", async () => {
-  restartBtn.disabled = true;
-  await clearState();
-  briefingOpen = true;
-  outcomeScreen.classList.remove("visible");
-  removeNpcTab();
-  hubScreen.classList.remove("active");
-  chatMessages.innerHTML = "";
-  await init();
-  restartBtn.disabled = false;
-});
-
-// Close modal on backdrop click
-addModalCloseOnClickOutside(accusationModal, closeAccusationModal);
+// Accusation event listeners → accusation.js (initAccusation)
 
 /* ── Case-Ready Modal (endgame trigger) ──────────────────── */
 const caseReadyModal = $("#case-ready-modal");
@@ -1229,6 +1132,19 @@ initEvidence({
   trackEvent,
   getGameId: () => gameId,
   getNpcs: () => npcs,
+});
+initAccusation({
+  getNpcs: () => npcs,
+  getConversations: () => conversations,
+  getGameId: () => gameId,
+  trackEvent,
+  buildPortraitImg,
+  clearState,
+  setBriefingOpen: (v) => { briefingOpen = v; },
+  removeNpcTab,
+  getHubScreen: () => hubScreen,
+  getChatMessages: () => chatMessages,
+  reinit: init,
 });
 initSettings({
   clearState,
