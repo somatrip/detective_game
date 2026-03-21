@@ -97,3 +97,17 @@ export function applyStateObject(saved, opts) {
 
   return result;
 }
+
+/* ── Store-aware helpers ──────────────────────────────────────── */
+import { store } from "./store.js";
+
+export function buildStateFromStore(opts) {
+  return buildStateObject(store, opts);
+}
+
+export function applyStateToStore(saved, opts) {
+  const result = applyStateObject(saved, opts);
+  if (!result) return null;
+  Object.assign(store, result);
+  return result;
+}
