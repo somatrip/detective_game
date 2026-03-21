@@ -72,3 +72,7 @@ tests/                # Backend test suite (pytest)
 ## Reference Docs (read on demand)
 
 - `docs/plans/2026-03-21-frontend-modularization.md` - Read when: understanding the module extraction rationale or planning further modularization.
+
+After every correction, update CLAUDE.md so you don't make that mistake again.
+
+When functionality is changed update CLAUDE.md or the files in the .claude folder as relevant.
