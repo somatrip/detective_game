@@ -41,14 +41,24 @@ import {
   openFeedback, closeFeedback,
   initLanguage, switchLanguage,
 } from "./settings.js";
+import {
+  initEvidence,
+  seedStartingEvidence, checkEndgameTrigger,
+  gradeArrest, detectEvidence, detectNewDiscoveries,
+  renderEvidence, getDiscoveriesForEvidence,
+  flashCaseBoardTab, clearCaseBoardBadges,
+  showDiscoveryToast,
+  getEvidence, setEvidence,
+  getDiscoveries, setDiscoveries,
+  getDiscoveryMessageIndices, setDiscoveryMessageIndices,
+  getNpcsWithNewDiscoveries,
+  isCaseReadyPromptShown, setCaseReadyPromptShown,
+  getUnseenDiscoveryCount,
+} from "./evidence.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
-const EVIDENCE_CATALOG = CASE.evidenceCatalog;
-const DISCOVERY_EVIDENCE_MAP = CASE.discoveryEvidenceMap;
-const EVIDENCE_GROUPS = CASE.evidenceGroups;
-const STARTING_EVIDENCE = CASE.startingEvidence;
-const CANONICAL_EVIDENCE = CASE.canonicalEvidence;
+// Evidence constants moved to evidence.js (reads from window.CASE directly)
 const PARTNER_NPC_ID = CASE.partnerNpcId;
 const CULPRIT_ID = CASE.culpritNpcId;
 
@@ -136,26 +146,16 @@ function updateInterrogationUI(npcId) {
   }
 }
 
-/** Check if all canonical evidence is collected and trigger endgame. */
-function checkEndgameTrigger() {
-  if (caseReadyPromptShown) return;
-  const collectedIds = evidence.map(e => e.id);
-  if (!CANONICAL_EVIDENCE.every(id => collectedIds.includes(id))) return;
-  caseReadyPromptShown = true;
-  saveState();
-  document.getElementById("case-ready-modal").classList.add("visible");
-}
+// checkEndgameTrigger → evidence.js
 
 /* ── State ──────────────────────────────────────────────── */
 let npcs = [];
 let activeNpcId = null;
 let conversations = {};
-let evidence = [];
-let discoveries = {};
+// evidence, discoveries, discoveryMessageIndices → evidence.js (use getters/setters)
 let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, rapport_band }
-let discoveryMessageIndices = {};  // npc_id → [messageIndex, ...] — tracks which messages revealed discoveries
 let playerNotes = "";
-let caseReadyPromptShown = false;
+// caseReadyPromptShown → evidence.js (use getter/setter)
 let sending = false;
 let accusationTarget = null;
 let subpoenaToastShown = false;
@@ -200,9 +200,7 @@ const cancelBtn         = $("#cancel-btn");
 
 // Chat dossier
 
-// Case Board (hub)
-const cbEvidenceList    = $("#cb-evidence-list");
-const cbEvidenceEmpty   = $("#cb-evidence-empty");
+// Case Board (hub) — evidence list DOM refs moved to evidence.js
 
 // Modals
 const accusationModal   = $("#accusation-modal");
@@ -243,9 +241,9 @@ function _stateOpts() {
 /** Snapshot the module-level state variables into a plain object. */
 function _currentState() {
   return {
-    conversations, evidence, activeNpcId, discoveries,
-    npcInterrogation, discoveryMessageIndices, playerNotes,
-    caseReadyPromptShown, briefingOpen, stringBoard: getStringBoard(),
+    conversations, evidence: getEvidence(), activeNpcId, discoveries: getDiscoveries(),
+    npcInterrogation, discoveryMessageIndices: getDiscoveryMessageIndices(), playerNotes,
+    caseReadyPromptShown: isCaseReadyPromptShown(), briefingOpen, stringBoard: getStringBoard(),
     audioEnabled: isAudioEnabled(), gameId,
   };
 }
@@ -259,13 +257,13 @@ function applyStateObject(s) {
   const restored = _applyStateObject(s, _stateOpts());
   if (!restored) return;
   if ("conversations" in restored)           conversations = restored.conversations;
-  if ("evidence" in restored)                evidence = restored.evidence;
+  if ("evidence" in restored)                setEvidence(restored.evidence);
   if ("activeNpcId" in restored)             activeNpcId = restored.activeNpcId;
-  if ("discoveries" in restored)             discoveries = restored.discoveries;
+  if ("discoveries" in restored)             setDiscoveries(restored.discoveries);
   if ("npcInterrogation" in restored)        npcInterrogation = restored.npcInterrogation;
-  if ("discoveryMessageIndices" in restored) discoveryMessageIndices = restored.discoveryMessageIndices;
+  if ("discoveryMessageIndices" in restored) setDiscoveryMessageIndices(restored.discoveryMessageIndices);
   if ("playerNotes" in restored)             playerNotes = restored.playerNotes;
-  if ("caseReadyPromptShown" in restored)    caseReadyPromptShown = restored.caseReadyPromptShown;
+  if ("caseReadyPromptShown" in restored)    setCaseReadyPromptShown(restored.caseReadyPromptShown);
   if ("briefingOpen" in restored)            briefingOpen = restored.briefingOpen;
   if ("stringBoard" in restored) {
     setStringBoard({
@@ -302,12 +300,12 @@ function loadState() {
 function resetLocalState() {
   if (isVoiceMode()) exitVoiceMode();
   conversations = {};
-  evidence = [];
-  discoveries = {};
+  setEvidence([]);
+  setDiscoveries({});
   npcInterrogation = {};
-  discoveryMessageIndices = {};
+  setDiscoveryMessageIndices({});
   playerNotes = "";
-  caseReadyPromptShown = false;
+  setCaseReadyPromptShown(false);
   subpoenaToastShown = false;
   briefingOpen = true;
   activeNpcId = null;
@@ -384,28 +382,7 @@ function showChat() {
 }
 
 /* ── Initialize ─────────────────────────────────────────── */
-function seedStartingEvidence() {
-  let added = false;
-  for (const se of STARTING_EVIDENCE) {
-    const existing = evidence.find(e => e.id === se.id);
-    if (existing) {
-      // Migration: ensure textKey is set on older saved evidence
-      if (!existing.textKey) existing.textKey = se.textKey;
-      continue;
-    }
-    const meta = EVIDENCE_CATALOG[se.id];
-    if (!meta) continue;
-    evidence.unshift({
-      id: se.id,
-      label: t("evidence." + se.id + "_label") || meta.label,
-      text: t(se.textKey),
-      textKey: se.textKey,
-      source: "crime-scene",
-    });
-    added = true;
-  }
-  if (added) saveState();
-}
+// seedStartingEvidence → evidence.js
 
 let briefingOpen = true; // default: open on first visit
 
@@ -445,7 +422,7 @@ async function init() {
   renderNpcGrid();
   renderEvidence();
   initStringBoard({
-    getEvidence: () => evidence,
+    getEvidence,
     getNpcs: () => npcs,
     portraitUrl,
     getDiscoveriesForEvidence,
@@ -563,7 +540,7 @@ function renderNpcGrid() {
     card.appendChild(infoDiv);
 
     // Discovery badge — shows exclamation when this NPC yielded unseen discoveries
-    if (npcsWithNewDiscoveries.has(npc.npc_id)) {
+    if (getNpcsWithNewDiscoveries().has(npc.npc_id)) {
       const badge = document.createElement("div");
       badge.className = "npc-card-discovery-badge";
       badge.textContent = "!";
@@ -745,7 +722,7 @@ function appendMessageBubble(role, content, messageIndex) {
 
   // Restore discovery icon if this message had one
   if (role === "assistant" && activeNpcId && messageIndex !== undefined
-      && (discoveryMessageIndices[activeNpcId] || []).includes(messageIndex)) {
+      && (getDiscoveryMessageIndices()[activeNpcId] || []).includes(messageIndex)) {
     div.classList.add("msg-has-discovery");
     const icon = document.createElement("span");
     icon.className = "msg-discovery-icon";
@@ -811,8 +788,8 @@ async function sendMessage(overrideText, displayText) {
         rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
         peak_pressure: (npcInterrogation[activeNpcId] || {}).peak_pressure ??
                        (npcInterrogation[activeNpcId] || {}).pressure ?? 0,
-        player_evidence_ids: evidence.map(e => e.id),
-        player_discovery_ids: Object.values(discoveries).flat().map(d => d.id),
+        player_evidence_ids: getEvidence().map(e => e.id),
+        player_discovery_ids: Object.values(getDiscoveries()).flat().map(d => d.id),
         session_id: gameId,
       }),
       signal: getChatAbortController()?.signal,
@@ -925,230 +902,7 @@ async function sendMessage(overrideText, displayText) {
   saveState();
 }
 
-/* ── Evidence Detection ─────────────────────────────────── */
-function gradeArrest() {
-  const found = Object.values(discoveries).flat().map(d => d.id);
-  const hasMotive = CASE.culpritMotiveDiscoveries.some(d => found.includes(d));
-  const hasOpportunity = CASE.culpritOpportunityDiscoveries.some(d => found.includes(d));
-  if (hasMotive && hasOpportunity) return "slam_dunk";
-  if (hasMotive || hasOpportunity) return "plea_deal";
-  return "released";
-}
-
-/**
- * Process new discoveries from the server's discovery-level detection.
- * Each discovery fires independently with an LLM-generated summary.
- */
-function detectNewDiscoveries(discoveryIds, npcId, discoverySummaries) {
-  const newTexts = [];
-
-  for (const did of discoveryIds) {
-    const evidenceId = DISCOVERY_EVIDENCE_MAP[did];
-    if (!evidenceId) continue;
-    if (!discoveries[npcId]) discoveries[npcId] = [];
-    if (discoveries[npcId].find(d => d.id === did)) continue;
-
-    // Use LLM summary if available; fall back to pre-written i18n text
-    const summary = discoverySummaries[did];
-    const fallbackKey = "discovery." + did;
-    const displayText = summary || t(fallbackKey);
-
-    discoveries[npcId].push({
-      id: did,
-      text: summary || fallbackKey,  // Store literal summary or i18n key as fallback
-      evidenceId: evidenceId,
-      timestamp: Date.now(),
-      isNew: true,
-    });
-    newTexts.push(displayText);
-    trackEvent("discovery", { session_id: gameId, case_id: CASE.id, evidence_id: evidenceId, npc_id: npcId, discovery_id: did });
-  }
-
-  if (newTexts.length > 0) {
-    for (const txt of newTexts) showDiscoveryToast(txt);
-    npcsWithNewDiscoveries.add(npcId);
-    markLastAssistantMessage();
-    renderEvidence();
-    flashCaseBoardTab();
-  }
-}
-
-function markLastAssistantMessage() {
-  const msgs = chatMessages.querySelectorAll(".msg.assistant");
-  const last = msgs[msgs.length - 1];
-  if (!last || last.querySelector(".msg-discovery-icon")) return;
-  const icon = document.createElement("span");
-  icon.className = "msg-discovery-icon";
-  icon.title = t("toast.new_discovery");
-  icon.textContent = "!";
-  last.appendChild(icon);
-  last.classList.add("msg-has-discovery");
-  // Persist discovery index so icons survive re-renders and reloads
-  if (activeNpcId) {
-    const convLen = (conversations[activeNpcId] || []).length;
-    const idx = convLen - 1;
-    if (!discoveryMessageIndices[activeNpcId]) discoveryMessageIndices[activeNpcId] = [];
-    if (!discoveryMessageIndices[activeNpcId].includes(idx)) {
-      discoveryMessageIndices[activeNpcId].push(idx);
-    }
-  }
-}
-
-let unseenDiscoveryCount = 0;
-
-function flashCaseBoardTab() {
-  unseenDiscoveryCount++;
-  // Flash both the hub caseboard tab and the chat-nav caseboard tab
-  const tabs = document.querySelectorAll('.manila-tab[data-hub-tab="caseboard"]');
-  tabs.forEach(tab => {
-    tab.classList.add("tab-flash");
-    setTimeout(() => tab.classList.remove("tab-flash"), 4000);
-    // Add or update badge
-    let badge = tab.querySelector(".tab-badge");
-    if (!badge) {
-      badge = document.createElement("span");
-      badge.className = "tab-badge";
-      tab.appendChild(badge);
-    }
-    badge.textContent = unseenDiscoveryCount;
-  });
-}
-
-function clearCaseBoardBadges() {
-  unseenDiscoveryCount = 0;
-  document.querySelectorAll('.manila-tab .tab-badge').forEach(b => b.remove());
-  if (npcsWithNewDiscoveries.size > 0) {
-    npcsWithNewDiscoveries.clear();
-    renderNpcGrid();
-  }
-}
-
-function showDiscoveryToast(text) {
-  const container = document.getElementById("discovery-toast-container");
-  const toast = document.createElement("div");
-  toast.className = "discovery-toast";
-  toast.innerHTML = `
-    <div class="discovery-toast-icon">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-    </div>
-    <div class="discovery-toast-body">
-      <div class="discovery-toast-heading">${escapeHtml(t("toast.new_discovery"))}</div>
-      <div class="discovery-toast-text">${escapeHtml(text)}</div>
-    </div>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add("hiding");
-    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
-    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 500);
-  }, 4500);
-}
-
-/* ── NPC Discovery Badges ──────────────────────────────── */
-const npcsWithNewDiscoveries = new Set();
-
-function detectEvidence(evidenceIds, npcId) {
-  const npcName = npcDisplayName(npcs.find(n => n.npc_id === npcId)?.display_name) || npcId;
-  let found = false;
-
-  for (const id of evidenceIds) {
-    const meta = EVIDENCE_CATALOG[id];
-    if (!meta) continue;
-
-    if (!evidence.find(e => e.id === id)) {
-      evidence.push({
-        id: id,
-        label: t("evidence." + id + "_label") || meta.label,
-        text: t(npcId === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by", { name: npcName }),
-        textKey: npcId === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by",
-        source: npcId,
-      });
-      found = true;
-    }
-  }
-
-  if (found) {
-    renderEvidence();
-  }
-}
-
-/* ── Render Evidence (Case Board) ────────────────────────── */
-/** Find collected discoveries linked to an evidence ID. */
-function getDiscoveriesForEvidence(evidenceId) {
-  const results = [];
-  for (const [npcId, discs] of Object.entries(discoveries)) {
-    for (const d of discs) {
-      if (d.evidenceId === evidenceId) {
-        results.push({ ...d, npcId });
-      }
-    }
-  }
-  return results;
-}
-
-/** Render a single evidence item with its linked discoveries. */
-function renderEvidenceItem(e) {
-  const div = document.createElement("div");
-  div.className = "clue-item";
-  // Re-translate at render time for current language
-  const label = t("evidence." + e.id + "_label") || e.label;
-  let text = e.text;
-  if (e.textKey) {
-    if (e.textKey === "evidence.mentioned_by" || e.textKey === "evidence.mentioned_by_partner") {
-      const npcName = npcDisplayName(npcs.find(n => n.npc_id === e.source)?.display_name) || e.source;
-      const key = e.source === PARTNER_NPC_ID ? "evidence.mentioned_by_partner" : "evidence.mentioned_by";
-      text = t(key, { name: npcName }) || text;
-    } else {
-      text = t(e.textKey) || text;
-    }
-  }
-  let html = `<div class="clue-label">${escapeHtml(label)}</div>
-    <div class="clue-text">${escapeHtml(text)}</div>`;
-
-  const linkedDisc = getDiscoveriesForEvidence(e.id);
-  if (linkedDisc.length > 0) {
-    html += `<div class="clue-discoveries">`;
-    for (const d of linkedDisc) {
-      // t() returns the key as-is when not found, so literal summaries pass through
-      const displayText = t(d.text);
-      html += `<div class="clue-discovery-item">${escapeHtml(displayText)}</div>`;
-    }
-    html += `</div>`;
-  }
-  if (e.id === "keycard-logs") {
-    html += `<button class="clue-view-logs-btn" onclick="window.__openKeycardModal()">${t("keycard.view_logs")}</button>`;
-  }
-  div.innerHTML = html;
-  return div;
-}
-
-function renderEvidence() {
-  cbEvidenceList.innerHTML = "";
-  cbEvidenceEmpty.style.display = evidence.length ? "none" : "block";
-
-  if (caseReadyPromptShown && evidence.length > 0) {
-    // Grouped view with section headers
-    for (const [groupKey, ids] of Object.entries(EVIDENCE_GROUPS)) {
-      const groupEvidence = evidence.filter(e => ids.includes(e.id));
-      if (groupEvidence.length === 0) continue;
-      const header = document.createElement("div");
-      header.className = "evidence-group-header";
-      header.textContent = t("evidence.group_" + groupKey);
-      cbEvidenceList.appendChild(header);
-      for (const e of groupEvidence) cbEvidenceList.appendChild(renderEvidenceItem(e));
-    }
-    // Accusation CTA
-    const cta = document.createElement("button");
-    cta.className = "evidence-accuse-cta";
-    cta.textContent = t("endgame.accuse_cta");
-    cta.addEventListener("click", openAccusationModal);
-    cbEvidenceList.appendChild(cta);
-  } else {
-    for (const e of evidence) cbEvidenceList.appendChild(renderEvidenceItem(e));
-  }
-}
+// Evidence Detection, Discovery, and Rendering → evidence.js
 
 
 /* ── Auto-resize textarea ───────────────────────────────── */
@@ -1207,13 +961,13 @@ function resolveAccusation() {
       target_npc_id: target,
       correct: true,
       grade,
-      evidence_count: evidence.length,
+      evidence_count: getEvidence().length,
       interview_count: interviewCount,
     });
     outcomeTitle.textContent = t("outcome." + grade + "_title");
     outcomeText.innerHTML = t("outcome." + grade + "_text", {
       name: escapeHtml(accusedName),
-      evidenceCount: evidence.length,
+      evidenceCount: getEvidence().length,
       interviewCount: interviewCount,
     });
   } else {
@@ -1224,7 +978,7 @@ function resolveAccusation() {
       target_npc_id: target,
       correct: false,
       grade: "wrong",
-      evidence_count: evidence.length,
+      evidence_count: getEvidence().length,
       interview_count: interviewCount,
     });
     outcomeTitle.textContent = t("outcome.wrong_title");
@@ -1463,6 +1217,19 @@ document.getElementById("keycard-modal-close").addEventListener("click", closeKe
 addModalCloseOnClickOutside(keycardModal, closeKeycardModal);
 
 /* ── Boot ───────────────────────────────────────────────── */
+initEvidence({
+  getConversations: () => conversations,
+  getNpcInterrogation: () => npcInterrogation,
+  saveState,
+  renderStringBoard,
+  renderNpcGrid,
+  getActiveNpcId: () => activeNpcId,
+  getChatMessages: () => chatMessages,
+  openAccusationModal,
+  trackEvent,
+  getGameId: () => gameId,
+  getNpcs: () => npcs,
+});
 initSettings({
   clearState,
   seedStartingEvidence,
