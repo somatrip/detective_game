@@ -61,12 +61,17 @@ import {
   isCaseReadyPromptShown, setCaseReadyPromptShown,
   getUnseenDiscoveryCount,
 } from "./evidence.js";
+import {
+  initChat,
+  selectNpc, renderMessages, sendMessage, leaveChat, cancelResponse,
+  showCancelBtn, hideCancelBtn, autoResize, scrollToBottom,
+  portraitUrl, buildPortraitImg, npcRole,
+  getSending, setSending,
+} from "./chat.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
-// Evidence constants moved to evidence.js (reads from window.CASE directly)
 const PARTNER_NPC_ID = CASE.partnerNpcId;
-// CULPRIT_ID moved to accusation.js (reads from window.CASE directly)
 
 // Create toast container dynamically (avoids HTML parser issues)
 const _toastContainer = document.createElement("div");
@@ -75,95 +80,12 @@ document.body.appendChild(_toastContainer);
 
 const API_BASE = window.location.origin;
 
-/* Auth & Cloud Save module → see auth.js */
-
-const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
-let currentExpression = {};  // npcId → last known expression
-
-function portraitUrl(npcId, expression = "neutral") {
-  return `${CASE.portraitBasePath}/${npcId}/${expression}.webp`;
-}
-
-/** Build an <img> element for a portrait, falling back to initials on error. */
-function buildPortraitImg(npcId, expression = "neutral", size = 36) {
-  const meta = NPC_META[npcId] || { initials: "?" };
-  const img = new Image(size, size);
-  img.src = portraitUrl(npcId, expression);
-  img.alt = meta.initials;
-  img.loading = "lazy";
-  img.onerror = function() {
-    this.parentElement.textContent = meta.initials;
-  };
-  return img;
-}
-
-/** Update the chat portrait to the given expression. */
-function setHeaderExpression(npcId, expression) {
-  if (!VALID_EXPRESSIONS.includes(expression)) expression = "neutral";
-  currentExpression[npcId] = expression;
-  if (npcId === activeNpcId && chatPortraitImg) {
-    chatPortraitImg.src = portraitUrl(npcId, expression);
-  }
-}
-
-function npcRole(npcId) {
-  return t("role." + npcId);
-}
-
-/** Update the interrogation icon gauges for the active NPC. */
-function updateInterrogationUI(npcId) {
-  const gaugesContainer = document.getElementById("interrogation-gauges");
-  const gaugeP = document.getElementById("gauge-pressure");
-  const gaugeR = document.getElementById("gauge-rapport");
-  const iconP  = document.getElementById("gauge-pressure-icon");
-  const iconR  = document.getElementById("gauge-rapport-icon");
-  if (!gaugeP || !gaugeR) return;
-
-  // Partner: hide gauges, show hint button; suspects: show gauges, hide hint
-  const hintBtn = document.getElementById("lila-hint-btn");
-  if (npcId === PARTNER_NPC_ID) {
-    gaugeP.style.display = "none";
-    gaugeR.style.display = "none";
-    if (hintBtn) hintBtn.classList.add("visible");
-    return;
-  }
-  if (hintBtn) hintBtn.classList.remove("visible");
-  gaugeP.style.display = "";
-  gaugeR.style.display = "";
-
-  const state = npcInterrogation[npcId] || { pressure_band: "calm", rapport_band: "neutral" };
-
-  // Update wrapper classes for glow styling
-  gaugeP.className = "gauge gauge-pressure " + state.pressure_band;
-  gaugeR.className = "gauge gauge-rapport " + state.rapport_band;
-
-  // Swap icon images with pulse animation on change
-  const newPSrc = "icons/pressure-" + state.pressure_band + ".png";
-  const newRSrc = "icons/rapport-" + state.rapport_band + ".png";
-  if (!iconP.src.endsWith(newPSrc)) {
-    iconP.src = newPSrc;
-    iconP.classList.add("pulse");
-    setTimeout(() => iconP.classList.remove("pulse"), 600);
-  }
-  if (!iconR.src.endsWith(newRSrc)) {
-    iconR.src = newRSrc;
-    iconR.classList.add("pulse");
-    setTimeout(() => iconR.classList.remove("pulse"), 600);
-  }
-}
-
-// checkEndgameTrigger → evidence.js
-
 /* ── State ──────────────────────────────────────────────── */
 let npcs = [];
 let activeNpcId = null;
 let conversations = {};
-// evidence, discoveries, discoveryMessageIndices → evidence.js (use getters/setters)
 let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, rapport_band }
 let playerNotes = "";
-// caseReadyPromptShown → evidence.js (use getter/setter)
-let sending = false;
-let subpoenaToastShown = false;
 
 /* ── Gameplay tracking ─────────────────────────────────── */
 let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
@@ -177,8 +99,6 @@ function trackEvent(endpoint, payload) {
   }).catch(() => {});  // fire-and-forget
 }
 
-/* ── Voice State — see voice.js ─────────────────── */
-
 /* ── DOM refs ───────────────────────────────────────────── */
 const $ = (s) => document.querySelector(s);
 
@@ -187,26 +107,6 @@ const titleCard         = $("#title-card");
 const titleCardBtn      = $("#title-card-btn");
 const hubScreen         = $("#hub-screen");
 const TITLE_STORAGE_KEY = "echoes_title_seen";
-
-// Hub elements — npcGridEl moved to navigation.js
-// Chat elements
-const chatLayout        = document.querySelector("#hub-chat .chat-layout");
-const chatPortraitImg   = $("#chat-portrait-img");
-const portraitName      = $("#portrait-name");
-const portraitRole      = $("#portrait-role");
-const portraitStatus    = $("#portrait-status");
-const chatMessages      = $("#chat-messages");
-const typingIndicator   = $("#typing-indicator");
-const chatInputBar      = $("#chat-input-bar");
-const chatInput         = $("#chat-input");
-const sendBtn           = $("#send-btn");
-const cancelBtn         = $("#cancel-btn");
-
-// Chat dossier
-
-// Case Board (hub) — evidence list DOM refs moved to evidence.js
-
-// Modals — accusation/outcome DOM refs moved to accusation.js
 
 /* ── Helpers ────────────────────────────────────────────── */
 
@@ -271,13 +171,11 @@ function applyStateObject(s) {
 }
 
 function saveState() {
-  // Always save to localStorage (offline-first) — use buildStateObject for consistency
   try {
     localStorage.setItem("echoes_state_v2", JSON.stringify(buildStateObject()));
   } catch (err) {
     console.error("[saveState] Failed to persist state:", err);
   }
-  // Schedule a debounced cloud save if logged in
   scheduleCloudSave();
 }
 
@@ -301,7 +199,6 @@ function resetLocalState() {
   setDiscoveryMessageIndices({});
   playerNotes = "";
   setCaseReadyPromptShown(false);
-  subpoenaToastShown = false;
   briefingOpen = true;
   activeNpcId = null;
   resetStringBoard();
@@ -312,7 +209,6 @@ function resetLocalState() {
   localStorage.removeItem("echoes_tutorial_done");
   localStorage.removeItem("echoes_title_seen");
   localStorage.removeItem("echoes_lila_hint_seen");
-  // Keep echoes_audio (device preference)
 }
 
 /** Full restart: wipe local state, delete cloud save, start new game session. */
@@ -326,26 +222,16 @@ async function clearState() {
   }
 }
 
-// escapeHtml is now imported from utils.js
-
-// Tab Navigation, NPC tabs, showHub, showChat → navigation.js
-
 /* ── Initialize ─────────────────────────────────────────── */
-// seedStartingEvidence → evidence.js
 
 let briefingOpen = true; // default: open on first visit
 
 async function init() {
   loadState();
   seedStartingEvidence();
-  // Wait for cloud merge to finish (if any) before first render
-  // so we always render with the latest cloud state
   if (getCloudMergePromise()) {
     await getCloudMergePromise().catch(() => {});
   }
-  // Check isNewGame AFTER cloud merge — a returning user on a new device
-  // will have no localStorage but WILL have a cloud save, so this avoids
-  // a false-positive "new game" analytics event.
   const isNewGame = !conversations || Object.keys(conversations).length === 0;
   if (isNewGame) {
     trackEvent("session", { session_id: gameId, case_id: CASE.id, language: window.currentLang || "en" });
@@ -378,7 +264,6 @@ async function init() {
     saveState,
   });
 
-  // Try loading string board state from server
   sbLoadFromServer().then(() => {
     sbEnsurePositions();
   }).catch(() => {});
@@ -430,369 +315,18 @@ async function init() {
   const hasConversations = Object.keys(conversations).length > 0;
 
   if (activeNpcId) {
-    // Returning player with active chat — go directly there
     titleCard.classList.add("hidden");
     hubScreen.classList.add("active");
     selectNpc(activeNpcId);
   } else if (!titleSeen && !hasConversations) {
-    // First-time player — show title card, hub stays hidden until dismissed
     titleCard.classList.remove("hidden");
   } else {
-    // Returning player — skip title card, show hub
     titleCard.classList.add("hidden");
     showHubOnCaseboard();
   }
 }
 
-// showHubOnCaseboard → navigation.js
-
-// Render NPC Grid → navigation.js
-
-/* ── Select NPC ─────────────────────────────────────────── */
-function selectNpc(npcId) {
-  stopAudio();
-  if (isVoiceMode()) exitVoiceMode();
-  activeNpcId = npcId;
-  const npc = npcs.find(n => n.npc_id === npcId);
-  const displayName = npcDisplayName(npc?.display_name) || npcId;
-
-  // Update portrait
-  const expr = currentExpression[npcId] || "neutral";
-  chatPortraitImg.src = portraitUrl(npcId, expr);
-  chatPortraitImg.alt = displayName;
-
-  // Update nameplate and topbar
-  portraitName.textContent = displayName;
-  portraitRole.textContent = npcRole(npcId);
-  portraitStatus.textContent = "";
-  // NPC name/role shown in portrait panel only (topbar has nav buttons)
-
-  // Render conversation and interrogation pills
-  renderMessages();
-  updateInterrogationUI(npcId);
-
-  // Preload all expressions for smooth transitions
-  for (const ex of VALID_EXPRESSIONS) {
-    const preload = new Image();
-    preload.src = portraitUrl(npcId, ex);
-  }
-
-  // Inject NPC sub-tab and switch to chat panel
-  addNpcTab(npcId);
-  activateTab("chat");
-  chatInput.focus();
-  saveState();
-
-  // Trigger chat-phase tutorial if pending
-  if (getChatTutorialPending()) {
-    if (npcId === PARTNER_NPC_ID) {
-      // Partner has no gauges/info — show hint btn + input tutorial instead
-      // Keep chatTutorialPending alive so gauges/info tutorial fires for suspects
-      setTimeout(() => startTutorial("lila_chat"), 600);
-    } else {
-      setChatTutorialPending(false);
-      // If partner's chat already showed the input bar, only show gauges + info
-      const lilaAlreadySeen = localStorage.getItem(LILA_HINT_STORAGE_KEY);
-      setTimeout(() => startTutorial(lilaAlreadySeen ? "chat_short" : "chat"), 600);
-    }
-  }
-  // Partner hint button tutorial — show once on first partner chat visit
-  else if (npcId === PARTNER_NPC_ID
-           && typeof LILA_HINT_STORAGE_KEY !== "undefined"
-           && !localStorage.getItem(LILA_HINT_STORAGE_KEY)) {
-    setTimeout(() => startTutorial("lila"), 600);
-  }
-}
-
-/* ── Render Messages ────────────────────────────────────── */
-function renderMessages() {
-  chatMessages.innerHTML = "";
-  const history = conversations[activeNpcId] || [];
-
-  if (history.length === 0) {
-    // NPC bio blurb (hidden once the player sends a message)
-    const bioKey = `dossier.${activeNpcId}.bio`;
-    const bioText = t(bioKey);
-    if (bioText !== bioKey) {
-      const bio = document.createElement("div");
-      bio.className = "chat-npc-bio";
-      bio.id = "chat-npc-bio";
-      bio.textContent = bioText;
-      chatMessages.appendChild(bio);
-    }
-
-    const hint = document.createElement("div");
-    hint.id = "chat-empty-hint";
-    hint.className = "chat-empty-hint";
-    if (activeNpcId === PARTNER_NPC_ID) {
-      hint.textContent = t("chat.hint_partner");
-    } else {
-      const npcName = npcDisplayName(npcs.find(n => n.npc_id === activeNpcId)?.display_name) || "this person";
-      hint.textContent = t("chat.hint", { name: npcName });
-    }
-    chatMessages.appendChild(hint);
-
-    // Conversation starter buttons
-    const startersDiv = document.createElement("div");
-    startersDiv.className = "chat-starters";
-    for (let n = 1; n <= 3; n++) {
-      const key = `starter.${activeNpcId}.${n}`;
-      const text = t(key);
-      if (text === key) continue;
-      const btn = document.createElement("button");
-      btn.className = "chat-starter-btn";
-      btn.textContent = text;
-      btn.addEventListener("click", () => sendMessage(text));
-      startersDiv.appendChild(btn);
-    }
-    if (startersDiv.children.length > 0) {
-      chatMessages.appendChild(startersDiv);
-    }
-  }
-
-  for (let i = 0; i < history.length; i++) {
-    appendMessageBubble(history[i].role, history[i].content, i);
-  }
-  if (history.length > 0) scrollToBottom();
-  else chatMessages.scrollTop = 0;
-}
-
-// Strip system tags (EXPRESSION, EVIDENCE and their Serbian variants) from display text
-function stripSystemTags(text) {
-  return text.replace(/\[(?:EXPRESSION|EVIDENCE|IZRAŽAJ|IZRAZAJ|IZRAZ|EVIDENCIJA|DOKAZ):\s*[^\]]*\]/gi, "").trim();
-}
-
-function appendMessageBubble(role, content, messageIndex) {
-  const div = document.createElement("div");
-  div.className = `msg ${role}`;
-  const senderLabel = role === "user" ? t("chat.sender_you") :
-    (npcDisplayName(npcs.find(n => n.npc_id === activeNpcId)?.display_name) || "Suspect");
-
-  const displayContent = role === "assistant" ? stripSystemTags(content) : content;
-  let senderHtml = senderLabel;
-
-  if (role === "assistant" && activeNpcId && messageIndex !== undefined) {
-    const cacheKey = `${activeNpcId}:${messageIndex}`;
-    senderHtml += `<button class="msg-audio-btn" data-cache-key="${cacheKey}"
-              data-npc-id="${activeNpcId}" data-msg-index="${messageIndex}"
-              title="${t('voice.replay_title')}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      </button>`;
-  }
-
-  let html = `<div class="msg-sender">${senderHtml}</div>${escapeHtml(displayContent)}`;
-
-  div.innerHTML = html;
-
-  const replayBtn = div.querySelector(".msg-audio-btn");
-  if (replayBtn) {
-    replayBtn.addEventListener("click", () => {
-      const npcId = replayBtn.dataset.npcId;
-      const idx = parseInt(replayBtn.dataset.msgIndex, 10);
-      const msgContent = (conversations[npcId] || [])[idx]?.content;
-      if (msgContent) speakText(msgContent, npcId, replayBtn.dataset.cacheKey);
-    });
-  }
-
-  // Restore discovery icon if this message had one
-  if (role === "assistant" && activeNpcId && messageIndex !== undefined
-      && (getDiscoveryMessageIndices()[activeNpcId] || []).includes(messageIndex)) {
-    div.classList.add("msg-has-discovery");
-    const icon = document.createElement("span");
-    icon.className = "msg-discovery-icon";
-    icon.title = t("toast.new_discovery");
-    icon.textContent = "!";
-    div.appendChild(icon);
-  }
-
-  chatMessages.appendChild(div);
-}
-
-function scrollToBottom() {
-  requestAnimationFrame(() => {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  });
-}
-
-/* ── Send Message ───────────────────────────────────────── */
-async function sendMessage(overrideText, displayText) {
-  const text = overrideText || chatInput.value.trim();
-  if (!text || !activeNpcId || sending) return;
-  const shownText = displayText || text; // what appears in the chat bubble
-
-  sending = true;
-  sendBtn.disabled = true;
-  showCancelBtn();
-  setChatAbortController(new AbortController());
-  if (!overrideText) { chatInput.value = ""; autoResize(); }
-
-  if (!conversations[activeNpcId]) conversations[activeNpcId] = [];
-
-  // Remove empty-state bio, hint and starters
-  const bio = document.getElementById("chat-npc-bio");
-  if (bio) bio.remove();
-  const hint = document.getElementById("chat-empty-hint");
-  if (hint) hint.remove();
-  const starters = chatMessages.querySelector(".chat-starters");
-  if (starters) starters.remove();
-
-  // Add user bubble (show friendly display text, store API text in history)
-  conversations[activeNpcId].push({ role: "user", content: text });
-  const userIdx = conversations[activeNpcId].length - 1;
-  appendMessageBubble("user", shownText, userIdx);
-  scrollToBottom();
-
-  // Show typing indicator
-  typingIndicator.classList.add("visible");
-  chatMessages.appendChild(typingIndicator);
-  scrollToBottom();
-  portraitStatus.textContent = t("chat.status_responding");
-
-  try {
-    const historyForApi = conversations[activeNpcId].slice(0, -1);
-    const res = await fetch(`${API_BASE}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        npc_id: activeNpcId,
-        message: text,
-        history: historyForApi,
-        language: window.currentLang || "en",
-        pressure: (npcInterrogation[activeNpcId] || {}).pressure || 0,
-        rapport: (npcInterrogation[activeNpcId] || {}).rapport ?? 25,
-        peak_pressure: (npcInterrogation[activeNpcId] || {}).peak_pressure ??
-                       (npcInterrogation[activeNpcId] || {}).pressure ?? 0,
-        player_evidence_ids: getEvidence().map(e => e.id),
-        player_discovery_ids: Object.values(getDiscoveries()).flat().map(d => d.id),
-        session_id: gameId,
-      }),
-      signal: getChatAbortController()?.signal,
-    });
-
-    if (!res.ok) {
-      let detail;
-      try {
-        const errBody = await res.json();
-        detail = errBody.detail || `HTTP ${res.status}`;
-      } catch (_) {
-        const text = await res.text().catch(() => "");
-        detail = text ? `HTTP ${res.status}: ${text.slice(0, 200)}` : `HTTP ${res.status} (no response body)`;
-      }
-      console.error(`[chat] Server error: ${res.status}`, detail);
-      throw new Error(detail);
-    }
-
-    const data = await res.json();
-    conversations[activeNpcId].push({ role: "assistant", content: data.reply });
-
-    typingIndicator.classList.remove("visible");
-    const assistantIdx = conversations[activeNpcId].length - 1;
-    appendMessageBubble("assistant", data.reply, assistantIdx);
-    scrollToBottom();
-
-    // Auto-play TTS only in voice mode
-    if (isVoiceMode()) {
-      const cacheKey = `${activeNpcId}:${assistantIdx}`;
-      speakText(data.reply, activeNpcId, cacheKey);
-    }
-
-    // Process evidence and discoveries
-    detectEvidence(data.evidence_ids || [], activeNpcId);
-    detectNewDiscoveries(data.discovery_ids || [], activeNpcId, data.discovery_summaries || {});
-
-    // Show one-time subpoena toast when a suspect mentions it
-    if (activeNpcId !== PARTNER_NPC_ID && !subpoenaToastShown &&
-        /subpoena|court order|lawyer|not at liberty/i.test(data.reply)) {
-      subpoenaToastShown = true;
-      showDiscoveryToast(t("toast.subpoena"));
-    }
-
-    // Update expression
-    if (data.expression) {
-      setHeaderExpression(activeNpcId, data.expression);
-    }
-
-    // ── Detective's Intuition line (LLM-generated, after NPC reply) ──
-    if (activeNpcId !== PARTNER_NPC_ID && data.intuition_line) {
-      const intuitionEl = document.createElement("div");
-      intuitionEl.className = "msg intuition";
-      intuitionEl.innerHTML =
-        `<div class="msg-sender">A Detective's Intuition</div>` +
-        `<em>${escapeHtml(data.intuition_line)}</em>`;
-      chatMessages.appendChild(intuitionEl);
-      scrollToBottom();
-    }
-
-    // Update interrogation state
-    if (data.pressure !== undefined) {
-      npcInterrogation[activeNpcId] = {
-        pressure: data.pressure,
-        rapport: data.rapport,
-        pressure_band: data.pressure_band || "calm",
-        rapport_band: data.rapport_band || "cold",
-        peak_pressure: data.peak_pressure ?? data.pressure,
-      };
-      updateInterrogationUI(activeNpcId);
-    }
-    checkEndgameTrigger();
-
-  } catch (err) {
-    typingIndicator.classList.remove("visible");
-    // Silently ignore user-initiated cancellation
-    if (err.name === "AbortError") {
-      // Remove the pending user message from conversation
-      conversations[activeNpcId].pop();
-    } else {
-      // Distinguish network errors from server errors
-      const isNetwork = err instanceof TypeError && err.message.includes("fetch");
-      const displayMsg = isNetwork
-        ? "Cannot reach server — please try again."
-        : err.message;
-      console.error("[chat] Request failed:", err);
-      const failedText = text;
-      const errDiv = document.createElement("div");
-      errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
-      errDiv.textContent = t("chat.error", { message: displayMsg });
-      const retryBtn = document.createElement("button");
-      retryBtn.textContent = t("chat.retry") || "Retry";
-      retryBtn.style.cssText = "margin-top:4px; padding:4px 12px; cursor:pointer; border:1px solid var(--danger); background:transparent; color:var(--danger); border-radius:4px; font-size:0.8rem;";
-      retryBtn.addEventListener("click", () => {
-        errDiv.remove();
-        sendMessage(failedText);
-      });
-      errDiv.appendChild(document.createElement("br"));
-      errDiv.appendChild(retryBtn);
-      chatMessages.appendChild(errDiv);
-      scrollToBottom();
-      conversations[activeNpcId].pop();
-    }
-  }
-
-  setChatAbortController(null);
-  portraitStatus.textContent = "";
-  sending = false;
-  sendBtn.disabled = !chatInput.value.trim();
-  hideCancelBtn();
-  saveState();
-}
-
-// Evidence Detection, Discovery, and Rendering → evidence.js
-
-
-/* ── Auto-resize textarea ───────────────────────────────── */
-function autoResize() {
-  chatInput.style.height = "auto";
-  chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
-}
-
-// Accusation System → accusation.js
-
 /* ── Event Listeners ────────────────────────────────────── */
-// Intro screen removed — game starts on Case Board directly
 
 // Case board briefing toggle (persists state)
 $("#cb-briefing-toggle").addEventListener("click", () => {
@@ -805,42 +339,6 @@ $("#cb-briefing-toggle").addEventListener("click", () => {
   saveState();
 });
 
-/* ── Cancel button: show/hide + abort logic ──────────── */
-function showCancelBtn() {
-  chatInputBar.classList.add("cancellable");
-}
-function hideCancelBtn() {
-  chatInputBar.classList.remove("cancellable");
-}
-function cancelResponse() {
-  // Abort in-flight chat request
-  const ctrl = getChatAbortController();
-  if (ctrl) { ctrl.abort(); setChatAbortController(null); }
-  // Abort in-flight TTS + stop any playing audio
-  stopAudio();
-  // Reset UI state
-  typingIndicator.classList.remove("visible");
-  portraitStatus.textContent = "";
-  sending = false;
-  sendBtn.disabled = !chatInput.value.trim();
-  hideCancelBtn();
-  // Exit voice-mode waiting state (don't auto-restart recording)
-  if (isVoiceMode()) {
-    document.querySelector("#mic-btn").classList.remove("waiting");
-    exitVoiceMode();
-  }
-}
-cancelBtn.addEventListener("click", cancelResponse);
-
-function leaveChat() {
-  cancelResponse();
-  if (isVoiceMode()) exitVoiceMode();
-  activeNpcId = null;
-  saveState();
-}
-
-// Hub manila folder tabs → navigation.js (initNavigation)
-
 // Notes textarea — auto-save on input
 const notesTextarea = document.getElementById("player-notes");
 if (notesTextarea) {
@@ -851,149 +349,47 @@ if (notesTextarea) {
   });
 }
 
-/* ── Portrait Info Button (bio tooltip) ──────────────── */
-const portraitInfoBtn = $("#portrait-info-btn");
-const bioTooltipEl = $("#portrait-bio-tooltip");
-const portraitFrameEl = document.querySelector(".portrait-frame");
-
-function showBioTooltip() {
-  if (!activeNpcId) return;
-  const bioKey = `dossier.${activeNpcId}.bio`;
-  const bioText = t(bioKey);
-  bioTooltipEl.textContent = bioText !== bioKey ? bioText : "";
-  bioTooltipEl.classList.add("visible");
-}
-function hideBioTooltip() {
-  bioTooltipEl.classList.remove("visible");
-}
-
-// Desktop: hover to show
-portraitInfoBtn.addEventListener("mouseenter", showBioTooltip);
-portraitFrameEl.addEventListener("mouseleave", hideBioTooltip);
-// Mobile: tap to toggle
-portraitInfoBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (bioTooltipEl.classList.contains("visible")) {
-    hideBioTooltip();
-  } else {
-    showBioTooltip();
-  }
-});
-// Tap tooltip to dismiss
-bioTooltipEl.addEventListener("click", hideBioTooltip);
-
-chatInput.addEventListener("input", () => {
-  autoResize();
-  sendBtn.disabled = !chatInput.value.trim() || sending;
-});
-
-chatInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-sendBtn.addEventListener("click", () => sendMessage());
-
-// Partner hint button — sends detailed prompt but shows a casual message in chat
-document.getElementById("lila-hint-btn").addEventListener("click", () => {
-  if (sending || activeNpcId !== PARTNER_NPC_ID) return;
-  const displayKey = CASE.hintDisplayKeys[Math.floor(Math.random() * CASE.hintDisplayKeys.length)];
-  sendMessage(t("chat.hint_prompt"), t(displayKey));
-});
-
-// Accusation event listeners → accusation.js (initAccusation)
-
-/* ── Case-Ready Modal (endgame trigger) ──────────────────── */
-const caseReadyModal = $("#case-ready-modal");
-$("#case-ready-review").addEventListener("click", () => {
-  caseReadyModal.classList.remove("visible");
-  leaveChat();
-  removeNpcTab();
-  activateTab("caseboard");
-});
-$("#case-ready-accuse").addEventListener("click", () => {
-  caseReadyModal.classList.remove("visible");
-  openAccusationModal();
-});
-$("#case-ready-continue").addEventListener("click", () => {
-  caseReadyModal.classList.remove("visible");
-});
-addModalCloseOnClickOutside(caseReadyModal, () => caseReadyModal.classList.remove("visible"));
-
-/* ── Keycard Logs Terminal Modal ────────────────────────── */
-let keycardLogsCache = null;
-const keycardModal = document.getElementById("keycard-modal");
-const keycardBody  = document.getElementById("keycard-terminal-body");
-
-function fmtTime(ts) {
-  return ts.substring(11, 19);
-}
-
-function padEnd(s, len) {
-  return s.length >= len ? s : s + " ".repeat(len - s.length);
-}
-
-function renderKeycardLogs(logs) {
-  let html = `<div class="kc-header">
-    <span>${t("keycard.col_time")}</span><span>${t("keycard.col_zone")}</span><span>${t("keycard.col_card")}</span><span>${t("keycard.col_holder")}</span><span>${t("keycard.col_dir")}</span><span>${t("keycard.col_status")}</span>
-  </div>`;
-  for (const l of logs) {
-    if (l.card_id === "SYSTEM") {
-      const isOff = l.access === "system_offline";
-      const icon = isOff ? "⚠" : "✓";
-      const cls = isOff ? "offline" : "restored";
-      const sysText = isOff ? t("keycard.system_offline") : t("keycard.system_restored");
-      html += `<div class="kc-system ${cls}">
-        <span class="kc-system-icon">${icon}</span>
-        <span class="kc-system-time">${fmtTime(l.timestamp)}</span>  ${sysText}
-      </div>`;
-    } else {
-      const dirCls = l.direction === "entry" ? "entry" : "exit";
-      const dirLabel = l.direction === "entry" ? t("keycard.entry") : t("keycard.exit");
-      const statusLabel = t("keycard.granted");
-      const zoneLabel = t("keycard.zone." + l.zone) || l.zone;
-      html += `<div class="kc-row">
-        <span class="kc-time">${fmtTime(l.timestamp)}</span>
-        <span class="kc-zone">${zoneLabel}</span>
-        <span class="kc-card">${l.card_id}</span>
-        <span class="kc-holder">${l.card_holder}</span>
-        <span class="kc-dir ${dirCls}">${dirLabel}</span>
-        <span class="kc-access">${statusLabel}</span>
-      </div>`;
-    }
-  }
-  keycardBody.innerHTML = html;
-}
-
-window.__openKeycardModal = async function() {
-  keycardModal.classList.add("visible");
-  // Re-translate terminal header for current language
-  document.querySelector(".keycard-terminal-title").textContent = t("keycard.title");
-  document.querySelector(".keycard-terminal-info").textContent = t("keycard.subtitle");
-  if (keycardLogsCache) {
-    renderKeycardLogs(keycardLogsCache);
-    return;
-  }
-  keycardBody.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(120,220,100,0.4);font-family:var(--font-mono);font-size:0.75rem;">' + t("keycard.loading") + '</div>';
-  try {
-    const resp = await fetch(CASE.keycardLogsPath);
-    keycardLogsCache = await resp.json();
-    renderKeycardLogs(keycardLogsCache);
-  } catch (err) {
-    keycardBody.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(220,60,40,0.8);font-family:var(--font-mono);font-size:0.75rem;">' + t("keycard.error") + '</div>';
-  }
-};
-
-function closeKeycardModal() {
-  keycardModal.classList.remove("visible");
-}
-
-document.getElementById("keycard-modal-close").addEventListener("click", closeKeycardModal);
-addModalCloseOnClickOutside(keycardModal, closeKeycardModal);
-
 /* ── Boot ───────────────────────────────────────────────── */
+const t = (...args) => window.t(...args);
+
+initChat({
+  // State getters/setters
+  getActiveNpcId: () => activeNpcId,
+  setActiveNpcId: (v) => { activeNpcId = v; },
+  getConversations: () => conversations,
+  setConversation: (npcId, arr) => { conversations[npcId] = arr; },
+  getNpcInterrogation: () => npcInterrogation,
+  setNpcInterrogation: (npcId, data) => { npcInterrogation[npcId] = data; },
+  getNpcs: () => npcs,
+
+  // Voice module
+  speakText, stopAudio, isVoiceMode, exitVoiceMode,
+  isAudioEnabled,
+  getChatAbortController, setChatAbortController,
+
+  // Navigation module
+  addNpcTab, activateTab, removeNpcTab,
+
+  // State persistence
+  saveState,
+
+  // Evidence module
+  getEvidence, getDiscoveries, getDiscoveryMessageIndices,
+  detectEvidence, detectNewDiscoveries, checkEndgameTrigger,
+  renderEvidence, flashCaseBoardTab, renderStringBoard,
+  showDiscoveryToast,
+
+  // Tutorial module
+  getChatTutorialPending, setChatTutorialPending,
+  startTutorial, LILA_HINT_STORAGE_KEY,
+
+  // Tracking
+  trackEvent,
+  getGameId: () => gameId,
+
+  // Navigation
+  renderNpcGrid,
+});
 initEvidence({
   getConversations: () => conversations,
   getNpcInterrogation: () => npcInterrogation,
@@ -1001,7 +397,7 @@ initEvidence({
   renderStringBoard,
   renderNpcGrid,
   getActiveNpcId: () => activeNpcId,
-  getChatMessages: () => chatMessages,
+  getChatMessages: () => document.querySelector("#chat-messages"),
   openAccusationModal,
   trackEvent,
   getGameId: () => gameId,
@@ -1017,7 +413,7 @@ initAccusation({
   setBriefingOpen: (v) => { briefingOpen = v; },
   removeNpcTab,
   getHubScreen: () => hubScreen,
-  getChatMessages: () => chatMessages,
+  getChatMessages: () => document.querySelector("#chat-messages"),
   reinit: init,
 });
 initNavigation({
@@ -1040,13 +436,13 @@ initSettings({
   renderMessages,
   activateTab,
   getActiveNpcId: () => activeNpcId,
-  getSending: () => sending,
+  getSending: () => getSending(),
   getGameId: () => gameId,
   npcRole,
   getHubScreen: () => hubScreen,
-  getChatMessages: () => chatMessages,
-  getPortraitRole: () => portraitRole,
-  getPortraitStatus: () => portraitStatus,
+  getChatMessages: () => document.querySelector("#chat-messages"),
+  getPortraitRole: () => document.querySelector("#portrait-role"),
+  getPortraitStatus: () => document.querySelector("#portrait-status"),
   setBriefingOpen: (v) => { briefingOpen = v; },
 });
 initTutorial({
@@ -1059,7 +455,7 @@ initTutorial({
 });
 initLanguage();
 initVoice({
-  getSending: () => sending,
+  getSending: () => getSending(),
   getActiveNpcId: () => activeNpcId,
   sendMessage,
   autoResize,
@@ -1089,7 +485,6 @@ initAuth({
 initAuthUI();
 
 // Check Supabase availability and restore auth session
-// Store promise so init() can await it before first render
 setCloudMergePromise(checkSupabaseStatus().then(async configured => {
   if (!configured) {
     const accountRow = document.getElementById("settings-account-row");
@@ -1103,7 +498,7 @@ setCloudMergePromise(checkSupabaseStatus().then(async configured => {
   }
 }));
 
-// Flush cloud save when tab becomes hidden — use keepalive fetch for reliability
+// Flush cloud save when tab becomes hidden
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden" && getAuthUser()?.access_token && isCloudSavePending()) {
     try {
@@ -1112,12 +507,12 @@ document.addEventListener("visibilitychange", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state: stateObj }),
-        keepalive: true, // survives page hide
+        keepalive: true,
       }).then(() => {}).catch(() => {});
     } catch {}
   }
 });
-// beforeunload: use sendBeacon as last resort (guaranteed to be queued)
+// beforeunload: use sendBeacon as last resort
 window.addEventListener("beforeunload", () => {
   if (getAuthUser() && isCloudSavePending()) {
     cloudSaveBeacon();
@@ -1141,7 +536,6 @@ function enterGame() {
 
 // Title card "Open Case File" button
 titleCardBtn.addEventListener("click", () => {
-  // If Supabase configured and user not logged in, show auth prompt
   if (isSupabaseConfigured() && !getAuthUser()) {
     titleCard.classList.add("dismissed");
     localStorage.setItem(TITLE_STORAGE_KEY, "1");
@@ -1151,7 +545,6 @@ titleCardBtn.addEventListener("click", () => {
     }, 500);
     return;
   }
-  // Already logged in or no Supabase — go straight to game
   enterGame();
 });
 
@@ -1177,12 +570,10 @@ document.getElementById("auth-prompt-signin").addEventListener("click", () => au
 document.getElementById("auth-prompt-signup").addEventListener("click", () => authPromptFlow("signup"));
 
 init().then(() => {
-  // Start tutorial on first visit (no existing conversations = new player)
-  // Only if title card was already seen (returning player who hasn't done tutorial)
   const hasConversations = Object.keys(conversations).length > 0;
   const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
   if (titleSeen && !isTutorialDone() && !hasConversations) {
-    setChatTutorialPending(true); // will fire when NPC selected
+    setChatTutorialPending(true);
     setTimeout(() => startTutorial("hub"), 600);
   }
 });
