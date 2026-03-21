@@ -27,6 +27,11 @@ import {
   sbLoadFromServer, sbEnsurePositions,
   getStringBoard, setStringBoard, resetStringBoard,
 } from "./stringboard.js";
+import {
+  initSettings, openSettings, closeSettings,
+  openFeedback, closeFeedback,
+  initLanguage, switchLanguage,
+} from "./settings.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
@@ -699,8 +704,6 @@ const TITLE_STORAGE_KEY = "echoes_title_seen";
 
 // Hub elements
 const npcGridEl         = $("#npc-grid");
-const hubSettingsTab    = $("#hub-settings-tab");
-
 // Chat elements
 const chatLayout        = document.querySelector("#hub-chat .chat-layout");
 const chatPortraitImg   = $("#chat-portrait-img");
@@ -1673,158 +1676,6 @@ function autoResize() {
   chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
 }
 
-/* ── Settings Modal ──────────────────────────────────────── */
-const settingsModal     = $("#settings-modal");
-const settingsCloseBtn  = $("#settings-close");
-const settingsRestartBtn   = $("#settings-restart-btn");
-const settingsRestartRow   = $("#settings-restart-row");
-const settingsRestartConfirm = $("#settings-restart-confirm");
-const settingsRestartCancel  = $("#settings-restart-cancel");
-const settingsRestartYes     = $("#settings-restart-yes");
-
-function openSettings() {
-  settingsRestartRow.style.display = "";
-  settingsRestartConfirm.style.display = "none";
-  settingsModal.classList.add("visible");
-}
-
-function closeSettings() {
-  settingsModal.classList.remove("visible");
-}
-
-hubSettingsTab.addEventListener("click", openSettings);
-settingsCloseBtn.addEventListener("click", closeSettings);
-addModalCloseOnClickOutside(settingsModal, closeSettings);
-
-settingsRestartBtn.addEventListener("click", () => {
-  settingsRestartRow.style.display = "none";
-  settingsRestartConfirm.style.display = "";
-});
-
-settingsRestartCancel.addEventListener("click", () => {
-  settingsRestartRow.style.display = "";
-  settingsRestartConfirm.style.display = "none";
-});
-
-settingsRestartYes.addEventListener("click", () => {
-  closeSettings();
-  clearState();
-  briefingOpen = true;
-  seedStartingEvidence();
-  removeNpcTab();
-  chatMessages.innerHTML = "";
-  renderEvidence();
-  renderNpcGrid();
-  // Go to hub on Case Board tab with briefing expanded
-  hubScreen.classList.add("active");
-  activateTab("caseboard");
-  const briefingToggle = $("#cb-briefing-toggle");
-  const briefingBody = $("#cb-briefing-body");
-  briefingToggle.setAttribute("aria-expanded", "true");
-  briefingBody.classList.add("open");
-});
-
-/* ── Feedback System ───────────────────────────────────── */
-const feedbackModal = $("#feedback-modal");
-const feedbackCloseBtn = $("#feedback-close");
-const feedbackText = $("#feedback-text");
-const feedbackFile = $("#feedback-file");
-const feedbackPreview = $("#feedback-preview");
-const feedbackPreviewImg = $("#feedback-preview-img");
-const feedbackPreviewRemove = $("#feedback-preview-remove");
-const feedbackSubmitBtn = $("#feedback-submit");
-const feedbackSuccess = $("#feedback-success");
-
-let feedbackScreenshotFile = null;
-
-function openFeedback() {
-  feedbackText.value = "";
-  feedbackText.style.display = "";
-  feedbackFile.value = "";
-  feedbackScreenshotFile = null;
-  feedbackPreview.style.display = "none";
-  document.querySelector(".feedback-screenshot-row").style.display = "";
-  feedbackSubmitBtn.style.display = "";
-  feedbackSuccess.style.display = "none";
-  feedbackModal.classList.add("visible");
-  feedbackText.focus();
-}
-
-function closeFeedback() {
-  feedbackModal.classList.remove("visible");
-}
-
-$("#hub-feedback-tab").addEventListener("click", openFeedback);
-feedbackCloseBtn.addEventListener("click", closeFeedback);
-addModalCloseOnClickOutside(feedbackModal, closeFeedback);
-
-feedbackFile.addEventListener("change", () => {
-  const file = feedbackFile.files[0];
-  if (!file) return;
-  feedbackScreenshotFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    feedbackPreviewImg.src = e.target.result;
-    feedbackPreview.style.display = "";
-  };
-  reader.readAsDataURL(file);
-});
-
-feedbackPreviewRemove.addEventListener("click", () => {
-  feedbackScreenshotFile = null;
-  feedbackFile.value = "";
-  feedbackPreview.style.display = "none";
-});
-
-feedbackSubmitBtn.addEventListener("click", async () => {
-  const text = feedbackText.value.trim();
-  if (!text) return;
-
-  feedbackSubmitBtn.disabled = true;
-  feedbackSubmitBtn.textContent = "…";
-
-  let screenshotUrl = null;
-
-  // Upload screenshot if attached
-  if (feedbackScreenshotFile) {
-    try {
-      const form = new FormData();
-      form.append("file", feedbackScreenshotFile);
-      const res = await fetch(`${API_BASE}/api/feedback/upload`, {
-        method: "POST",
-        body: form,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        screenshotUrl = data.url;
-      }
-    } catch (_) { /* proceed without screenshot */ }
-  }
-
-  // Submit feedback
-  try {
-    await fetch(`${API_BASE}/api/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: gameId,
-        feedback_text: text,
-        screenshot_url: screenshotUrl,
-      }),
-    });
-  } catch (_) { /* fire-and-forget */ }
-
-  // Show success
-  feedbackSubmitBtn.style.display = "none";
-  feedbackText.style.display = "none";
-  document.querySelector(".feedback-screenshot-row").style.display = "none";
-  feedbackSuccess.style.display = "";
-  feedbackSubmitBtn.disabled = false;
-  feedbackSubmitBtn.textContent = t("feedback.submit");
-
-  setTimeout(closeFeedback, 1500);
-});
-
 /* ── Accusation System ──────────────────────────────────── */
 function openAccusationModal() {
   accusationTarget = null;
@@ -2130,31 +1981,25 @@ function closeKeycardModal() {
 document.getElementById("keycard-modal-close").addEventListener("click", closeKeycardModal);
 addModalCloseOnClickOutside(keycardModal, closeKeycardModal);
 
-/* ── Language Toggle ────────────────────────────────────── */
-function initLanguage() {
-  const saved = localStorage.getItem("echoes_lang") || "en";
-  window.currentLang = saved;
-  applyLanguage(saved);
-}
-
-function switchLanguage(lang) {
-  applyLanguage(lang);
-  renderNpcGrid();
-  renderEvidence();
-  if (activeNpcId) {
-    renderMessages();
-    // Update programmatically-set NPC role text in chat screen
-    portraitRole.textContent = npcRole(activeNpcId);
-    // topbar has nav buttons now, no role text to update
-    portraitStatus.textContent = sending ? t("chat.status_responding") : "";
-  }
-}
-
-document.querySelectorAll(".lang-btn").forEach(btn => {
-  btn.addEventListener("click", () => switchLanguage(btn.dataset.lang));
-});
-
 /* ── Boot ───────────────────────────────────────────────── */
+initSettings({
+  clearState,
+  seedStartingEvidence,
+  removeNpcTab,
+  renderEvidence,
+  renderNpcGrid,
+  renderMessages,
+  activateTab,
+  getActiveNpcId: () => activeNpcId,
+  getSending: () => sending,
+  getGameId: () => gameId,
+  npcRole,
+  getHubScreen: () => hubScreen,
+  getChatMessages: () => chatMessages,
+  getPortraitRole: () => portraitRole,
+  getPortraitStatus: () => portraitStatus,
+  setBriefingOpen: (v) => { briefingOpen = v; },
+});
 initTutorial({
   activateTab,
   leaveChat,
