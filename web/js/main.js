@@ -1,13 +1,30 @@
 /* ================================================================
-   ECHOES IN THE ATRIUM — Game Frontend
+   ECHOES IN THE ATRIUM — Game Frontend (Orchestrator)
+   ================================================================
+   This file wires together the game's ES modules and runs the
+   boot sequence. All domain logic lives in dedicated modules:
+
+   auth.js        — Authentication & cloud save
+   chat.js        — NPC conversation UI & portrait management
+   evidence.js    — Evidence collection & discovery tracking
+   stringboard.js — Deduction board (drag, link, pan, zoom)
+   voice.js       — Text-to-speech & speech-to-text
+   tutorial.js    — Onboarding coach marks
+   accusation.js  — Arrest flow & outcome grading
+   settings.js    — Settings, feedback, language
+   navigation.js  — Tab switching, NPC grid, screen transitions
+   store.js       — Shared game state (not yet wired)
+   events.js      — Cross-module event bus (not yet wired)
+   state.js       — State serialization for save/load
+   api.js         — Authenticated fetch wrapper
+   utils.js       — HTML escaping, display name, modal helper
    ================================================================ */
-import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside } from "./utils.js";
-import { apiFetch, apiPost } from "./api.js";
+import { apiFetch } from "./api.js";
 import {
-  initAuth, initAuthUI, openAuthModal, closeAuthModal,
-  updateAuthUI, getAuthUser, isSupabaseConfigured,
+  initAuth, initAuthUI, openAuthModal,
+  getAuthUser, isSupabaseConfigured,
   checkSupabaseStatus, restoreAuthSession, mergeCloudState,
-  scheduleCloudSave, flushCloudSave, cloudSaveState,
+  scheduleCloudSave,
   cloudSaveBeacon, isCloudSavePending,
   getCloudMergePromise, setCloudMergePromise,
   cloudDeleteState,
@@ -17,19 +34,18 @@ import {
   applyStateObject as _applyStateObject,
 } from "./state.js";
 import {
-  initTutorial, startTutorial, endTutorial, skipTutorial,
-  isTutorialDone, markTutorialDone,
+  initTutorial, startTutorial,
+  isTutorialDone,
   getChatTutorialPending, setChatTutorialPending,
   TUTORIAL_STORAGE_KEY, LILA_HINT_STORAGE_KEY,
 } from "./tutorial.js";
 import {
   initVoice, speakText, stopAudio,
-  startRecording, stopRecording,
-  enterVoiceMode, exitVoiceMode, isVoiceMode,
+  isVoiceMode, exitVoiceMode,
   isAudioEnabled, setAudioEnabled, updateAudioToggle,
-  setNpcVoice, getIsRecording, getIsTranscribing,
+  setNpcVoice,
   getChatAbortController, setChatAbortController,
-  clearAudioCache, transcribeAudio,
+  clearAudioCache,
 } from "./voice.js";
 import {
   initStringBoard, renderStringBoard,
@@ -37,46 +53,39 @@ import {
   getStringBoard, setStringBoard, resetStringBoard,
 } from "./stringboard.js";
 import {
-  initSettings, openSettings, closeSettings,
-  openFeedback, closeFeedback,
-  initLanguage, switchLanguage,
+  initSettings, closeSettings,
+  initLanguage,
 } from "./settings.js";
 import {
   initAccusation, openAccusationModal,
 } from "./accusation.js";
 import {
   initNavigation, activateTab, addNpcTab, removeNpcTab,
-  showHub, showChat, showHubOnCaseboard, renderNpcGrid,
+  showHubOnCaseboard, renderNpcGrid,
 } from "./navigation.js";
 import {
   initEvidence,
   seedStartingEvidence, checkEndgameTrigger,
   gradeArrest, detectEvidence, detectNewDiscoveries,
   renderEvidence, getDiscoveriesForEvidence,
-  flashCaseBoardTab, clearCaseBoardBadges,
+  flashCaseBoardTab,
   showDiscoveryToast,
   getEvidence, setEvidence,
   getDiscoveries, setDiscoveries,
   getDiscoveryMessageIndices, setDiscoveryMessageIndices,
   isCaseReadyPromptShown, setCaseReadyPromptShown,
-  getUnseenDiscoveryCount,
 } from "./evidence.js";
 import {
   initChat,
-  selectNpc, renderMessages, sendMessage, leaveChat, cancelResponse,
+  selectNpc, renderMessages, sendMessage, leaveChat,
   showCancelBtn, hideCancelBtn, autoResize, scrollToBottom,
   portraitUrl, buildPortraitImg, npcRole,
-  getSending, setSending,
+  getSending,
 } from "./chat.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
 const PARTNER_NPC_ID = CASE.partnerNpcId;
-
-// Create toast container dynamically (avoids HTML parser issues)
-const _toastContainer = document.createElement("div");
-_toastContainer.id = "discovery-toast-container";
-document.body.appendChild(_toastContainer);
 
 const API_BASE = window.location.origin;
 
@@ -84,7 +93,7 @@ const API_BASE = window.location.origin;
 let npcs = [];
 let activeNpcId = null;
 let conversations = {};
-let npcInterrogation = {};   // npc_id → { pressure, rapport, pressure_band, rapport_band }
+let npcInterrogation = {};
 let playerNotes = "";
 
 /* ── Gameplay tracking ─────────────────────────────────── */
@@ -96,21 +105,17 @@ function trackEvent(endpoint, payload) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  }).catch(() => {});  // fire-and-forget
+  }).catch(() => {});
 }
 
 /* ── DOM refs ───────────────────────────────────────────── */
-const $ = (s) => document.querySelector(s);
-
-// Screens
-const titleCard         = $("#title-card");
-const titleCardBtn      = $("#title-card-btn");
-const hubScreen         = $("#hub-screen");
+const titleCard         = document.querySelector("#title-card");
+const titleCardBtn      = document.querySelector("#title-card-btn");
+const hubScreen         = document.querySelector("#hub-screen");
 const TITLE_STORAGE_KEY = "echoes_title_seen";
 
 /* ── Helpers ────────────────────────────────────────────── */
 
-/** Count total conversation messages + evidence items as a state richness proxy. */
 function stateRichness(s) {
   if (!s) return 0;
   let count = 0;
@@ -123,7 +128,6 @@ function stateRichness(s) {
   return count;
 }
 
-/** Collect the storage-key constants needed by state serialization. */
 function _stateOpts() {
   return {
     caseId: CASE.id,
@@ -133,7 +137,6 @@ function _stateOpts() {
   };
 }
 
-/** Snapshot the module-level state variables into a plain object. */
 function _currentState() {
   return {
     conversations, evidence: getEvidence(), activeNpcId, discoveries: getDiscoveries(),
@@ -147,7 +150,6 @@ function buildStateObject() {
   return _buildStateObject(_currentState(), _stateOpts());
 }
 
-/** Apply a state object (from cloud or localStorage) to the running game variables. */
 function applyStateObject(s) {
   const restored = _applyStateObject(s, _stateOpts());
   if (!restored) return;
@@ -189,7 +191,6 @@ function loadState() {
   }
 }
 
-/** Wipe all local game state (memory + localStorage). Does NOT touch cloud. */
 function resetLocalState() {
   if (isVoiceMode()) exitVoiceMode();
   conversations = {};
@@ -211,7 +212,6 @@ function resetLocalState() {
   localStorage.removeItem("echoes_lila_hint_seen");
 }
 
-/** Full restart: wipe local state, delete cloud save, start new game session. */
 async function clearState() {
   resetLocalState();
   localStorage.setItem("echoes_game_id", gameId);
@@ -224,7 +224,7 @@ async function clearState() {
 
 /* ── Initialize ─────────────────────────────────────────── */
 
-let briefingOpen = true; // default: open on first visit
+let briefingOpen = true;
 
 async function init() {
   loadState();
@@ -269,7 +269,7 @@ async function init() {
   }).catch(() => {});
 
   // Populate briefing paragraphs from case data
-  const briefingBody = $("#cb-briefing-body");
+  const briefingBody = document.querySelector("#cb-briefing-body");
   briefingBody.innerHTML = "";
   for (const entry of CASE.briefingKeys) {
     const isObj = typeof entry === "object";
@@ -306,7 +306,7 @@ async function init() {
   }
 
   // Restore briefing open/closed state
-  const briefingToggle = $("#cb-briefing-toggle");
+  const briefingToggle = document.querySelector("#cb-briefing-toggle");
   briefingToggle.setAttribute("aria-expanded", String(briefingOpen));
   if (briefingOpen) briefingBody.classList.add("open");
   else briefingBody.classList.remove("open");
@@ -328,10 +328,9 @@ async function init() {
 
 /* ── Event Listeners ────────────────────────────────────── */
 
-// Case board briefing toggle (persists state)
-$("#cb-briefing-toggle").addEventListener("click", () => {
-  const toggle = $("#cb-briefing-toggle");
-  const body = $("#cb-briefing-body");
+document.querySelector("#cb-briefing-toggle").addEventListener("click", () => {
+  const toggle = document.querySelector("#cb-briefing-toggle");
+  const body = document.querySelector("#cb-briefing-body");
   const expanded = toggle.getAttribute("aria-expanded") === "true";
   toggle.setAttribute("aria-expanded", String(!expanded));
   body.classList.toggle("open");
@@ -339,7 +338,6 @@ $("#cb-briefing-toggle").addEventListener("click", () => {
   saveState();
 });
 
-// Notes textarea — auto-save on input
 const notesTextarea = document.getElementById("player-notes");
 if (notesTextarea) {
   notesTextarea.value = playerNotes;
@@ -353,7 +351,6 @@ if (notesTextarea) {
 const t = (...args) => window.t(...args);
 
 initChat({
-  // State getters/setters
   getActiveNpcId: () => activeNpcId,
   setActiveNpcId: (v) => { activeNpcId = v; },
   getConversations: () => conversations,
@@ -362,32 +359,25 @@ initChat({
   setNpcInterrogation: (npcId, data) => { npcInterrogation[npcId] = data; },
   getNpcs: () => npcs,
 
-  // Voice module
   speakText, stopAudio, isVoiceMode, exitVoiceMode,
   isAudioEnabled,
   getChatAbortController, setChatAbortController,
 
-  // Navigation module
   addNpcTab, activateTab, removeNpcTab,
 
-  // State persistence
   saveState,
 
-  // Evidence module
   getEvidence, getDiscoveries, getDiscoveryMessageIndices,
   detectEvidence, detectNewDiscoveries, checkEndgameTrigger,
   renderEvidence, flashCaseBoardTab, renderStringBoard,
   showDiscoveryToast,
 
-  // Tutorial module
   getChatTutorialPending, setChatTutorialPending,
   startTutorial, LILA_HINT_STORAGE_KEY,
 
-  // Tracking
   trackEvent,
   getGameId: () => gameId,
 
-  // Navigation
   renderNpcGrid,
 });
 initEvidence({
@@ -484,7 +474,6 @@ initAuth({
 });
 initAuthUI();
 
-// Check Supabase availability and restore auth session
 setCloudMergePromise(checkSupabaseStatus().then(async configured => {
   if (!configured) {
     const accountRow = document.getElementById("settings-account-row");
@@ -498,7 +487,6 @@ setCloudMergePromise(checkSupabaseStatus().then(async configured => {
   }
 }));
 
-// Flush cloud save when tab becomes hidden
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden" && getAuthUser()?.access_token && isCloudSavePending()) {
     try {
@@ -512,14 +500,13 @@ document.addEventListener("visibilitychange", () => {
     } catch {}
   }
 });
-// beforeunload: use sendBeacon as last resort
+
 window.addEventListener("beforeunload", () => {
   if (getAuthUser() && isCloudSavePending()) {
     cloudSaveBeacon();
   }
 });
 
-// Shared: enter the game (dismiss title card or auth prompt, show hub)
 function enterGame() {
   titleCard.classList.add("dismissed");
   localStorage.setItem(TITLE_STORAGE_KEY, "1");
@@ -534,7 +521,6 @@ function enterGame() {
   }, 500);
 }
 
-// Title card "Open Case File" button
 titleCardBtn.addEventListener("click", () => {
   if (isSupabaseConfigured() && !getAuthUser()) {
     titleCard.classList.add("dismissed");
@@ -548,7 +534,6 @@ titleCardBtn.addEventListener("click", () => {
   enterGame();
 });
 
-// Auth prompt buttons
 document.getElementById("auth-prompt-skip").addEventListener("click", () => {
   document.getElementById("auth-prompt").classList.add("hidden");
   showHubOnCaseboard();

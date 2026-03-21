@@ -172,8 +172,18 @@ export function clearCaseBoardBadges() {
 }
 
 // ── Toast ───────────────────────────────────────────────────────
+function ensureToastContainer() {
+  let el = document.getElementById("discovery-toast-container");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "discovery-toast-container";
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 export function showDiscoveryToast(text) {
-  const container = document.getElementById("discovery-toast-container");
+  const container = ensureToastContainer();
   const toast = document.createElement("div");
   toast.className = "discovery-toast";
   toast.innerHTML = `
