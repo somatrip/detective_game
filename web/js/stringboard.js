@@ -2,7 +2,7 @@
    STRING BOARD (Deduction Board) — extracted module
    ══════════════════════════════════════════════════════════════ */
 
-const API_BASE = window.location.origin;
+import { API_BASE } from "./api.js";
 
 // ── Module-level state ──────────────────────────────────────
 let stringBoard = {
@@ -30,7 +30,9 @@ function _partnerNpcId() { return window.CASE.partnerNpcId; }
 function _suspectIds() { return Object.keys(_npcMeta()).filter(id => id !== _partnerNpcId()); }
 
 /** Default auto-layout positions for suspect + starting evidence cards. */
+let _defaultPositionsCache = null;
 function sbDefaultPositions() {
+  if (_defaultPositionsCache) return _defaultPositionsCache;
   const defaults = {};
   const cols = 4;
   const spacingX = 200;
@@ -52,6 +54,7 @@ function sbDefaultPositions() {
   defaults["burned-notebook"] = { x: startX, y: evidenceY };
   defaults["keycard-logs"] = { x: startX + spacingX, y: evidenceY };
 
+  _defaultPositionsCache = defaults;
   return defaults;
 }
 

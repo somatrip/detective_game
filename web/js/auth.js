@@ -4,11 +4,8 @@
  * and cloud state persistence via Supabase.
  * @module auth
  */
-import { initApiClient, apiFetch, apiPost } from "./api.js";
-import { addModalCloseOnClickOutside } from "./utils.js";
-
-const API_BASE = window.location.origin;
-const t = (...args) => window.t(...args);
+import { initApiClient, apiFetch, apiPost, API_BASE } from "./api.js";
+import { addModalCloseOnClickOutside, t } from "./utils.js";
 
 const AUTH_STORAGE_KEY = "echoes_auth";
 const SUPABASE_URL = "https://hnfrnqizlahwxlootoho.supabase.co";

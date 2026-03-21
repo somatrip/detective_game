@@ -2,8 +2,7 @@
    Settings, Feedback & Language Module
    ================================================================ */
 import { addModalCloseOnClickOutside } from "./utils.js";
-
-const API_BASE = window.location.origin;
+import { API_BASE } from "./api.js";
 
 /* ── DOM refs ─────────────────────────────────────────────── */
 const settingsModal          = document.querySelector("#settings-modal");

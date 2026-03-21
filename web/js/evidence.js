@@ -3,9 +3,7 @@
    Extracted from main.js — manages evidence collection, discovery
    detection, rendering, and endgame trigger.
    ================================================================ */
-import { escapeHtml, npcDisplayName } from "./utils.js";
-
-const t = (...args) => window.t(...args);
+import { escapeHtml, npcDisplayName, t } from "./utils.js";
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }

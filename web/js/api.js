@@ -3,6 +3,8 @@
  * @module api
  */
 
+export const API_BASE = window.location.origin;
+
 let _getAuthUser = null;
 
 /**

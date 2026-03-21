@@ -3,11 +3,9 @@
    Extracted from main.js — manages tab navigation, NPC tab creation,
    hub/chat switching, and NPC grid rendering.
    ================================================================ */
-import { escapeHtml, npcDisplayName } from "./utils.js";
+import { escapeHtml, npcDisplayName, t } from "./utils.js";
 import { renderEvidence, clearCaseBoardBadges, getNpcsWithNewDiscoveries } from "./evidence.js";
 import { openAccusationModal } from "./accusation.js";
-
-const t = (...args) => window.t(...args);
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }

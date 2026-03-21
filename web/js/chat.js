@@ -4,17 +4,16 @@
    send/receive flow, portrait expressions, keycard logs modal,
    and case-ready modal.
    ================================================================ */
-import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside } from "./utils.js";
+import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside, t } from "./utils.js";
+import { API_BASE } from "./api.js";
 import { openAccusationModal } from "./accusation.js";
-
-const API_BASE = window.location.origin;
-const t = (...args) => window.t(...args);
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }
 
 // ── Module state ────────────────────────────────────────────────
 const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
+const _preloadedNpcs = new Set();
 let currentExpression = {};  // npcId → last known expression
 let sending = false;
 let subpoenaToastShown = false;
@@ -127,10 +126,12 @@ export function selectNpc(npcId) {
   renderMessages();
   updateInterrogationUI(npcId);
 
-  // Preload all expressions for smooth transitions
-  for (const ex of VALID_EXPRESSIONS) {
-    const preload = new Image();
-    preload.src = portraitUrl(npcId, ex);
+  // Preload all expressions for smooth transitions (once per NPC)
+  if (!_preloadedNpcs.has(npcId)) {
+    _preloadedNpcs.add(npcId);
+    for (const ex of VALID_EXPRESSIONS) {
+      new Image().src = portraitUrl(npcId, ex);
+    }
   }
 
   // Inject NPC sub-tab and switch to chat panel

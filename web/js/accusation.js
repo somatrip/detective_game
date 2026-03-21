@@ -3,10 +3,8 @@
    Extracted from main.js — manages suspect accusation modal,
    suspect selection, and outcome resolution.
    ================================================================ */
-import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside } from "./utils.js";
+import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside, t } from "./utils.js";
 import { gradeArrest, getEvidence } from "./evidence.js";
-
-const t = (...args) => window.t(...args);
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }

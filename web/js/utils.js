@@ -1,12 +1,18 @@
 /**
+ * Thin wrapper around the global t() i18n function, importable by modules.
+ * @param {...any} args - Arguments forwarded to window.t()
+ * @returns {string}
+ */
+export const t = (...args) => window.t(...args);
+
+/**
  * Escape HTML special characters to prevent XSS.
  * @param {string} str - Raw string to escape
  * @returns {string} HTML-safe string
  */
+const _ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export function escapeHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
+  return String(str).replace(/[&<>"']/g, c => _ESC[c]);
 }
 
 /**

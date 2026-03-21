@@ -1,9 +1,8 @@
 /* ================================================================
    Voice I/O Module — TTS, mic recording, voice mode, transcription
    ================================================================ */
-
-const API_BASE = window.location.origin;
-const t = (...args) => window.t(...args);
+import { API_BASE } from "./api.js";
+import { t } from "./utils.js";
 
 /* ── Voice State ─────────────────────────────────── */
 let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
@@ -23,6 +22,9 @@ let silenceTimer = null;
 let audioContext = null;
 let analyserNode = null;
 let silenceCheckRAF = null;
+
+/* ── Cached DOM refs (set by initVoice) ───────────────── */
+let _micBtn, _audioToggle, _portraitStatus;
 
 /* ── Callbacks (set by initVoice) ──────────────────── */
 let _cb = {};
@@ -52,10 +54,9 @@ export function clearAudioCache() {
 
 /* ── Voice: Audio Toggle ────────────────────────────── */
 export function updateAudioToggle() {
-  const audioToggle = document.querySelector("#audio-toggle");
-  if (!audioToggle) return;
-  audioToggle.classList.toggle("active", audioEnabled);
-  audioToggle.title = audioEnabled ? t("voice.audio_on") : t("voice.audio_off");
+  if (!_audioToggle) return;
+  _audioToggle.classList.toggle("active", audioEnabled);
+  _audioToggle.title = audioEnabled ? t("voice.audio_on") : t("voice.audio_off");
 }
 
 /* ── Voice: Stop Audio ──────────────────────────────── */
@@ -114,13 +115,12 @@ function playAudioBlob(blobUrl, cacheKey) {
 
   const replayBtn = document.querySelector(`.msg-audio-btn[data-cache-key="${cacheKey}"]`);
   if (replayBtn) replayBtn.classList.add("playing");
-  const portraitStatus = document.querySelector("#portrait-status");
-  if (_cb.getActiveNpcId()) portraitStatus.textContent = t("voice.status_speaking");
+  if (_cb.getActiveNpcId()) _portraitStatus.textContent = t("voice.status_speaking");
 
   audio.onended = () => {
     currentAudio = null;
     if (replayBtn) replayBtn.classList.remove("playing");
-    if (_cb.getActiveNpcId()) portraitStatus.textContent = "";
+    if (_cb.getActiveNpcId()) _portraitStatus.textContent = "";
     if (!_cb.getSending()) _cb.hideCancelBtn();
     if (voiceMode && !_cb.getSending()) {
       setTimeout(() => { if (voiceMode) startRecording(); }, 400);
@@ -129,7 +129,7 @@ function playAudioBlob(blobUrl, cacheKey) {
   audio.onerror = () => {
     currentAudio = null;
     if (replayBtn) replayBtn.classList.remove("playing");
-    if (_cb.getActiveNpcId()) portraitStatus.textContent = "";
+    if (_cb.getActiveNpcId()) _portraitStatus.textContent = "";
     if (!_cb.getSending()) _cb.hideCancelBtn();
     if (voiceMode && !_cb.getSending()) {
       setTimeout(() => { if (voiceMode) startRecording(); }, 400);
@@ -143,8 +143,6 @@ const SILENCE_THRESHOLD = 0.01;
 const SILENCE_DURATION  = 1500;
 
 export async function startRecording() {
-  const micBtn = document.querySelector("#mic-btn");
-  const portraitStatus = document.querySelector("#portrait-status");
   if (isRecording || isTranscribing || _cb.getSending()) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -201,10 +199,10 @@ export async function startRecording() {
 
     mediaRecorder.start();
     isRecording = true;
-    micBtn.classList.remove("processing", "waiting");
-    micBtn.classList.add("recording");
-    micBtn.title = t("voice.mic_recording");
-    if (voiceMode) portraitStatus.textContent = t("voice.listening");
+    _micBtn.classList.remove("processing", "waiting");
+    _micBtn.classList.add("recording");
+    _micBtn.title = t("voice.mic_recording");
+    if (voiceMode) _portraitStatus.textContent = t("voice.listening");
 
     silenceCheckRAF = requestAnimationFrame(checkSilence);
   } catch (err) {
@@ -225,48 +223,42 @@ function stopSilenceDetection() {
 }
 
 export function stopRecording() {
-  const micBtn = document.querySelector("#mic-btn");
   stopSilenceDetection();
   if (mediaRecorder && mediaRecorder.state !== "inactive") {
     mediaRecorder.stop();
   }
   isRecording = false;
-  micBtn.classList.remove("recording");
-  if (!voiceMode) micBtn.title = t("voice.mic_title");
+  _micBtn.classList.remove("recording");
+  if (!voiceMode) _micBtn.title = t("voice.mic_title");
 }
 
 /* ── Voice Mode Toggle ─────────────────────────────── */
 export function enterVoiceMode() {
-  const micBtn = document.querySelector("#mic-btn");
   voiceMode = true;
   audioEnabled = true;
   localStorage.setItem("echoes_audio", "true");
   updateAudioToggle();
-  micBtn.classList.add("voice-mode");
-  micBtn.title = t("voice.mode_active");
+  _micBtn.classList.add("voice-mode");
+  _micBtn.title = t("voice.mode_active");
   startRecording();
 }
 
 export function exitVoiceMode() {
-  const micBtn = document.querySelector("#mic-btn");
-  const portraitStatus = document.querySelector("#portrait-status");
   voiceMode = false;
   if (isRecording) stopRecording();
-  micBtn.classList.remove("voice-mode", "recording", "processing", "waiting");
-  micBtn.title = t("voice.mic_title");
-  if (_cb.getActiveNpcId() && !_cb.getSending()) portraitStatus.textContent = "";
+  _micBtn.classList.remove("voice-mode", "recording", "processing", "waiting");
+  _micBtn.title = t("voice.mic_title");
+  if (_cb.getActiveNpcId() && !_cb.getSending()) _portraitStatus.textContent = "";
 }
 
 /* ── Voice: Transcription ──────────────────────────── */
 export async function transcribeAudio(blob) {
-  const micBtn = document.querySelector("#mic-btn");
-  const portraitStatus = document.querySelector("#portrait-status");
   const chatMessages = document.querySelector("#chat-messages");
   isTranscribing = true;
-  micBtn.classList.remove("recording");
-  micBtn.classList.add("processing");
-  micBtn.title = t("voice.mic_processing");
-  if (voiceMode) portraitStatus.textContent = t("voice.mic_processing");
+  _micBtn.classList.remove("recording");
+  _micBtn.classList.add("processing");
+  _micBtn.title = t("voice.mic_processing");
+  if (voiceMode) _portraitStatus.textContent = t("voice.mic_processing");
 
   try {
     const formData = new FormData();
@@ -286,8 +278,8 @@ export async function transcribeAudio(blob) {
     const data = await res.json();
     if (data.text && data.text.trim()) {
       if (voiceMode) {
-        micBtn.classList.remove("processing");
-        micBtn.classList.add("waiting");
+        _micBtn.classList.remove("processing");
+        _micBtn.classList.add("waiting");
         await _cb.sendMessage(data.text.trim());
       } else {
         const chatInput = document.querySelector("#chat-input");
@@ -309,8 +301,8 @@ export async function transcribeAudio(blob) {
     if (voiceMode) setTimeout(() => { if (voiceMode) startRecording(); }, 1000);
   } finally {
     isTranscribing = false;
-    micBtn.classList.remove("processing");
-    if (!voiceMode) micBtn.title = t("voice.mic_title");
+    _micBtn.classList.remove("processing");
+    if (!voiceMode) _micBtn.title = t("voice.mic_title");
   }
 }
 
@@ -329,11 +321,12 @@ export async function transcribeAudio(blob) {
 export function initVoice(callbacks) {
   _cb = callbacks;
 
-  const micBtn = document.querySelector("#mic-btn");
-  const audioToggle = document.querySelector("#audio-toggle");
+  _micBtn = document.querySelector("#mic-btn");
+  _audioToggle = document.querySelector("#audio-toggle");
+  _portraitStatus = document.querySelector("#portrait-status");
 
   // Audio toggle click
-  audioToggle.addEventListener("click", () => {
+  _audioToggle.addEventListener("click", () => {
     audioEnabled = !audioEnabled;
     localStorage.setItem("echoes_audio", audioEnabled);
     updateAudioToggle();
@@ -344,7 +337,7 @@ export function initVoice(callbacks) {
   });
 
   // Mic button click
-  micBtn.addEventListener("click", () => {
+  _micBtn.addEventListener("click", () => {
     if (isTranscribing || _cb.getSending()) return;
     if (voiceMode) {
       exitVoiceMode();
@@ -357,6 +350,6 @@ export function initVoice(callbacks) {
 
   // Hide mic if browser doesn't support it
   if (!navigator.mediaDevices || !window.MediaRecorder) {
-    micBtn.style.display = "none";
+    _micBtn.style.display = "none";
   }
 }

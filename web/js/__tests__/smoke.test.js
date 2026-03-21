@@ -4,6 +4,9 @@ import { escapeHtml, npcDisplayName } from "../utils.js";
 describe("utils", () => {
   it("escapes HTML entities", () => {
     expect(escapeHtml("<script>")).toBe("&lt;script&gt;");
+    expect(escapeHtml('a"b')).toBe("a&quot;b");
+    expect(escapeHtml("a'b")).toBe("a&#39;b");
+    expect(escapeHtml("a&b")).toBe("a&amp;b");
   });
 
   it("extracts NPC display name", () => {

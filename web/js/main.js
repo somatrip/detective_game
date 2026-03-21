@@ -19,7 +19,7 @@
    api.js         — Authenticated fetch wrapper
    utils.js       — HTML escaping, display name, modal helper
    ================================================================ */
-import { apiFetch } from "./api.js";
+import { API_BASE } from "./api.js";
 import {
   initAuth, initAuthUI, openAuthModal,
   getAuthUser, isSupabaseConfigured,
@@ -82,12 +82,11 @@ import {
   portraitUrl, buildPortraitImg, npcRole,
   getSending,
 } from "./chat.js";
+import { t } from "./utils.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
 const PARTNER_NPC_ID = CASE.partnerNpcId;
-
-const API_BASE = window.location.origin;
 
 /* ── State ──────────────────────────────────────────────── */
 let npcs = [];
@@ -207,9 +206,9 @@ function resetLocalState() {
   clearAudioCache();
   localStorage.removeItem("echoes_state_v2");
   localStorage.removeItem("echoes_game_id");
-  localStorage.removeItem("echoes_tutorial_done");
-  localStorage.removeItem("echoes_title_seen");
-  localStorage.removeItem("echoes_lila_hint_seen");
+  localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+  localStorage.removeItem(TITLE_STORAGE_KEY);
+  localStorage.removeItem(LILA_HINT_STORAGE_KEY);
 }
 
 async function clearState() {
@@ -339,16 +338,17 @@ document.querySelector("#cb-briefing-toggle").addEventListener("click", () => {
 });
 
 const notesTextarea = document.getElementById("player-notes");
+let _notesSaveTimer;
 if (notesTextarea) {
   notesTextarea.value = playerNotes;
   notesTextarea.addEventListener("input", () => {
     playerNotes = notesTextarea.value;
-    saveState();
+    clearTimeout(_notesSaveTimer);
+    _notesSaveTimer = setTimeout(saveState, 500);
   });
 }
 
 /* ── Boot ───────────────────────────────────────────────── */
-const t = (...args) => window.t(...args);
 
 initChat({
   getActiveNpcId: () => activeNpcId,
@@ -488,16 +488,8 @@ setCloudMergePromise(checkSupabaseStatus().then(async configured => {
 }));
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden" && getAuthUser()?.access_token && isCloudSavePending()) {
-    try {
-      const stateObj = buildStateObject();
-      apiFetch(`${API_BASE}/api/state/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: stateObj }),
-        keepalive: true,
-      }).then(() => {}).catch(() => {});
-    } catch {}
+  if (document.visibilityState === "hidden" && getAuthUser() && isCloudSavePending()) {
+    cloudSaveBeacon();
   }
 });
 
