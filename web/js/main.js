@@ -13,6 +13,15 @@ import {
   getChatTutorialPending, setChatTutorialPending,
   TUTORIAL_STORAGE_KEY, LILA_HINT_STORAGE_KEY,
 } from "./tutorial.js";
+import {
+  initVoice, speakText, stopAudio,
+  startRecording, stopRecording,
+  enterVoiceMode, exitVoiceMode, isVoiceMode,
+  isAudioEnabled, setAudioEnabled, updateAudioToggle,
+  setNpcVoice, getIsRecording, getIsTranscribing,
+  getChatAbortController, setChatAbortController,
+  clearAudioCache, transcribeAudio,
+} from "./voice.js";
 
 const CASE = window.CASE;
 const NPC_META = CASE.npcMeta;
@@ -672,24 +681,7 @@ function trackEvent(endpoint, payload) {
   }).catch(() => {});  // fire-and-forget
 }
 
-/* ── Voice State ─────────────────────────────────── */
-let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
-let isTranscribing = false;
-const AUDIO_CACHE_MAX = 30;
-let audioCache = new Map();
-let currentAudio = null;
-let npcVoices = {};
-let npcVoiceInstructions = {};
-let voiceMode = false;
-let chatAbortController = null;
-let ttsAbortController = null;
-let silenceTimer = null;
-let audioContext = null;
-let analyserNode = null;
-let silenceCheckRAF = null;
+/* ── Voice State — see voice.js ─────────────────── */
 
 /* ── DOM refs ───────────────────────────────────────────── */
 const $ = (s) => document.querySelector(s);
@@ -716,8 +708,6 @@ const chatInputBar      = $("#chat-input-bar");
 const chatInput         = $("#chat-input");
 const sendBtn           = $("#send-btn");
 const cancelBtn         = $("#cancel-btn");
-const micBtn            = $("#mic-btn");
-const audioToggle       = $("#audio-toggle");
 
 // Chat dossier
 
@@ -767,7 +757,7 @@ function _currentState() {
     conversations, evidence, activeNpcId, discoveries,
     npcInterrogation, discoveryMessageIndices, playerNotes,
     caseReadyPromptShown, briefingOpen, stringBoard,
-    audioEnabled, gameId,
+    audioEnabled: isAudioEnabled(), gameId,
   };
 }
 
@@ -793,7 +783,7 @@ function applyStateObject(s) {
     stringBoard.links = restored.stringBoard.links;
   }
   if ("gameId" in restored)       gameId = restored.gameId;
-  if ("audioEnabled" in restored) audioEnabled = restored.audioEnabled;
+  if ("audioEnabled" in restored) setAudioEnabled(restored.audioEnabled);
 }
 
 function saveState() {
@@ -819,7 +809,7 @@ function loadState() {
 
 /** Wipe all local game state (memory + localStorage). Does NOT touch cloud. */
 function resetLocalState() {
-  if (voiceMode) exitVoiceMode();
+  if (isVoiceMode()) exitVoiceMode();
   conversations = {};
   evidence = [];
   discoveries = {};
@@ -832,9 +822,7 @@ function resetLocalState() {
   activeNpcId = null;
   stringBoard = { cardPositions: {}, links: [] };
   gameId = crypto.randomUUID();
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  for (const url of audioCache.values()) URL.revokeObjectURL(url);
-  audioCache.clear();
+  clearAudioCache();
   localStorage.removeItem("echoes_state_v2");
   localStorage.removeItem("echoes_game_id");
   localStorage.removeItem("echoes_tutorial_done");
@@ -954,8 +942,7 @@ async function init() {
       return oa - ob;
     });
     for (const npc of npcs) {
-      if (npc.voice) npcVoices[npc.npc_id] = npc.voice;
-      if (npc.voice_instruction) npcVoiceInstructions[npc.npc_id] = npc.voice_instruction;
+      setNpcVoice(npc.npc_id, npc.voice, npc.voice_instruction);
     }
   } catch {
     npcs = Object.entries(NPC_META).map(([id, m]) => ({
@@ -1111,8 +1098,8 @@ function renderNpcGrid() {
 
 /* ── Select NPC ─────────────────────────────────────────── */
 function selectNpc(npcId) {
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  if (voiceMode) exitVoiceMode();
+  stopAudio();
+  if (isVoiceMode()) exitVoiceMode();
   activeNpcId = npcId;
   const npc = npcs.find(n => n.npc_id === npcId);
   const displayName = npcDisplayName(npc?.display_name) || npcId;
@@ -1288,7 +1275,7 @@ async function sendMessage(overrideText, displayText) {
   sending = true;
   sendBtn.disabled = true;
   showCancelBtn();
-  chatAbortController = new AbortController();
+  setChatAbortController(new AbortController());
   if (!overrideText) { chatInput.value = ""; autoResize(); }
 
   if (!conversations[activeNpcId]) conversations[activeNpcId] = [];
@@ -1331,7 +1318,7 @@ async function sendMessage(overrideText, displayText) {
         player_discovery_ids: Object.values(discoveries).flat().map(d => d.id),
         session_id: gameId,
       }),
-      signal: chatAbortController?.signal,
+      signal: getChatAbortController()?.signal,
     });
 
     if (!res.ok) {
@@ -1356,7 +1343,7 @@ async function sendMessage(overrideText, displayText) {
     scrollToBottom();
 
     // Auto-play TTS only in voice mode
-    if (voiceMode) {
+    if (isVoiceMode()) {
       const cacheKey = `${activeNpcId}:${assistantIdx}`;
       speakText(data.reply, activeNpcId, cacheKey);
     }
@@ -1433,7 +1420,7 @@ async function sendMessage(overrideText, displayText) {
     }
   }
 
-  chatAbortController = null;
+  setChatAbortController(null);
   portraitStatus.textContent = "";
   sending = false;
   sendBtn.disabled = !chatInput.value.trim();
@@ -2410,11 +2397,10 @@ function hideCancelBtn() {
 }
 function cancelResponse() {
   // Abort in-flight chat request
-  if (chatAbortController) { chatAbortController.abort(); chatAbortController = null; }
-  // Abort in-flight TTS request
-  if (ttsAbortController) { ttsAbortController.abort(); ttsAbortController = null; }
-  // Stop any playing audio
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const ctrl = getChatAbortController();
+  if (ctrl) { ctrl.abort(); setChatAbortController(null); }
+  // Abort in-flight TTS + stop any playing audio
+  stopAudio();
   // Reset UI state
   typingIndicator.classList.remove("visible");
   portraitStatus.textContent = "";
@@ -2422,8 +2408,8 @@ function cancelResponse() {
   sendBtn.disabled = !chatInput.value.trim();
   hideCancelBtn();
   // Exit voice-mode waiting state (don't auto-restart recording)
-  if (voiceMode) {
-    micBtn.classList.remove("waiting");
+  if (isVoiceMode()) {
+    document.querySelector("#mic-btn").classList.remove("waiting");
     exitVoiceMode();
   }
 }
@@ -2431,7 +2417,7 @@ cancelBtn.addEventListener("click", cancelResponse);
 
 function leaveChat() {
   cancelResponse();
-  if (voiceMode) exitVoiceMode();
+  if (isVoiceMode()) exitVoiceMode();
   activeNpcId = null;
   saveState();
 }
@@ -2617,276 +2603,6 @@ function closeKeycardModal() {
 document.getElementById("keycard-modal-close").addEventListener("click", closeKeycardModal);
 addModalCloseOnClickOutside(keycardModal, closeKeycardModal);
 
-/* ── Voice: Audio Toggle ────────────────────────────────── */
-function updateAudioToggle() {
-  audioToggle.classList.toggle("active", audioEnabled);
-  audioToggle.title = audioEnabled ? t("voice.audio_on") : t("voice.audio_off");
-}
-
-audioToggle.addEventListener("click", () => {
-  audioEnabled = !audioEnabled;
-  localStorage.setItem("echoes_audio", audioEnabled);
-  updateAudioToggle();
-  if (!audioEnabled && currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-});
-
-/* ── Voice: TTS Playback ───────────────────────────────── */
-async function speakText(text, npcId, cacheKey) {
-  /* Stop any in-flight TTS fetch or playing audio first */
-  if (ttsAbortController) { ttsAbortController.abort(); ttsAbortController = null; }
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
-
-  if (audioCache.has(cacheKey)) {
-    playAudioBlob(audioCache.get(cacheKey), cacheKey);
-    return;
-  }
-
-  const voice = npcVoices[npcId] || "alloy";
-  const instructions = npcVoiceInstructions[npcId] || "";
-  ttsAbortController = new AbortController();
-  showCancelBtn();
-  try {
-    const res = await fetch(`${API_BASE}/api/speak`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice, instructions }),
-      signal: ttsAbortController.signal,
-    });
-    if (!res.ok) throw new Error(`TTS failed: HTTP ${res.status}`);
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    // LRU eviction: revoke oldest blob URL when cache exceeds limit
-    if (audioCache.size >= AUDIO_CACHE_MAX) {
-      const oldest = audioCache.keys().next().value;
-      URL.revokeObjectURL(audioCache.get(oldest));
-      audioCache.delete(oldest);
-    }
-    audioCache.set(cacheKey, blobUrl);
-    ttsAbortController = null;
-    playAudioBlob(blobUrl, cacheKey);
-  } catch (err) {
-    ttsAbortController = null;
-    if (err.name !== "AbortError") console.error("TTS error:", err);
-    if (!sending && !currentAudio) hideCancelBtn();
-  }
-}
-
-function playAudioBlob(blobUrl, cacheKey) {
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
-
-  const audio = new Audio(blobUrl);
-  currentAudio = audio;
-  showCancelBtn();
-
-  const replayBtn = document.querySelector(`.msg-audio-btn[data-cache-key="${cacheKey}"]`);
-  if (replayBtn) replayBtn.classList.add("playing");
-  if (activeNpcId) portraitStatus.textContent = t("voice.status_speaking");
-
-  audio.onended = () => {
-    currentAudio = null;
-    if (replayBtn) replayBtn.classList.remove("playing");
-    if (activeNpcId) portraitStatus.textContent = "";
-    if (!sending) hideCancelBtn();
-    if (voiceMode && !sending) {
-      setTimeout(() => { if (voiceMode) startRecording(); }, 400);
-    }
-  };
-  audio.onerror = () => {
-    currentAudio = null;
-    if (replayBtn) replayBtn.classList.remove("playing");
-    if (activeNpcId) portraitStatus.textContent = "";
-    if (!sending) hideCancelBtn();
-    if (voiceMode && !sending) {
-      setTimeout(() => { if (voiceMode) startRecording(); }, 400);
-    }
-  };
-  audio.play().catch(console.error);
-}
-
-/* ── Voice: Microphone Recording with Silence Detection ── */
-const SILENCE_THRESHOLD = 0.01;
-const SILENCE_DURATION  = 1500;
-
-async function startRecording() {
-  if (isRecording || isTranscribing || sending) return;
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus" : "audio/webm",
-    });
-
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      stopSilenceDetection();
-      stream.getTracks().forEach(track => track.stop());
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
-      if (blob.size < 100) {
-        if (voiceMode) setTimeout(() => { if (voiceMode) startRecording(); }, 300);
-        return;
-      }
-      await transcribeAudio(blob);
-    };
-
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(stream);
-    analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 2048;
-    source.connect(analyserNode);
-
-    let silentSince = null;
-    let hasSpoken = false;
-    const dataArray = new Float32Array(analyserNode.fftSize);
-
-    function checkSilence() {
-      if (!isRecording) return;
-      analyserNode.getFloatTimeDomainData(dataArray);
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
-      const rms = Math.sqrt(sum / dataArray.length);
-
-      if (rms > SILENCE_THRESHOLD) {
-        hasSpoken = true;
-        silentSince = null;
-      } else if (hasSpoken) {
-        if (!silentSince) silentSince = Date.now();
-        else if (Date.now() - silentSince > SILENCE_DURATION) {
-          stopRecording();
-          return;
-        }
-      }
-      silenceCheckRAF = requestAnimationFrame(checkSilence);
-    }
-
-    mediaRecorder.start();
-    isRecording = true;
-    micBtn.classList.remove("processing", "waiting");
-    micBtn.classList.add("recording");
-    micBtn.title = t("voice.mic_recording");
-    if (voiceMode) portraitStatus.textContent = t("voice.listening");
-
-    silenceCheckRAF = requestAnimationFrame(checkSilence);
-  } catch (err) {
-    if (err.name === "NotAllowedError") {
-      alert(t("voice.mic_denied"));
-      exitVoiceMode();
-    } else {
-      alert(t("voice.mic_error", { message: err.message }));
-      exitVoiceMode();
-    }
-  }
-}
-
-function stopSilenceDetection() {
-  if (silenceCheckRAF) { cancelAnimationFrame(silenceCheckRAF); silenceCheckRAF = null; }
-  if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
-  analyserNode = null;
-}
-
-function stopRecording() {
-  stopSilenceDetection();
-  if (mediaRecorder && mediaRecorder.state !== "inactive") {
-    mediaRecorder.stop();
-  }
-  isRecording = false;
-  micBtn.classList.remove("recording");
-  if (!voiceMode) micBtn.title = t("voice.mic_title");
-}
-
-/* ── Voice Mode Toggle ─────────────────────────────────── */
-function enterVoiceMode() {
-  voiceMode = true;
-  audioEnabled = true;
-  localStorage.setItem("echoes_audio", "true");
-  updateAudioToggle();
-  micBtn.classList.add("voice-mode");
-  micBtn.title = t("voice.mode_active");
-  startRecording();
-}
-
-function exitVoiceMode() {
-  voiceMode = false;
-  if (isRecording) stopRecording();
-  micBtn.classList.remove("voice-mode", "recording", "processing", "waiting");
-  micBtn.title = t("voice.mic_title");
-  if (activeNpcId && !sending) portraitStatus.textContent = "";
-}
-
-micBtn.addEventListener("click", () => {
-  if (isTranscribing || sending) return;
-  if (voiceMode) {
-    exitVoiceMode();
-  } else if (isRecording) {
-    stopRecording();
-  } else {
-    enterVoiceMode();
-  }
-});
-
-/* ── Voice: Transcription ──────────────────────────────── */
-async function transcribeAudio(blob) {
-  isTranscribing = true;
-  micBtn.classList.remove("recording");
-  micBtn.classList.add("processing");
-  micBtn.title = t("voice.mic_processing");
-  if (voiceMode) portraitStatus.textContent = t("voice.mic_processing");
-
-  try {
-    const formData = new FormData();
-    formData.append("file", blob, "recording.webm");
-    formData.append("language", window.currentLang || "en");
-
-    const res = await fetch(`${API_BASE}/api/transcribe`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: "Transcription error" }));
-      throw new Error(err.detail || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    if (data.text && data.text.trim()) {
-      if (voiceMode) {
-        micBtn.classList.remove("processing");
-        micBtn.classList.add("waiting");
-        await sendMessage(data.text.trim());
-      } else {
-        chatInput.value = data.text.trim();
-        autoResize();
-        sendBtn.disabled = false;
-        chatInput.focus();
-      }
-    } else if (voiceMode) {
-      setTimeout(() => { if (voiceMode) startRecording(); }, 300);
-    }
-  } catch (err) {
-    const errDiv = document.createElement("div");
-    errDiv.style.cssText = "text-align:center; color:var(--danger); font-size:0.82rem; padding:0.5rem;";
-    errDiv.textContent = t("voice.mic_error", { message: err.message });
-    chatMessages.appendChild(errDiv);
-    scrollToBottom();
-    if (voiceMode) setTimeout(() => { if (voiceMode) startRecording(); }, 1000);
-  } finally {
-    isTranscribing = false;
-    micBtn.classList.remove("processing");
-    if (!voiceMode) micBtn.title = t("voice.mic_title");
-  }
-}
-
-// Hide mic if browser doesn't support it
-if (!navigator.mediaDevices || !window.MediaRecorder) {
-  micBtn.style.display = "none";
-}
-
 /* ── Language Toggle ────────────────────────────────────── */
 function initLanguage() {
   const saved = localStorage.getItem("echoes_lang") || "en";
@@ -2921,6 +2637,15 @@ initTutorial({
   getActiveNpcId: () => activeNpcId,
 });
 initLanguage();
+initVoice({
+  getSending: () => sending,
+  getActiveNpcId: () => activeNpcId,
+  sendMessage,
+  autoResize,
+  showCancelBtn,
+  hideCancelBtn,
+  scrollToBottom,
+});
 updateAudioToggle();
 initAuthUI();
 
