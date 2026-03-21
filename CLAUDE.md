@@ -1,55 +1,74 @@
-# CLAUDE.md
+# Project: Echoes in the Atrium
 
-This file provides guidance to Claude Code (claude.ai/claude-code) when working with this codebase.
+LLM-powered detective mystery game. Players interrogate nine AI-driven suspects at a luxury hotel gala to solve a murder. Vanilla ES6 frontend served by a FastAPI backend.
 
-## Project Overview
+## Tech Stack
 
-Echoes in the Atrium is an LLM-powered detective mystery game. Players interrogate nine AI-driven suspects at a luxury hotel gala to solve a murder. The frontend is vanilla ES6 modules served by a FastAPI backend.
+- **Backend:** Python 3.11+, FastAPI, Supabase (auth + state persistence)
+- **Frontend:** Vanilla ES6 modules (no framework, no bundler), served as static files by FastAPI
+- **LLM:** Anthropic Claude / OpenAI (pluggable via `server/llm/` abstraction)
+- **Tests:** pytest (backend), vitest + jsdom (frontend)
 
-## Common Commands
+## Commands
 
 ```bash
-# Start the server
-uvicorn server.app:app --port 8000
-
-# Run frontend tests
-cd web && npm test
-
-# Run backend tests
-pytest
+uvicorn server.app:app --port 8000  # Start dev server
+cd web && npm test                   # Run frontend tests (vitest)
+pytest                               # Run backend tests
 ```
 
-## Architecture
+## Project Structure
 
-### Backend
+```
+server/
+  app.py              # FastAPI application + static file serving
+  interrogation.py    # Core chat engine (NPC personality + game logic)
+  llm/                # LLM provider abstraction (Anthropic, OpenAI, local stub)
+  cases/              # Case data packages (NPCs, evidence, prompts)
+  auth_routes.py      # Supabase auth endpoints
+  config.py           # Environment config
+web/
+  js/
+    main.js           # Orchestrator — boot sequence, state, wiring
+    chat.js           # NPC conversation, portraits, message rendering
+    auth.js           # Authentication, cloud save/load
+    evidence.js       # Evidence collection, discovery tracking
+    stringboard.js    # Deduction board (drag, link, pan, zoom)
+    voice.js          # TTS, STT, recording
+    tutorial.js       # Onboarding coach marks
+    navigation.js     # Tab switching, NPC grid
+    settings.js       # Settings, feedback, language
+    accusation.js     # Arrest flow, outcome grading
+    state.js          # State serialization for save/load
+    api.js            # Authenticated fetch wrapper + API_BASE
+    utils.js          # escapeHtml, npcDisplayName, t() wrapper
+    store.js          # Shared state defaults (not yet wired)
+    events.js         # Pub/sub event bus (not yet wired)
+  cases/              # Case-specific content (i18n, portraits, case.js)
+tests/                # Backend test suite (pytest)
+```
 
-FastAPI application in `server/` with LLM provider abstraction (`server/llm/`), interrogation engine (`server/interrogation.py`), and case data packages (`server/cases/`).
+## Conventions
 
-### Frontend Modules
+- **Module wiring:** Modules export `initXxx(callbacks)`. The orchestrator (`main.js`) wires them together by passing callbacks, avoiding circular imports.
+- **State:** Module-level variables hold runtime state. Shared state accessed via getter/setter callbacks from `main.js`.
+- **Case data:** All case-specific content loaded from `window.CASE`, set by `web/cases/echoes-in-atrium/case.js`.
+- **i18n:** `t(key)` resolves translations (exported from `utils.js`, backed by `window.t`). Language files in `web/cases/echoes-in-atrium/i18n-*.js`.
+- **Named exports only** in frontend modules — no default exports.
+- **No build system** — plain ES6 modules, `<script type="module">` in HTML.
 
-The frontend is vanilla ES6 modules (no build system) served by FastAPI:
+## Important Rules
 
-| Module | Responsibility | ~Lines |
-|--------|---------------|--------|
-| `main.js` | Boot sequence, orchestrator, state management | ~565 |
-| `chat.js` | NPC conversation, portraits, message rendering | ~645 |
-| `auth.js` | Authentication, cloud save/load, token refresh | ~550 |
-| `stringboard.js` | Deduction board (drag, link, pan, zoom) | ~530 |
-| `tutorial.js` | Onboarding coach marks (multi-phase) | ~315 |
-| `evidence.js` | Evidence collection, discovery tracking | ~310 |
-| `voice.js` | Text-to-speech, speech-to-text, recording | ~360 |
-| `settings.js` | Settings modal, feedback, language toggle | ~195 |
-| `navigation.js` | Tab switching, NPC grid, screen transitions | ~165 |
-| `accusation.js` | Arrest flow, outcome grading | ~145 |
-| `state.js` | State serialization for save/load | ~115 |
-| `store.js` | Shared game state defaults + reset | ~65 |
-| `api.js` | Authenticated fetch wrapper | ~46 |
-| `events.js` | Cross-module pub/sub event bus | ~42 |
-| `utils.js` | HTML escaping, display name, modal helper | ~33 |
+- IMPORTANT: `store.js` and `events.js` exist but are **not yet wired** as canonical state sources. All runtime state currently lives in module-level variables. Don't assume modules read from `store.js`.
+- IMPORTANT: Frontend modules must not import each other in circles. Use the callback injection pattern via `main.js` to break circular dependencies.
+- All new backend endpoints need tests in `tests/`.
+- The `server/cases/` directory is case-agnostic — case content lives in `web/cases/` and is loaded client-side.
 
-### Key Patterns
+## Git Workflow
 
-- **Callback injection**: Modules expose an `initXxx(callbacks)` function. The orchestrator (`main.js`) wires modules together by passing callbacks, avoiding circular imports.
-- **State**: Module-level variables in `main.js` hold runtime state. `store.js` and `events.js` are extracted but not yet wired as the canonical source.
-- **Case data**: All case-specific content (NPCs, evidence, strings) is loaded from `window.CASE`, set by `web/cases/echoes-in-atrium/case.js`.
-- **i18n**: `window.t(key)` resolves translations. Language files are in `web/cases/echoes-in-atrium/i18n-*.js`.
+- Feature branches off `main`, PRs for review.
+- Commit messages: `type: description` (e.g., `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`).
+
+## Reference Docs (read on demand)
+
+- `docs/plans/2026-03-21-frontend-modularization.md` - Read when: understanding the module extraction rationale or planning further modularization.
