@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import httpx
 from openai import AsyncOpenAI
 
+from ..errors import LLMServiceError
 from .base import LLM_TIMEOUT_SECONDS, ChatMessage, LLMClient
 
 
@@ -25,10 +26,13 @@ class OpenAILLMClient(LLMClient):
 
     async def generate(self, *, npc_id: str, messages: Iterable[ChatMessage]) -> str:
         chat_messages = list(messages)
-        response = await self._client.chat.completions.create(
-            model=self._model,
-            messages=chat_messages,
-        )
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=chat_messages,
+            )
+        except Exception as exc:
+            raise LLMServiceError(str(exc)) from exc
         choice = response.choices[0]
         return choice.message.content or ""
 

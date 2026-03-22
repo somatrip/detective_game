@@ -4,8 +4,6 @@
    hub/chat switching, and NPC grid rendering.
    ================================================================ */
 import { escapeHtml, npcDisplayName, t } from "./utils.js";
-import { renderEvidence, clearCaseBoardBadges, getNpcsWithNewDiscoveries } from "./evidence.js";
-import { openAccusationModal } from "./accusation.js";
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }
@@ -41,9 +39,9 @@ export function activateTab(tabName) {
   if (panel) panel.classList.add("active");
 
   // Tab-specific side effects
-  if (tabName === "caseboard") { renderEvidence(); clearCaseBoardBadges(); }
+  if (tabName === "caseboard") { _cb.renderEvidence(); _cb.clearCaseBoardBadges(); }
   if (tabName === "stringboard") _cb.renderStringBoard();
-  if (tabName === "suspects") { renderNpcGrid(); renderEvidence(); }
+  if (tabName === "suspects") { renderNpcGrid(); _cb.renderEvidence(); }
 
   // Audio toggle only visible in chat
   const audioBtn = document.getElementById("audio-toggle");
@@ -130,7 +128,7 @@ export function renderNpcGrid() {
     card.appendChild(infoDiv);
 
     // Discovery badge — shows exclamation when this NPC yielded unseen discoveries
-    if (getNpcsWithNewDiscoveries().has(npc.npc_id)) {
+    if (_cb.getNpcsWithNewDiscoveries().has(npc.npc_id)) {
       const badge = document.createElement("div");
       badge.className = "npc-card-discovery-badge";
       badge.textContent = "!";
@@ -157,5 +155,5 @@ export function renderNpcGrid() {
   accuseSection.className = "accuse-section";
   accuseSection.innerHTML = `<button id="hub-accuse-btn" data-i18n="sidebar.accuse">${t("sidebar.accuse")}</button>`;
   npcGridEl.appendChild(accuseSection);
-  document.querySelector("#hub-accuse-btn").addEventListener("click", openAccusationModal);
+  document.querySelector("#hub-accuse-btn").addEventListener("click", _cb.openAccusationModal);
 }

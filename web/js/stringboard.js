@@ -3,6 +3,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 import { API_BASE } from "./api.js";
+import { t } from "./utils.js";
 
 // ── Module-level state ──────────────────────────────────────
 let stringBoard = {
@@ -168,7 +169,7 @@ export function renderStringBoard() {
   // Render evidence cards (only collected)
   for (const e of evidence) {
     const pos = stringBoard.cardPositions[e.id] || { x: 0, y: 0 };
-    const label = window.t("evidence." + e.id + "_label") || e.label;
+    const label = t("evidence." + e.id + "_label") || e.label;
 
     const card = document.createElement("div");
     card.className = "string-board-card evidence";
@@ -195,7 +196,7 @@ export function renderStringBoard() {
       discDiv.className = "sb-card-discoveries";
       for (const d of linkedDisc) {
         const line = document.createElement("div");
-        line.textContent = "- " + window.t(d.text);
+        line.textContent = "- " + t(d.text);
         discDiv.appendChild(line);
       }
       card.appendChild(discDiv);

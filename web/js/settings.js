@@ -1,7 +1,7 @@
 /* ================================================================
    Settings, Feedback & Language Module
    ================================================================ */
-import { addModalCloseOnClickOutside } from "./utils.js";
+import { addModalCloseOnClickOutside, t } from "./utils.js";
 import { API_BASE } from "./api.js";
 
 /* ── DOM refs ─────────────────────────────────────────────── */
@@ -69,7 +69,7 @@ export function switchLanguage(lang) {
   if (_callbacks.getActiveNpcId()) {
     _callbacks.renderMessages();
     _callbacks.getPortraitRole().textContent = _callbacks.npcRole(_callbacks.getActiveNpcId());
-    _callbacks.getPortraitStatus().textContent = _callbacks.getSending() ? window.t("chat.status_responding") : "";
+    _callbacks.getPortraitStatus().textContent = _callbacks.getSending() ? t("chat.status_responding") : "";
   }
 }
 
@@ -180,7 +180,7 @@ export function initSettings(callbacks) {
     document.querySelector(".feedback-screenshot-row").style.display = "none";
     feedbackSuccess.style.display = "";
     feedbackSubmitBtn.disabled = false;
-    feedbackSubmitBtn.textContent = window.t("feedback.submit");
+    feedbackSubmitBtn.textContent = t("feedback.submit");
 
     setTimeout(closeFeedback, 1500);
   });

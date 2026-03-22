@@ -34,7 +34,7 @@ BUCKET = "feedback-screenshots"
 
 
 @router.post("")
-async def submit_feedback(body: FeedbackRequest):
+async def submit_feedback(body: FeedbackRequest) -> dict:
     sb = require_supabase()
     try:
         sb.table("feedback").insert(
@@ -45,12 +45,13 @@ async def submit_feedback(body: FeedbackRequest):
             }
         ).execute()
     except Exception as exc:
-        log.warning("Failed to save feedback: %s", exc)
+        log.exception("Failed to save feedback")
+        raise HTTPException(status_code=500, detail="Failed to save feedback") from exc
     return {"ok": True}
 
 
 @router.post("/upload")
-async def upload_screenshot(file: UploadFile = File(...)):  # noqa: B008
+async def upload_screenshot(file: UploadFile = File(...)) -> dict:  # noqa: B008
     sb = require_supabase()
     ext = (file.filename or "img.png").rsplit(".", 1)[-1].lower() or "png"
     if ext not in _ALLOWED_EXTENSIONS:
@@ -74,5 +75,8 @@ async def upload_screenshot(file: UploadFile = File(...)):  # noqa: B008
         public_url = sb.storage.from_(BUCKET).get_public_url(filename)
         return {"url": public_url}
     except Exception as exc:
-        log.warning("Failed to upload screenshot: %s", exc)
+        log.exception("Failed to upload screenshot")
         raise HTTPException(status_code=500, detail="Upload failed") from exc
+
+
+__all__ = ["router"]

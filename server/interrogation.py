@@ -6,9 +6,16 @@ LLM-based turn classification; this module applies the mechanical results.
 
 from __future__ import annotations
 
+import logging
+import random
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from .cases import DiscoveryEntry
+
+log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Typed return shape
@@ -24,6 +31,15 @@ class TurnResult(TypedDict):
     delta_pressure: int
     delta_rapport: int
     peak_pressure: int
+
+
+class GateCondition(TypedDict, total=False):
+    """A single gate condition — all present keys must be satisfied (AND logic)."""
+
+    min_pressure: int
+    min_rapport: int
+    requires_evidence: list[str]
+    requires_discovery: list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -227,21 +243,17 @@ def process_turn(
     current_pressure: int,
     current_rapport: int,
     peak_pressure: int = 0,
-    archetype_id: str | None = None,
+    archetype_id: str = "professional_fixer",
 ) -> TurnResult:
     """Process one interrogation turn and return updated state.
 
     Parameters
     ----------
-    archetype_id : str | None
-        Archetype to use.  When provided, the function is fully self-contained
-        (no import of case data).  When ``None``, falls back to looking up the
-        active case — retained for backward compatibility but discouraged.
+    archetype_id : str
+        Archetype to use.  Must be a key in ``ARCHETYPES``; unknown values fall
+        back to ``"professional_fixer"`` mechanics while preserving the given ID
+        in the result.
     """
-    if archetype_id is None:
-        from .cases import get_active_case
-
-        archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES.get(archetype_id)
     if archetype is None:
         archetype = ARCHETYPES["professional_fixer"]
@@ -331,8 +343,8 @@ _HIGH_RAPPORT_HELPFULNESS: dict[str, str] = {
 }
 
 
-def _check_gate(
-    conditions: list[dict[str, Any]],
+def check_gate(
+    conditions: list[GateCondition],
     pressure: int,
     rapport: int,
     player_evidence: list[str],
@@ -361,6 +373,38 @@ def _check_gate(
     return False
 
 
+def filter_gated_discoveries(
+    discovery_ids: list[str],
+    gates_map: dict[str, list[GateCondition]],
+    pressure: int,
+    rapport: int,
+    player_evidence: list[str],
+    player_discoveries: list[str],
+) -> tuple[list[str], list[str]]:
+    """Apply mechanical gates to detected discoveries.
+
+    Returns ``(passed_ids, blocked_ids)``.
+    """
+    passed: list[str] = []
+    blocked: list[str] = []
+    for did in discovery_ids:
+        gates = gates_map.get(did)
+        if gates is None:
+            passed.append(did)
+            continue
+        if check_gate(gates, pressure, rapport, player_evidence, player_discoveries):
+            passed.append(did)
+        else:
+            blocked.append(did)
+            log.info(
+                "[gate] Blocked discovery %s (pressure=%d, rapport=%d)",
+                did,
+                pressure,
+                rapport,
+            )
+    return passed, blocked
+
+
 def get_locked_secret_descriptions(
     npc_id: str,
     pressure: int,
@@ -382,7 +426,7 @@ def get_locked_secret_descriptions(
         if case.discovery_catalog.get(discovery_id, {}).get("npc_id") != npc_id:
             continue
         # If the gate is NOT satisfied, the secret is locked
-        if not _check_gate(gate_conditions, pressure, rapport, player_evidence, player_discoveries):
+        if not check_gate(gate_conditions, pressure, rapport, player_evidence, player_discoveries):
             desc = locked_descs.get(discovery_id)
             if desc:
                 locked.append(desc)
@@ -391,32 +435,34 @@ def get_locked_secret_descriptions(
 
 def build_interrogation_context(
     npc_id: str,
-    pressure_val: int,
-    rapport_val: int,
+    current_pressure: int,
+    current_rapport: int,
     tactic_type: str,
     evidence_strength: str,
-    archetype_id: str | None = None,
+    archetype_id: str = "professional_fixer",
     player_evidence: list[str] | None = None,
     player_discoveries: list[str] | None = None,
+    locked_secret_descriptions: list[str] | None = None,
 ) -> str:
     """Build the system-prompt paragraph injected per turn.
 
     Parameters
     ----------
-    archetype_id : str | None
-        When provided, avoids the internal case-data lookup.
+    archetype_id : str
+        Archetype identifier — must be a key in ``ARCHETYPES``; unknown values
+        fall back to ``"professional_fixer"`` mechanics.
     player_evidence : list[str] | None
         Evidence IDs the player currently holds (for gate awareness).
     player_discoveries : list[str] | None
         Discovery IDs the player has already collected (for gate awareness).
+    locked_secret_descriptions : list[str] | None
+        Pre-computed locked-secret description strings.  When provided, skips
+        the internal ``get_locked_secret_descriptions`` lookup.  When ``None``,
+        the lookup is performed automatically.
     """
-    p_band = pressure_band(pressure_val)
-    r_band = rapport_band(rapport_val)
+    p_band = pressure_band(current_pressure)
+    r_band = rapport_band(current_rapport)
 
-    if archetype_id is None:
-        from .cases import get_active_case
-
-        archetype_id = get_active_case().npc_archetype_map.get(npc_id, "professional_fixer")
     archetype = ARCHETYPES.get(archetype_id, ARCHETYPES["professional_fixer"])
 
     lines = [
@@ -453,13 +499,16 @@ def build_interrogation_context(
         lines.append(helpfulness)
 
     # Inject locked-secret awareness so the LLM avoids revealing gated secrets
-    locked_secrets = get_locked_secret_descriptions(
-        npc_id,
-        pressure_val,
-        rapport_val,
-        player_evidence or [],
-        player_discoveries or [],
-    )
+    if locked_secret_descriptions is not None:
+        locked_secrets = locked_secret_descriptions
+    else:
+        locked_secrets = get_locked_secret_descriptions(
+            npc_id,
+            current_pressure,
+            current_rapport,
+            player_evidence or [],
+            player_discoveries or [],
+        )
     if locked_secrets:
         lines.append("")
         lines.append(
@@ -485,7 +534,7 @@ def should_show_intuition(
     evidence_strength: str,
     discovery_ids: list[str],
     player_discovery_ids: list[str],
-    discovery_catalog: dict[str, dict[str, Any]],
+    discovery_catalog: dict[str, DiscoveryEntry],
 ) -> tuple[bool, str | None]:
     """Decide whether to show an intuition line and what kind.
 
@@ -493,8 +542,6 @@ def should_show_intuition(
     for atmospheric flavor text, or one of ``"dead_end"``,
     ``"breakthrough"``, ``"smoking_gun"`` for major-moment nudges.
     """
-    import random
-
     # --- Major moment triggers (checked first, always shown) ---
 
     # Smoking-gun evidence presented
@@ -527,11 +574,13 @@ def should_show_intuition(
 
 
 __all__ = [
-    "_check_gate",
+    "check_gate",
+    "filter_gated_discoveries",
     "process_turn",
     "build_interrogation_context",
     "pressure_band",
     "rapport_band",
+    "GateCondition",
     "TurnResult",
     "ARCHETYPES",
     "should_show_intuition",

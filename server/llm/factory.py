@@ -42,8 +42,4 @@ def get_llm_client() -> LLMClient:
     return builder()
 
 
-# Keep legacy alias for any external callers
-create_llm_client = get_llm_client
-
-
-__all__ = ["get_llm_client", "create_llm_client"]
+__all__ = ["get_llm_client"]

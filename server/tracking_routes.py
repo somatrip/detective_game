@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -52,7 +53,7 @@ async def track_session(body: TrackSessionRequest):
 
 
 @router.post("/discovery")
-async def track_discovery(body: TrackDiscoveryRequest):
+async def track_discovery(body: TrackDiscoveryRequest) -> dict:
     safe_insert(
         "discovery_events",
         {
@@ -65,7 +66,7 @@ async def track_discovery(body: TrackDiscoveryRequest):
 
 
 @router.post("/accusation")
-async def track_accusation(body: TrackAccusationRequest):
+async def track_accusation(body: TrackAccusationRequest) -> dict:
     safe_insert(
         "accusation_events",
         {
@@ -79,35 +80,43 @@ async def track_accusation(body: TrackAccusationRequest):
     return {"ok": True}
 
 
-def log_chat_event(
-    session_id: str,
-    npc_id: str,
-    player_message: str,
-    npc_reply: str,
-    tactic_type: str | None = None,
-    evidence_strength: str | None = None,
-    pressure: int | None = None,
-    rapport: int | None = None,
-    pressure_band: str | None = None,
-    rapport_band: str | None = None,
-    expression: str | None = None,
-    evidence_ids: list[str] | None = None,
-) -> None:
+@dataclass(frozen=True)
+class ChatEventData:
+    """Grouped parameters for a chat analytics event."""
+
+    session_id: str
+    npc_id: str
+    player_message: str
+    npc_reply: str
+    tactic_type: str | None = None
+    evidence_strength: str | None = None
+    pressure: int | None = None
+    rapport: int | None = None
+    pressure_band: str | None = None
+    rapport_band: str | None = None
+    expression: str | None = None
+    evidence_ids: list[str] = field(default_factory=list)
+
+
+def log_chat_event(event: ChatEventData) -> None:
     """Insert a chat_events row. Called from the /api/chat endpoint."""
     safe_insert(
         "chat_events",
         {
-            "session_id": session_id,
-            "npc_id": npc_id,
-            "player_message": player_message,
-            "npc_reply": npc_reply,
-            "tactic_type": tactic_type,
-            "evidence_strength": evidence_strength,
-            "pressure": pressure,
-            "rapport": rapport,
-            "pressure_band": pressure_band,
-            "rapport_band": rapport_band,
-            "expression": expression,
-            "evidence_ids": evidence_ids or [],
+            "session_id": event.session_id,
+            "npc_id": event.npc_id,
+            "player_message": event.player_message,
+            "npc_reply": event.npc_reply,
+            "tactic_type": event.tactic_type,
+            "evidence_strength": event.evidence_strength,
+            "pressure": event.pressure,
+            "rapport": event.rapport,
+            "pressure_band": event.pressure_band,
+            "rapport_band": event.rapport_band,
+            "expression": event.expression,
+            "evidence_ids": event.evidence_ids,
         },
     )
+
+
+__all__ = ["router", "log_chat_event", "ChatEventData"]

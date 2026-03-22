@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from server.llm.factory import create_llm_client, get_llm_client
+from server.llm.factory import get_llm_client
 from server.llm.local_stub import LocalEchoLLMClient
 
 
@@ -34,6 +34,3 @@ class TestGetLlmClient:
             client = get_llm_client()
             assert isinstance(client, LocalEchoLLMClient)
             get_llm_client.cache_clear()
-
-    def test_create_llm_client_is_legacy_alias(self):
-        assert create_llm_client is get_llm_client

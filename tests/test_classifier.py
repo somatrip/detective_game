@@ -65,15 +65,6 @@ def _make_mock_case():
 class TestClassifyPlayerTurn:
     """Tests for classify_player_turn."""
 
-    @pytest.fixture(autouse=True)
-    def _mock_case_fixture(self):
-        mock_case = _make_mock_case()
-        with patch("server.cases.get_active_case", return_value=mock_case):
-            with patch(
-                "server.llm.classifier._get_npc_display_name", return_value="Test NPC"
-            ):
-                yield mock_case
-
     async def test_valid_classification(self):
         from server.llm.classifier import classify_player_turn
 
@@ -85,6 +76,7 @@ class TestClassifyPlayerTurn:
                 npc_id="detective-npc",
                 player_evidence_ids=["evidence-a"],
                 conversation_history=[],
+                npc_name="Test NPC",
             )
 
         assert result["tactic_type"] == "empathy"
@@ -102,6 +94,7 @@ class TestClassifyPlayerTurn:
                 npc_id="detective-npc",
                 player_evidence_ids=[],
                 conversation_history=[],
+                npc_name="Test NPC",
             )
 
         assert result["tactic_type"] == "open_ended"
@@ -118,6 +111,7 @@ class TestClassifyPlayerTurn:
                 npc_id="detective-npc",
                 player_evidence_ids=[],
                 conversation_history=[],
+                npc_name="Test NPC",
             )
 
         assert result["tactic_type"] == "direct_accusation"
@@ -132,6 +126,7 @@ class TestClassifyPlayerTurn:
                 npc_id="detective-npc",
                 player_evidence_ids=[],
                 conversation_history=[],
+                npc_name="Test NPC",
             )
 
         assert result["degraded"] is True
@@ -147,6 +142,7 @@ class TestClassifyPlayerTurn:
                 npc_id="detective-npc",
                 player_evidence_ids=[],
                 conversation_history=[],
+                npc_name="Test NPC",
             )
 
         assert result["tactic_type"] == "open_ended"
@@ -167,6 +163,7 @@ class TestClassifyPlayerTurn:
                     {"role": "user", "content": "where were you?"},
                     {"role": "assistant", "content": "I was at home."},
                 ],
+                npc_name="Test NPC",
             )
             mock_call.assert_awaited_once()
 
@@ -181,9 +178,8 @@ class TestDetectEvidence:
 
     @pytest.fixture()
     def case(self, sample_case_data):
-        """Provide the real case data and patch get_active_case to return it."""
-        with patch("server.cases.get_active_case", return_value=sample_case_data):
-            yield sample_case_data
+        """Provide the real case data."""
+        return sample_case_data
 
     def _pick_npc_and_discovery(self, case):
         """Pick the first NPC that has discoveries in the catalog."""
@@ -207,8 +203,10 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="I confess, I did lend my key.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
                 player_message="Did you lend someone your key?",
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert disc_id in result["discovery_ids"]
@@ -231,7 +229,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="I already told you this.",
                 npc_id=npc_id,
-                already_collected=[disc_id],
+                player_discovery_ids=[disc_id],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert disc_id not in result["discovery_ids"]
@@ -252,7 +252,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="Nothing to see here.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert result["expression"] == "neutral"
@@ -266,7 +268,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="Something went wrong.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert result["degraded"] is True
@@ -282,7 +286,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="I have nothing to say.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert result["discovery_ids"] == []
@@ -305,7 +311,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="I said nothing useful.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert result["discovery_ids"] == []
@@ -321,7 +329,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="Hello.",
                 npc_id="nonexistent-npc-999",
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         mock_call.assert_not_awaited()
@@ -345,7 +355,9 @@ class TestDetectEvidence:
             result = await detect_evidence(
                 npc_response="Fine, I gave Eddie my key.",
                 npc_id=npc_id,
-                already_collected=[],
+                player_discovery_ids=[],
+                npc_name="Test NPC",
+                discovery_catalog=case.discovery_catalog,
             )
 
         assert disc_id in result["discovery_summaries"]

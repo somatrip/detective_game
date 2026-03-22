@@ -4,7 +4,6 @@
    suspect selection, and outcome resolution.
    ================================================================ */
 import { escapeHtml, npcDisplayName, addModalCloseOnClickOutside, t } from "./utils.js";
-import { gradeArrest, getEvidence } from "./evidence.js";
 
 // ── CASE constants (from window.CASE) ───────────────────────────
 function _case() { return window.CASE; }
@@ -106,7 +105,7 @@ export function resolveAccusation() {
   const outcomeScreen = _dom("#outcome-screen");
 
   if (correct) {
-    const grade = gradeArrest();
+    const grade = _cb.gradeArrest();
     outcomeCard.className = "outcome-card " + grade.replace(/_/g, "-");
     _cb.trackEvent("arrest", {
       session_id: gameId,
@@ -114,13 +113,13 @@ export function resolveAccusation() {
       target_npc_id: target,
       correct: true,
       grade,
-      evidence_count: getEvidence().length,
+      evidence_count: _cb.getEvidence().length,
       interview_count: interviewCount,
     });
     outcomeTitle.textContent = t("outcome." + grade + "_title");
     outcomeText.innerHTML = t("outcome." + grade + "_text", {
       name: escapeHtml(accusedName),
-      evidenceCount: getEvidence().length,
+      evidenceCount: _cb.getEvidence().length,
       interviewCount: interviewCount,
     });
   } else {
@@ -131,7 +130,7 @@ export function resolveAccusation() {
       target_npc_id: target,
       correct: false,
       grade: "wrong",
-      evidence_count: getEvidence().length,
+      evidence_count: _cb.getEvidence().length,
       interview_count: interviewCount,
     });
     outcomeTitle.textContent = t("outcome.wrong_title");

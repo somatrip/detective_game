@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,22 +22,22 @@ from .supabase_helpers import require_supabase
 log = logging.getLogger(__name__)
 
 
-def _handle_supabase_error(exc: APIError, entity: str = "resource") -> HTTPException:
-    """Convert Supabase APIError to an appropriate HTTPException."""
+def _raise_supabase_error(exc: APIError, entity: str = "resource") -> NoReturn:
+    """Convert Supabase APIError to an appropriate HTTPException and raise it."""
     msg = str(exc)
     # .single() with 0 rows → PGRST116
     if "PGRST116" in msg or "0 rows" in msg:
-        return HTTPException(status_code=404, detail=f"{entity} not found")
+        raise HTTPException(status_code=404, detail=f"{entity} not found") from exc
     # Unique constraint violation
     if "duplicate key" in msg or "23505" in msg:
-        return HTTPException(
+        raise HTTPException(
             status_code=409, detail=f"{entity} already exists (duplicate slug or key)"
-        )
+        ) from exc
     # FK constraint violation
     if "violates foreign key" in msg or "23503" in msg:
-        return HTTPException(status_code=400, detail=f"Referenced {entity} does not exist")
+        raise HTTPException(status_code=400, detail=f"Referenced {entity} does not exist") from exc
     log.warning("Supabase error on %s: %s", entity, msg)
-    return HTTPException(status_code=500, detail=f"Database error on {entity}")
+    raise HTTPException(status_code=500, detail=f"Database error on {entity}") from exc
 
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -164,7 +165,7 @@ async def get_case(case_id: UUID, user_id: str = Depends(require_admin)):
     try:
         case = sb.table("cases").select("*").eq("id", str(case_id)).single().execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Case") from exc
+        _raise_supabase_error(exc, "Case")
     cid = str(case_id)
     npcs = (
         sb.table("npcs")
@@ -230,7 +231,7 @@ async def create_case(body: CaseCreate, user_id: str = Depends(require_admin)):
     try:
         result = require_supabase().table("cases").insert(body.model_dump()).execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Case") from exc
+        _raise_supabase_error(exc, "Case")
     return result.data[0]
 
 
@@ -240,7 +241,9 @@ async def update_case(case_id: UUID, body: CaseUpdate, user_id: str = Depends(re
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = require_supabase().table("cases").update(data).eq("id", str(case_id)).execute()
-    return result.data[0] if result.data else {"ok": True}
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return result.data[0]
 
 
 @router.delete("/cases/{case_id}")
@@ -265,7 +268,7 @@ async def create_npc(case_id: UUID, body: NPCCreate, user_id: str = Depends(requ
     try:
         result = require_supabase().table("npcs").insert(data).execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "NPC") from exc
+        _raise_supabase_error(exc, "NPC")
     return result.data[0]
 
 
@@ -275,7 +278,9 @@ async def update_npc(npc_id: UUID, body: NPCUpdate, user_id: str = Depends(requi
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = require_supabase().table("npcs").update(data).eq("id", str(npc_id)).execute()
-    return result.data[0] if result.data else {"ok": True}
+    if not result.data:
+        raise HTTPException(status_code=404, detail="NPC not found")
+    return result.data[0]
 
 
 @router.delete("/npcs/{npc_id}")
@@ -302,7 +307,7 @@ async def create_evidence(
     try:
         result = require_supabase().table("evidence").insert(data).execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Evidence") from exc
+        _raise_supabase_error(exc, "Evidence")
     return result.data[0]
 
 
@@ -314,7 +319,9 @@ async def update_evidence(
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = require_supabase().table("evidence").update(data).eq("id", str(evidence_id)).execute()
-    return result.data[0] if result.data else {"ok": True}
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+    return result.data[0]
 
 
 @router.delete("/evidence/{evidence_id}")
@@ -343,7 +350,7 @@ async def create_discovery(
     try:
         result = require_supabase().table("discoveries").insert(data).execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Discovery") from exc
+        _raise_supabase_error(exc, "Discovery")
     return result.data[0]
 
 
@@ -357,7 +364,9 @@ async def update_discovery(
     result = (
         require_supabase().table("discoveries").update(data).eq("id", str(discovery_id)).execute()
     )
-    return result.data[0] if result.data else {"ok": True}
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Discovery not found")
+    return result.data[0]
 
 
 @router.delete("/discoveries/{discovery_id}")
@@ -384,7 +393,7 @@ async def create_gate(discovery_id: UUID, body: GateCreate, user_id: str = Depen
     try:
         result = require_supabase().table("discovery_gates").insert(data).execute()
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Gate") from exc
+        _raise_supabase_error(exc, "Gate")
     return result.data[0]
 
 
@@ -396,7 +405,9 @@ async def update_gate(gate_id: UUID, body: GateUpdate, user_id: str = Depends(re
     result = (
         require_supabase().table("discovery_gates").update(data).eq("id", str(gate_id)).execute()
     )
-    return result.data[0] if result.data else {"ok": True}
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Gate not found")
+    return result.data[0]
 
 
 @router.delete("/gates/{gate_id}")
@@ -421,8 +432,10 @@ async def upsert_locked_secret(
             .execute()
         )
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Locked secret") from exc
-    return result.data[0] if result.data else {"ok": True}
+        _raise_supabase_error(exc, "Locked secret")
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Locked secret not found")
+    return result.data[0]
 
 
 @router.delete("/discoveries/{discovery_id}/locked-secret")
@@ -446,8 +459,10 @@ async def create_relevance(body: RelevanceUpdate, user_id: str = Depends(require
             .execute()
         )
     except APIError as exc:
-        raise _handle_supabase_error(exc, "Relevance") from exc
-    return result.data[0] if result.data else {"ok": True}
+        _raise_supabase_error(exc, "Relevance")
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Relevance entry not found")
+    return result.data[0]
 
 
 @router.delete("/relevance/{relevance_id}")

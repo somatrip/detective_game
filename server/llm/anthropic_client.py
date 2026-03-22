@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import anthropic
 import httpx
 
+from ..errors import LLMServiceError
 from .base import LLM_TIMEOUT_SECONDS, ChatMessage, LLMClient
 
 
@@ -41,12 +42,15 @@ class AnthropicLLMClient(LLMClient):
 
         system_prompt = "\n\n".join(system_parts) if system_parts else ""
 
-        response = await self._client.messages.create(
-            model=self._model,
-            max_tokens=1024,
-            system=system_prompt,
-            messages=conversation,
-        )
+        try:
+            response = await self._client.messages.create(
+                model=self._model,
+                max_tokens=1024,
+                system=system_prompt,
+                messages=conversation,
+            )
+        except Exception as exc:
+            raise LLMServiceError(str(exc)) from exc
         return response.content[0].text
 
 

@@ -1,4 +1,5 @@
 /* ── Tutorial Coach Marks System ─────────────────────────── */
+import { t } from "./utils.js";
 
 export const TUTORIAL_STORAGE_KEY = "echoes_tutorial_done";
 export const LILA_HINT_STORAGE_KEY = "echoes_lila_hint_seen";
@@ -155,10 +156,10 @@ function showTutorialStep(idx) {
     const globalIdx = (isLila || isLilaChat) ? idx : isChatLike ? HUB_STEPS.length + idx : idx;
     const globalTotal = (isLila || isLilaChat) ? tutorialSteps.length : HUB_STEPS.length + tutorialSteps.length;
     tutorialStepInd.textContent = `${globalIdx + 1} / ${globalTotal}`;
-    tutorialText.textContent = window.t(step.text);
+    tutorialText.textContent = t(step.text);
 
     const isLast = isLila || (isLilaChat && idx === LILA_CHAT_STEPS.length - 1) || (isChatLike && idx === tutorialSteps.length - 1);
-    tutorialSkipBtn.textContent = window.t("tutorial.skip");
+    tutorialSkipBtn.textContent = t("tutorial.skip");
 
     // clickToAdvance: hide Next button, show pulsing ring, advance on target click
     if (step.clickToAdvance) {
@@ -183,7 +184,7 @@ function showTutorialStep(idx) {
       target.style.zIndex = "10002";
     } else {
       tutorialNextBtn.style.display = "";
-      tutorialNextBtn.textContent = isLast ? window.t("tutorial.got_it") : window.t("tutorial.next");
+      tutorialNextBtn.textContent = isLast ? t("tutorial.got_it") : t("tutorial.next");
     }
     tutorialSkipBtn.style.display = isLast ? "none" : "";
 

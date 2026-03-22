@@ -70,6 +70,7 @@ import {
   renderEvidence, getDiscoveriesForEvidence,
   flashCaseBoardTab,
   showDiscoveryToast,
+  clearCaseBoardBadges, getNpcsWithNewDiscoveries,
   getEvidence, setEvidence,
   getDiscoveries, setDiscoveries,
   getDiscoveryMessageIndices, setDiscoveryMessageIndices,
@@ -379,6 +380,7 @@ initChat({
   getGameId: () => gameId,
 
   renderNpcGrid,
+  openAccusationModal,
 });
 initEvidence({
   getConversations: () => conversations,
@@ -405,6 +407,8 @@ initAccusation({
   getHubScreen: () => hubScreen,
   getChatMessages: () => document.querySelector("#chat-messages"),
   reinit: init,
+  gradeArrest,
+  getEvidence,
 });
 initNavigation({
   getNpcs: () => npcs,
@@ -416,6 +420,10 @@ initNavigation({
   portraitUrl,
   npcRole,
   renderStringBoard,
+  renderEvidence,
+  clearCaseBoardBadges,
+  getNpcsWithNewDiscoveries,
+  openAccusationModal,
 });
 initSettings({
   clearState,

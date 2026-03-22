@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...interrogation import GateCondition
 
 # ---------------------------------------------------------------------------
 # Evidence knowledge base (used by tactic classifier for strength scoring)
@@ -240,7 +243,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
 # Within each condition dict, ALL requirements must be met (AND).
 # ---------------------------------------------------------------------------
 
-DISCOVERY_GATES: dict[str, list[dict[str, Any]]] = {
+DISCOVERY_GATES: dict[str, list[GateCondition]] = {
     "noah-embezzlement": [
         {"min_pressure": 70},
         {"requires_evidence": ["financial-misconduct"]},

@@ -8,7 +8,6 @@ import { initApiClient, apiFetch, apiPost, API_BASE } from "./api.js";
 import { addModalCloseOnClickOutside, t } from "./utils.js";
 
 const AUTH_STORAGE_KEY = "echoes_auth";
-const SUPABASE_URL = "https://hnfrnqizlahwxlootoho.supabase.co";
 
 // Auth state
 let authUser = null;          // { user_id, email, access_token, refresh_token }

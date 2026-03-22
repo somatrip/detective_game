@@ -6,12 +6,12 @@ import logging
 
 from fastapi import HTTPException
 
-from .supabase_client import get_supabase
+from .supabase_client import SupabaseClient, get_supabase
 
 log = logging.getLogger(__name__)
 
 
-def require_supabase():
+def require_supabase() -> SupabaseClient:
     """Return the Supabase client or raise 503 if not configured."""
     sb = get_supabase()
     if sb is None:

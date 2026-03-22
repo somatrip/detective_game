@@ -68,8 +68,7 @@ class TestSubmitFeedback:
                 "/api/feedback",
                 json={"session_id": "sess-4", "feedback_text": "Still works"},
             )
-        assert resp.status_code == 200
-        assert resp.json() == {"ok": True}
+        assert resp.status_code == 500
 
     def test_supabase_unavailable(self, client):
         from fastapi import HTTPException

@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from server.tracking_routes import log_chat_event, router
+from server.tracking_routes import ChatEventData, log_chat_event, router
 
 # Build a minimal app that only includes the tracking router.
 _app = FastAPI()
@@ -141,7 +141,7 @@ class TestTrackAccusation:
 class TestLogChatEvent:
     def test_inserts_with_all_fields(self):
         with patch(PATCH_TARGET) as mock:
-            log_chat_event(
+            log_chat_event(ChatEventData(
                 session_id="s1",
                 npc_id="npc1",
                 player_message="hello",
@@ -154,7 +154,7 @@ class TestLogChatEvent:
                 rapport_band="high",
                 expression="smile",
                 evidence_ids=["e1", "e2"],
-            )
+            ))
         mock.assert_called_once_with(
             "chat_events",
             {
@@ -175,12 +175,12 @@ class TestLogChatEvent:
 
     def test_defaults_produce_none_and_empty_list(self):
         with patch(PATCH_TARGET) as mock:
-            log_chat_event(
+            log_chat_event(ChatEventData(
                 session_id="s1",
                 npc_id="npc1",
                 player_message="hey",
                 npc_reply="yo",
-            )
+            ))
         mock.assert_called_once_with(
             "chat_events",
             {

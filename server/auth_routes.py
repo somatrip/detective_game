@@ -63,7 +63,7 @@ def _extract_token(authorization: str | None) -> str:
 
 
 @router.get("/status")
-async def auth_status():
+async def auth_status() -> dict:
     """Check whether Supabase auth is available."""
     return {"supabase_configured": is_supabase_configured()}
 
@@ -72,7 +72,7 @@ async def auth_status():
 
 
 @router.post("/signup", response_model=AuthResponse)
-async def signup(body: SignupRequest):
+async def signup(body: SignupRequest) -> AuthResponse:
     sb = require_supabase()
     try:
         result = sb.auth.sign_up({"email": body.email, "password": body.password})
@@ -106,7 +106,7 @@ async def signup(body: SignupRequest):
 
 
 @router.post("/login", response_model=AuthResponse)
-async def login(body: LoginRequest):
+async def login(body: LoginRequest) -> AuthResponse:
     sb = require_supabase()
     try:
         result = sb.auth.sign_in_with_password({"email": body.email, "password": body.password})
@@ -134,7 +134,7 @@ class RefreshRequest(BaseModel):
 
 
 @router.post("/refresh", response_model=AuthResponse)
-async def refresh(body: RefreshRequest):
+async def refresh(body: RefreshRequest) -> AuthResponse:
     sb = require_supabase()
     try:
         result = sb.auth._refresh_access_token(body.refresh_token)
@@ -160,7 +160,7 @@ async def refresh(body: RefreshRequest):
 
 
 @router.post("/logout")
-async def logout(authorization: str | None = Header(default=None)):
+async def logout(authorization: str | None = Header(default=None)) -> dict:
     sb = require_supabase()
     token = _extract_token(authorization)
     with contextlib.suppress(Exception):
@@ -173,18 +173,9 @@ async def logout(authorization: str | None = Header(default=None)):
 
 
 @router.get("/session")
-async def check_session(authorization: str | None = Header(default=None)):
-    require_supabase()
-    user_id = _get_user_id_from_token(authorization)
-    # Re-fetch email from token (lightweight — already validated above)
-    token = _extract_token(authorization)
-    sb = require_supabase()
-    try:
-        user = sb.auth.get_user(token)
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail="Invalid or expired session.") from exc
-    email = user.user.email if user and user.user else ""
-    return {"user_id": user_id, "email": email}
+async def check_session(authorization: str | None = Header(default=None)) -> dict:
+    user = _validate_token(authorization)
+    return {"user_id": str(user.id), "email": getattr(user, "email", "") or ""}
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -194,32 +185,38 @@ async def check_session(authorization: str | None = Header(default=None)):
 state_router = APIRouter(prefix="/api/state", tags=["state"])
 
 
-def _get_user_id_from_token(authorization: str | None) -> str:
-    """Validate the Bearer token and return the user_id."""
+def _validate_token(authorization: str | None) -> Any:
+    """Validate the Bearer token and return the Supabase user object."""
     sb = require_supabase()
     token = _extract_token(authorization)
     try:
         user_resp = sb.auth.get_user(token)
     except Exception as exc:
-        log.warning("Token validation failed: %s", exc)
+        log.warning("Token validation failed: %s", type(exc).__name__)
         raise HTTPException(status_code=401, detail="Invalid or expired session.") from exc
     if user_resp is None or user_resp.user is None:
         raise HTTPException(status_code=401, detail="Invalid session")
-    return str(user_resp.user.id)
+    return user_resp.user
+
+
+def _require_user_id(authorization: str | None) -> str:
+    """Validate the Bearer token and return the user_id."""
+    return str(_validate_token(authorization).id)
 
 
 @state_router.post("/save")
 async def save_state(
     body: SaveStateRequest,
     authorization: str | None = Header(default=None),
+    # Accept token from query param (for sendBeacon which can't set headers)
     token: str | None = Query(default=None),
-):
+) -> dict:
     """Upsert the user's game state (single save slot per user)."""
     sb = require_supabase()
     # Accept token from query param (for sendBeacon which can't set headers)
     if not authorization and token:
         authorization = f"Bearer {token}"
-    user_id = _get_user_id_from_token(authorization)
+    user_id = _require_user_id(authorization)
 
     try:
         (
@@ -238,10 +235,10 @@ async def save_state(
 
 
 @state_router.get("/load", response_model=GameStateResponse)
-async def load_state(authorization: str | None = Header(default=None)):
+async def load_state(authorization: str | None = Header(default=None)) -> GameStateResponse:
     """Load the user's saved game state."""
     sb = require_supabase()
-    user_id = _get_user_id_from_token(authorization)
+    user_id = _require_user_id(authorization)
 
     try:
         result = (
@@ -265,10 +262,10 @@ async def load_state(authorization: str | None = Header(default=None)):
 
 
 @state_router.delete("/delete")
-async def delete_state(authorization: str | None = Header(default=None)):
+async def delete_state(authorization: str | None = Header(default=None)) -> dict:
     """Delete the user's saved game state (for restart)."""
     sb = require_supabase()
-    user_id = _get_user_id_from_token(authorization)
+    user_id = _require_user_id(authorization)
 
     try:
         sb.table("game_saves").delete().eq("user_id", user_id).execute()

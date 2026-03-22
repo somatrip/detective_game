@@ -14,7 +14,7 @@ import logging
 
 from fastapi import Header, HTTPException
 
-from .supabase_client import get_supabase
+from .auth_routes import _validate_token
 
 log = logging.getLogger(__name__)
 
@@ -24,28 +24,8 @@ def require_admin(authorization: str | None = Header(default=None)) -> str:
 
     Returns the user_id on success. Raises 401/403 on failure.
     """
-    sb = get_supabase()
-    if sb is None:
-        raise HTTPException(status_code=503, detail="Supabase not configured")
+    user = _validate_token(authorization)
 
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
-
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Invalid Authorization header")
-
-    token = parts[1]
-    try:
-        user_resp = sb.auth.get_user(token)
-    except Exception as exc:
-        log.warning("Admin token validation failed: %s", exc)
-        raise HTTPException(status_code=401, detail="Invalid or expired session") from exc
-
-    if user_resp is None or user_resp.user is None:
-        raise HTTPException(status_code=401, detail="Invalid session")
-
-    user = user_resp.user
     # Use app_metadata (server-only) instead of user_metadata (user-writable)
     # to prevent privilege escalation via supabase.auth.updateUser()
     metadata = user.app_metadata or {}
