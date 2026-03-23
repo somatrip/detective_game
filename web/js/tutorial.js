@@ -76,7 +76,11 @@ function _buildHubSteps() {
     { selector: '.manila-tab[data-hub-tab="notes"]', text: "tutorial.step_notes", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="stringboard"]', text: "tutorial.step_stringboard", arrow: "top" },
     { selector: '.manila-tab[data-hub-tab="suspects"]', text: "tutorial.step_suspects", arrow: "top", clickToAdvance: true },
-    { selector: `.npc-card[data-npc-id="${_partnerNpcId}"]`, text: "tutorial.step_partner", arrow: "top", beforeShow() {
+    { selector: `.npc-card[data-npc-id="${_partnerNpcId}"]`, getText() {
+        const card = document.querySelector(`.npc-card[data-npc-id="${_partnerNpcId}"]`);
+        const name = card?.querySelector(".npc-card-name")?.textContent?.trim() || _partnerNpcId;
+        return t("tutorial.step_partner").replace("{name}", name);
+      }, arrow: "top", beforeShow() {
       // Ensure suspects tab is active (user just clicked it in the previous step)
       _callbacks.activateTab("suspects");
     }},
@@ -156,7 +160,7 @@ function showTutorialStep(idx) {
     const globalIdx = (isLila || isLilaChat) ? idx : isChatLike ? HUB_STEPS.length + idx : idx;
     const globalTotal = (isLila || isLilaChat) ? tutorialSteps.length : HUB_STEPS.length + tutorialSteps.length;
     tutorialStepInd.textContent = `${globalIdx + 1} / ${globalTotal}`;
-    tutorialText.textContent = t(step.text);
+    tutorialText.textContent = step.getText ? step.getText() : t(step.text);
 
     const isLast = isLila || (isLilaChat && idx === LILA_CHAT_STEPS.length - 1) || (isChatLike && idx === tutorialSteps.length - 1);
     tutorialSkipBtn.textContent = t("tutorial.skip");

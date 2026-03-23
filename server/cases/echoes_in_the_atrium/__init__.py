@@ -64,4 +64,5 @@ case_data = CaseData(
     locked_secret_descriptions=LOCKED_SECRET_DESCRIPTIONS,
     intuition_prompt=INTUITION_PROMPT,
     frontend_dir="echoes-in-atrium",
+    tagline="A luxury gala turns deadly",
 )

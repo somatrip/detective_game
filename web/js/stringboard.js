@@ -84,15 +84,20 @@ function sbFindOpenSlot() {
   return { x: startX, y: startY + 20 * slotH };
 }
 
-/** Ensure all suspect cards and collected evidence have positions. */
+/** Ensure all suspect cards and collected evidence have positions.
+ *  Also prunes any cards that don't belong to the current case. */
 export function sbEnsurePositions() {
   const defaults = sbDefaultPositions();
   let changed = false;
   const suspectIds = _suspectIds();
 
+  // Build set of valid card IDs for current case
+  const validIds = new Set();
+
   // Suspects always present
   for (const npcId of suspectIds) {
     const cardId = "suspect:" + npcId;
+    validIds.add(cardId);
     if (!stringBoard.cardPositions[cardId]) {
       stringBoard.cardPositions[cardId] = defaults[cardId] || sbFindOpenSlot();
       changed = true;
@@ -101,11 +106,27 @@ export function sbEnsurePositions() {
 
   // Evidence cards — only collected ones
   for (const e of _getEvidence()) {
+    validIds.add(e.id);
     if (!stringBoard.cardPositions[e.id]) {
       stringBoard.cardPositions[e.id] = defaults[e.id] || sbFindOpenSlot();
       changed = true;
     }
   }
+
+  // Prune cards from other cases
+  for (const cardId of Object.keys(stringBoard.cardPositions)) {
+    if (!validIds.has(cardId)) {
+      delete stringBoard.cardPositions[cardId];
+      changed = true;
+    }
+  }
+
+  // Prune links referencing removed cards
+  const before = stringBoard.links.length;
+  stringBoard.links = stringBoard.links.filter(
+    l => validIds.has(l.from) && validIds.has(l.to)
+  );
+  if (stringBoard.links.length !== before) changed = true;
 
   return changed;
 }
@@ -303,7 +324,8 @@ function sbScheduleSave() {
 /** Save string board state to the backend. */
 async function sbSaveToServer() {
   try {
-    await fetch(`${API_BASE}/api/state/stringboard`, {
+    const caseId = window.CASE?.id || "default";
+    await fetch(`${API_BASE}/api/state/stringboard?case_id=${encodeURIComponent(caseId)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(stringBoard),
@@ -316,7 +338,8 @@ async function sbSaveToServer() {
 /** Load string board state from the backend (only if richer than local). */
 export async function sbLoadFromServer() {
   try {
-    const res = await fetch(`${API_BASE}/api/state/stringboard`);
+    const caseId = window.CASE?.id || "default";
+    const res = await fetch(`${API_BASE}/api/state/stringboard?case_id=${encodeURIComponent(caseId)}`);
     if (res.ok) {
       const data = await res.json();
       const serverPositions = Object.keys(data?.cardPositions || {}).length;
@@ -532,4 +555,5 @@ export function setStringBoard(data) {
 /** Resets string board to empty state. */
 export function resetStringBoard() {
   stringBoard = { cardPositions: {}, links: [] };
+  _defaultPositionsCache = null;
 }

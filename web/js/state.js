@@ -87,12 +87,12 @@ export function applyStateObject(saved, opts) {
 
   if (saved.gameId) {
     result.gameId = saved.gameId;
-    localStorage.setItem("echoes_game_id", saved.gameId);
+    localStorage.setItem("sad_game_id", saved.gameId);
   }
 
   if (saved.audioEnabled !== undefined) {
     result.audioEnabled = saved.audioEnabled;
-    localStorage.setItem("echoes_audio", String(saved.audioEnabled));
+    localStorage.setItem("sad_audio", String(saved.audioEnabled));
   }
 
   return result;

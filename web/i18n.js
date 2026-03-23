@@ -123,7 +123,7 @@ window.I18N = {
     "tutorial.step_caseboard": "This is your Case Board — review evidence and the case briefing here.",
     "tutorial.step_briefing": "Expand or collapse the Case Briefing here.",
     "tutorial.step_suspects": "Click this tab to see all persons of interest.",
-    "tutorial.step_partner": "This is your partner, Detective Lila Chen. She can brief you on the case and offer guidance.",
+    "tutorial.step_partner": "You trust {name}. They can fill you in about the case and offer help.",
     "tutorial.step_npc_card": "Click a suspect to begin interrogating them. Start with the two 'Matts' — the burned notebook makes them your strongest leads.",
     "tutorial.step_stringboard": "Use the String Board to map connections between suspects and evidence. Drag cards and draw lines to visualize your theory of the case.",
     "tutorial.step_gauges": "These gauges track Pressure and Trust. Build pressure with evidence and accusations to force confessions. Build trust with empathy to make suspects share info about others. A 'Cornered' suspect is close to breaking.",
@@ -258,7 +258,7 @@ window.I18N = {
     "tutorial.step_caseboard": "Ovo je vaša Tabla Slučaja — pregledajte dokaze i brifing ovde.",
     "tutorial.step_briefing": "Otvorite ili zatvorite brifing o slučaju ovde.",
     "tutorial.step_suspects": "Kliknite na ovu karticu da vidite sve osumnjičene.",
-    "tutorial.step_partner": "Ovo je vaš partner, detektiv Lila Chen. Ona vas može informisati o slučaju i ponuditi smernice.",
+    "tutorial.step_partner": "Verujete {name}. Oni mogu da vas upoznaju sa slučajem i ponude pomoć.",
     "tutorial.step_npc_card": "Kliknite na osumnjičenog da započnete ispitivanje. Počnite sa dva 'Matta' — spaljena beležnica ih čini vašim najjačim tragovima.",
     "tutorial.step_stringboard": "Koristite Tablu Veza da mapirate veze između osumnjičenih i dokaza. Prevlačite kartice i crtajte linije da vizualizujete vašu teoriju slučaja.",
     "tutorial.step_gauges": "Ovi merači prate Pritisak i Poverenje. Gradite pritisak dokazima i optužbama da izsilite priznanja. Gradite poverenje empatijom da osumnjičeni dele informacije o drugima. 'Priklešten' osumnjičeni je blizu sloma.",
@@ -295,7 +295,7 @@ window.t = function t(key, vars) {
  */
 window.applyLanguage = function applyLanguage(lang) {
   window.currentLang = lang;
-  localStorage.setItem("echoes_lang", lang);
+  localStorage.setItem("sad_lang", lang);
   document.documentElement.lang = lang;
 
   document.querySelectorAll("[data-i18n]").forEach(el => {

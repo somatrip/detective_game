@@ -2,5 +2,5 @@
 @import url("base.css");
 @import url("layout.css");
 @import url("components.css");
-@import url("chat.css");
+@import url("chat.css?v=2");
 @import url("game.css");

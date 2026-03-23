@@ -7,7 +7,7 @@
 import { initApiClient, apiFetch, apiPost, API_BASE } from "./api.js";
 import { addModalCloseOnClickOutside, t } from "./utils.js";
 
-const AUTH_STORAGE_KEY = "echoes_auth";
+const AUTH_STORAGE_KEY = "sad_auth";
 
 // Auth state
 let authUser = null;          // { user_id, email, access_token, refresh_token }
@@ -388,16 +388,20 @@ export function initAuthUI() {
       _callbacks.renderNpcGrid();
       _callbacks.renderEvidence();
 
-      // If login came from auth prompt, close modal and enter the game
+      // If login came from auth prompt (case selection flow), enter the game
       if (window.__authFromTitleCard) {
         window.__authFromTitleCard = false;
         closeAuthModal();
-        const authPrompt = document.getElementById("auth-prompt");
-        authPrompt.classList.add("hidden");
-        _callbacks.showHubOnCaseboard();
-        if (!_callbacks.isTutorialDone()) {
-          _callbacks.setChatTutorialPending(true);
-          setTimeout(() => _callbacks.startTutorial("hub"), 500);
+        if (_callbacks.onAuthEnterGame) {
+          _callbacks.onAuthEnterGame();
+        } else {
+          const authPrompt = document.getElementById("auth-prompt");
+          authPrompt.classList.add("hidden");
+          _callbacks.showHubOnCaseboard();
+          if (!_callbacks.isTutorialDone()) {
+            _callbacks.setChatTutorialPending(true);
+            setTimeout(() => _callbacks.startTutorial("hub"), 500);
+          }
         }
       }
 

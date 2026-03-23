@@ -5,7 +5,7 @@ import { API_BASE } from "./api.js";
 import { t } from "./utils.js";
 
 /* ── Voice State ─────────────────────────────────── */
-let audioEnabled = localStorage.getItem("echoes_audio") !== "false";
+let audioEnabled = (localStorage.getItem("sad_audio") || localStorage.getItem("echoes_audio")) !== "false";
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
@@ -33,7 +33,7 @@ let _cb = {};
 export function isAudioEnabled() { return audioEnabled; }
 export function setAudioEnabled(val) {
   audioEnabled = val;
-  localStorage.setItem("echoes_audio", audioEnabled);
+  localStorage.setItem("sad_audio", audioEnabled);
 }
 export function isVoiceMode() { return voiceMode; }
 export function getIsRecording() { return isRecording; }
@@ -236,7 +236,7 @@ export function stopRecording() {
 export function enterVoiceMode() {
   voiceMode = true;
   audioEnabled = true;
-  localStorage.setItem("echoes_audio", "true");
+  localStorage.setItem("sad_audio", "true");
   updateAudioToggle();
   _micBtn.classList.add("voice-mode");
   _micBtn.title = t("voice.mode_active");
@@ -328,7 +328,7 @@ export function initVoice(callbacks) {
   // Audio toggle click
   _audioToggle.addEventListener("click", () => {
     audioEnabled = !audioEnabled;
-    localStorage.setItem("echoes_audio", audioEnabled);
+    localStorage.setItem("sad_audio", audioEnabled);
     updateAudioToggle();
     if (!audioEnabled && currentAudio) {
       currentAudio.pause();

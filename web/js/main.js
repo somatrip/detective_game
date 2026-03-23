@@ -1,8 +1,13 @@
 /* ================================================================
-   ECHOES IN THE ATRIUM — Game Frontend (Orchestrator)
+   SOLVED AFTER DARK — Game Frontend (Orchestrator)
    ================================================================
    This file wires together the game's ES modules and runs the
-   boot sequence. All domain logic lives in dedicated modules:
+   boot sequence. Supports multiple cases with per-case state.
+
+   Boot flow:
+     1. initShell() — case-agnostic setup (auth, settings, case selector)
+     2. User selects a case → loadCase(caseData) dynamically loads assets
+     3. initGame() — case-specific setup (chat, evidence, stringboard, etc.)
 
    auth.js        — Authentication & cloud save
    chat.js        — NPC conversation UI & portrait management
@@ -13,8 +18,7 @@
    accusation.js  — Arrest flow & outcome grading
    settings.js    — Settings, feedback, language
    navigation.js  — Tab switching, NPC grid, screen transitions
-   store.js       — Shared game state (not yet wired)
-   events.js      — Cross-module event bus (not yet wired)
+   caseSelector.js — Case selection UI
    state.js       — State serialization for save/load
    api.js         — Authenticated fetch wrapper
    utils.js       — HTML escaping, display name, modal helper
@@ -83,11 +87,15 @@ import {
   portraitUrl, buildPortraitImg, npcRole,
   getSending,
 } from "./chat.js";
+import {
+  initCaseSelector, showCaseSelector, hideCaseSelector,
+} from "./caseSelector.js";
 import { t } from "./utils.js";
 
-const CASE = window.CASE;
-const NPC_META = CASE.npcMeta;
-const PARTNER_NPC_ID = CASE.partnerNpcId;
+/* ── Active case refs (set after case loads) ──────────── */
+let CASE = null;       // window.CASE — set dynamically
+let NPC_META = null;
+let PARTNER_NPC_ID = null;
 
 /* ── State ──────────────────────────────────────────────── */
 let npcs = [];
@@ -95,10 +103,16 @@ let activeNpcId = null;
 let conversations = {};
 let npcInterrogation = {};
 let playerNotes = "";
+let briefingOpen = true;
+let gameInitialized = false; // tracks whether initGame() has run
 
 /* ── Gameplay tracking ─────────────────────────────────── */
-let gameId = localStorage.getItem("echoes_game_id") || crypto.randomUUID();
-localStorage.setItem("echoes_game_id", gameId);
+let gameId = "";
+
+function stateKeyPrefix() {
+  if (!CASE) return "sad_unknown";
+  return `sad_${CASE.id}`;
+}
 
 function trackEvent(endpoint, payload) {
   fetch(`${API_BASE}/api/track/${endpoint}`, {
@@ -112,7 +126,7 @@ function trackEvent(endpoint, payload) {
 const titleCard         = document.querySelector("#title-card");
 const titleCardBtn      = document.querySelector("#title-card-btn");
 const hubScreen         = document.querySelector("#hub-screen");
-const TITLE_STORAGE_KEY = "echoes_title_seen";
+const TITLE_STORAGE_KEY = "sad_title_seen";
 
 /* ── Helpers ────────────────────────────────────────────── */
 
@@ -131,9 +145,9 @@ function stateRichness(s) {
 function _stateOpts() {
   return {
     caseId: CASE.id,
-    tutorialStorageKey: TUTORIAL_STORAGE_KEY,
+    tutorialStorageKey: `${stateKeyPrefix()}_tutorial_done`,
     titleStorageKey: TITLE_STORAGE_KEY,
-    lilaHintStorageKey: LILA_HINT_STORAGE_KEY,
+    lilaHintStorageKey: `${stateKeyPrefix()}_lila_hint_seen`,
   };
 }
 
@@ -154,7 +168,12 @@ function applyStateObject(s) {
   const restored = _applyStateObject(s, _stateOpts());
   if (!restored) return;
   if ("conversations" in restored)           conversations = restored.conversations;
-  if ("evidence" in restored)                setEvidence(restored.evidence);
+  if ("evidence" in restored) {
+    // Filter out evidence from other cases that may have leaked into saved state
+    const catalog = CASE.evidenceCatalog || {};
+    const validEvidence = restored.evidence.filter(e => e.id in catalog);
+    setEvidence(validEvidence);
+  }
   if ("activeNpcId" in restored)             activeNpcId = restored.activeNpcId;
   if ("discoveries" in restored)             setDiscoveries(restored.discoveries);
   if ("npcInterrogation" in restored)        npcInterrogation = restored.npcInterrogation;
@@ -174,7 +193,7 @@ function applyStateObject(s) {
 
 function saveState() {
   try {
-    localStorage.setItem("echoes_state_v2", JSON.stringify(buildStateObject()));
+    localStorage.setItem(`${stateKeyPrefix()}_state_v2`, JSON.stringify(buildStateObject()));
   } catch (err) {
     console.error("[saveState] Failed to persist state:", err);
   }
@@ -183,7 +202,7 @@ function saveState() {
 
 function loadState() {
   try {
-    const raw = localStorage.getItem("echoes_state_v2");
+    const raw = localStorage.getItem(`${stateKeyPrefix()}_state_v2`);
     if (!raw) return;
     applyStateObject(JSON.parse(raw));
   } catch (err) {
@@ -205,16 +224,15 @@ function resetLocalState() {
   resetStringBoard();
   gameId = crypto.randomUUID();
   clearAudioCache();
-  localStorage.removeItem("echoes_state_v2");
-  localStorage.removeItem("echoes_game_id");
-  localStorage.removeItem(TUTORIAL_STORAGE_KEY);
-  localStorage.removeItem(TITLE_STORAGE_KEY);
-  localStorage.removeItem(LILA_HINT_STORAGE_KEY);
+  localStorage.removeItem(`${stateKeyPrefix()}_state_v2`);
+  localStorage.removeItem(`${stateKeyPrefix()}_game_id`);
+  localStorage.removeItem(`${stateKeyPrefix()}_tutorial_done`);
+  localStorage.removeItem(`${stateKeyPrefix()}_lila_hint_seen`);
 }
 
 async function clearState() {
   resetLocalState();
-  localStorage.setItem("echoes_game_id", gameId);
+  localStorage.setItem(`${stateKeyPrefix()}_game_id`, gameId);
   trackEvent("session", { session_id: gameId, case_id: CASE.id, language: window.currentLang || "en" });
   if (getAuthUser()) {
     try { await cloudDeleteState(); }
@@ -222,11 +240,156 @@ async function clearState() {
   }
 }
 
-/* ── Initialize ─────────────────────────────────────────── */
+/* ── Theme Management ──────────────────────────────────── */
 
-let briefingOpen = true;
+function applyTheme(theme) {
+  if (!theme) return;
+  const root = document.documentElement;
+  for (const [prop, value] of Object.entries(theme)) {
+    root.style.setProperty(prop, value);
+  }
+}
 
-async function init() {
+function clearTheme() {
+  const root = document.documentElement;
+  // Remove all inline style properties (reverts to CSS stylesheet defaults)
+  root.removeAttribute("style");
+}
+
+/* ── Dynamic case asset loading ────────────────────────── */
+
+async function loadCaseAssets(frontendDir) {
+  const lang = window.currentLang || "en";
+  const base = `cases/${frontendDir}/`;
+  await window.loadScript(base + "case.js");
+  await window.loadScript(base + `i18n-${lang}.js`);
+  // Re-apply translations so data-i18n elements pick up case-specific overrides
+  window.applyLanguage(lang);
+}
+
+/* ── localStorage migration from old echoes_* keys ─────── */
+
+function migrateOldState() {
+  const oldState = localStorage.getItem("echoes_state_v2");
+  if (!oldState) return;
+
+  // Migrate to the Atrium case's new key
+  const newKey = "sad_echoes-in-atrium_state_v2";
+  if (!localStorage.getItem(newKey)) {
+    localStorage.setItem(newKey, oldState);
+  }
+
+  // Migrate other keys
+  const migrations = [
+    ["echoes_game_id",        "sad_echoes-in-atrium_game_id"],
+    ["echoes_tutorial_done",  "sad_echoes-in-atrium_tutorial_done"],
+    ["echoes_lila_hint_seen", "sad_echoes-in-atrium_lila_hint_seen"],
+  ];
+  for (const [oldKey, newK] of migrations) {
+    const val = localStorage.getItem(oldKey);
+    if (val && !localStorage.getItem(newK)) {
+      localStorage.setItem(newK, val);
+    }
+  }
+
+  // Migrate auth key
+  const oldAuth = localStorage.getItem("echoes_auth");
+  if (oldAuth && !localStorage.getItem("sad_auth")) {
+    localStorage.setItem("sad_auth", oldAuth);
+  }
+
+  // Migrate title seen
+  const oldTitle = localStorage.getItem("echoes_title_seen");
+  if (oldTitle && !localStorage.getItem(TITLE_STORAGE_KEY)) {
+    localStorage.setItem(TITLE_STORAGE_KEY, oldTitle);
+  }
+
+  // Migrate language
+  const oldLang = localStorage.getItem("echoes_lang");
+  if (oldLang && !localStorage.getItem("sad_lang")) {
+    localStorage.setItem("sad_lang", oldLang);
+  }
+
+  // Mark migration done
+  localStorage.setItem("sad_migrated", "1");
+}
+
+/* ── Case selection handler ────────────────────────────── */
+
+async function onCaseSelected(caseData) {
+  hideCaseSelector();
+
+  // Load case assets dynamically
+  await loadCaseAssets(caseData.frontend_dir);
+
+  // Set case refs
+  CASE = window.CASE;
+  NPC_META = CASE.npcMeta;
+  PARTNER_NPC_ID = CASE.partnerNpcId;
+
+  // Apply case theme
+  applyTheme(CASE.theme);
+
+  // Load per-case state
+  gameId = localStorage.getItem(`${stateKeyPrefix()}_game_id`) || crypto.randomUUID();
+  localStorage.setItem(`${stateKeyPrefix()}_game_id`, gameId);
+
+  // Auth prompt check (only for unauthenticated users on first play)
+  if (isSupabaseConfigured() && !getAuthUser()) {
+    document.getElementById("auth-prompt").classList.remove("hidden");
+    // The auth prompt handlers will call enterGame() or skip
+    return;
+  }
+
+  enterGame();
+}
+
+/* ── Enter Game (after case selected + auth resolved) ──── */
+
+function enterGame() {
+  document.getElementById("auth-prompt").classList.add("hidden");
+
+  if (!gameInitialized) {
+    initGameModules();
+  }
+
+  initGameState().then(() => {
+    hubScreen.classList.add("active");
+
+    if (activeNpcId) {
+      selectNpc(activeNpcId);
+    } else {
+      showHubOnCaseboard();
+    }
+
+    if (!isTutorialDone()) {
+      setChatTutorialPending(true);
+      setTimeout(() => startTutorial("hub"), 500);
+    }
+  });
+}
+
+/* ── Back to Cases ─────────────────────────────────────── */
+
+function backToCases() {
+  // Save current state
+  if (CASE) saveState();
+
+  // Clear case theme
+  clearTheme();
+
+  // Hide game, show case selector
+  hubScreen.classList.remove("active");
+  showCaseSelector();
+
+  // Reset game-level state for next case load
+  gameInitialized = false;
+}
+
+/* ── Game State Init (per-case) ────────────────────────── */
+
+async function initGameState() {
+  resetStringBoard();
   loadState();
   seedStartingEvidence();
   if (getCloudMergePromise()) {
@@ -237,7 +400,7 @@ async function init() {
     trackEvent("session", { session_id: gameId, case_id: CASE.id, language: window.currentLang || "en" });
   }
   try {
-    const res = await fetch(`${API_BASE}/api/npcs`);
+    const res = await fetch(`${API_BASE}/api/npcs?case_id=${encodeURIComponent(CASE.id.replace(/-/g, "_"))}`);
     const data = await res.json();
     npcs = data.npcs.sort((a, b) => {
       const oa = NPC_META[a.npc_id]?.order ?? 99;
@@ -311,22 +474,111 @@ async function init() {
   if (briefingOpen) briefingBody.classList.add("open");
   else briefingBody.classList.remove("open");
 
-  const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
-  const hasConversations = Object.keys(conversations).length > 0;
-
-  if (activeNpcId) {
-    titleCard.classList.add("hidden");
-    hubScreen.classList.add("active");
-    selectNpc(activeNpcId);
-  } else if (!titleSeen && !hasConversations) {
-    titleCard.classList.remove("hidden");
-  } else {
-    titleCard.classList.add("hidden");
-    showHubOnCaseboard();
-  }
+  // Restore notes
+  const notesTextarea = document.getElementById("player-notes");
+  if (notesTextarea) notesTextarea.value = playerNotes;
 }
 
-/* ── Event Listeners ────────────────────────────────────── */
+/* ── Module Initialization (once per session) ──────────── */
+
+function initGameModules() {
+  gameInitialized = true;
+
+  initChat({
+    getActiveNpcId: () => activeNpcId,
+    setActiveNpcId: (v) => { activeNpcId = v; },
+    getConversations: () => conversations,
+    setConversation: (npcId, arr) => { conversations[npcId] = arr; },
+    getNpcInterrogation: () => npcInterrogation,
+    setNpcInterrogation: (npcId, data) => { npcInterrogation[npcId] = data; },
+    getNpcs: () => npcs,
+
+    speakText, stopAudio, isVoiceMode, exitVoiceMode,
+    isAudioEnabled,
+    getChatAbortController, setChatAbortController,
+
+    addNpcTab, activateTab, removeNpcTab,
+
+    saveState,
+
+    getEvidence, getDiscoveries, getDiscoveryMessageIndices,
+    detectEvidence, detectNewDiscoveries, checkEndgameTrigger,
+    renderEvidence, flashCaseBoardTab, renderStringBoard,
+    showDiscoveryToast,
+
+    getChatTutorialPending, setChatTutorialPending,
+    startTutorial, LILA_HINT_STORAGE_KEY,
+
+    trackEvent,
+    getGameId: () => gameId,
+
+    renderNpcGrid,
+    openAccusationModal,
+  });
+  initEvidence({
+    getConversations: () => conversations,
+    getNpcInterrogation: () => npcInterrogation,
+    saveState,
+    renderStringBoard,
+    renderNpcGrid,
+    getActiveNpcId: () => activeNpcId,
+    getChatMessages: () => document.querySelector("#chat-messages"),
+    openAccusationModal,
+    trackEvent,
+    getGameId: () => gameId,
+    getNpcs: () => npcs,
+  });
+  initAccusation({
+    getNpcs: () => npcs,
+    getConversations: () => conversations,
+    getGameId: () => gameId,
+    trackEvent,
+    buildPortraitImg,
+    clearState,
+    setBriefingOpen: (v) => { briefingOpen = v; },
+    removeNpcTab,
+    getHubScreen: () => hubScreen,
+    getChatMessages: () => document.querySelector("#chat-messages"),
+    reinit: () => initGameState(),
+    gradeArrest,
+    getEvidence,
+  });
+  initNavigation({
+    getNpcs: () => npcs,
+    getConversations: () => conversations,
+    getActiveNpcId: () => activeNpcId,
+    getHubScreen: () => hubScreen,
+    leaveChat,
+    selectNpc,
+    portraitUrl,
+    npcRole,
+    renderStringBoard,
+    renderEvidence,
+    clearCaseBoardBadges,
+    getNpcsWithNewDiscoveries,
+    openAccusationModal,
+  });
+  initTutorial({
+    activateTab,
+    leaveChat,
+    removeNpcTab,
+    closeSettings,
+    partnerNpcId: PARTNER_NPC_ID,
+    getActiveNpcId: () => activeNpcId,
+  });
+  initVoice({
+    getSending: () => getSending(),
+    getActiveNpcId: () => activeNpcId,
+    sendMessage,
+    autoResize,
+    showCancelBtn,
+    hideCancelBtn,
+    scrollToBottom,
+  });
+  updateAudioToggle();
+}
+
+/* ── Event Listeners (always active) ───────────────────── */
 
 document.querySelector("#cb-briefing-toggle").addEventListener("click", () => {
   const toggle = document.querySelector("#cb-briefing-toggle");
@@ -341,7 +593,6 @@ document.querySelector("#cb-briefing-toggle").addEventListener("click", () => {
 const notesTextarea = document.getElementById("player-notes");
 let _notesSaveTimer;
 if (notesTextarea) {
-  notesTextarea.value = playerNotes;
   notesTextarea.addEventListener("input", () => {
     playerNotes = notesTextarea.value;
     clearTimeout(_notesSaveTimer);
@@ -349,198 +600,21 @@ if (notesTextarea) {
   });
 }
 
-/* ── Boot ───────────────────────────────────────────────── */
-
-initChat({
-  getActiveNpcId: () => activeNpcId,
-  setActiveNpcId: (v) => { activeNpcId = v; },
-  getConversations: () => conversations,
-  setConversation: (npcId, arr) => { conversations[npcId] = arr; },
-  getNpcInterrogation: () => npcInterrogation,
-  setNpcInterrogation: (npcId, data) => { npcInterrogation[npcId] = data; },
-  getNpcs: () => npcs,
-
-  speakText, stopAudio, isVoiceMode, exitVoiceMode,
-  isAudioEnabled,
-  getChatAbortController, setChatAbortController,
-
-  addNpcTab, activateTab, removeNpcTab,
-
-  saveState,
-
-  getEvidence, getDiscoveries, getDiscoveryMessageIndices,
-  detectEvidence, detectNewDiscoveries, checkEndgameTrigger,
-  renderEvidence, flashCaseBoardTab, renderStringBoard,
-  showDiscoveryToast,
-
-  getChatTutorialPending, setChatTutorialPending,
-  startTutorial, LILA_HINT_STORAGE_KEY,
-
-  trackEvent,
-  getGameId: () => gameId,
-
-  renderNpcGrid,
-  openAccusationModal,
-});
-initEvidence({
-  getConversations: () => conversations,
-  getNpcInterrogation: () => npcInterrogation,
-  saveState,
-  renderStringBoard,
-  renderNpcGrid,
-  getActiveNpcId: () => activeNpcId,
-  getChatMessages: () => document.querySelector("#chat-messages"),
-  openAccusationModal,
-  trackEvent,
-  getGameId: () => gameId,
-  getNpcs: () => npcs,
-});
-initAccusation({
-  getNpcs: () => npcs,
-  getConversations: () => conversations,
-  getGameId: () => gameId,
-  trackEvent,
-  buildPortraitImg,
-  clearState,
-  setBriefingOpen: (v) => { briefingOpen = v; },
-  removeNpcTab,
-  getHubScreen: () => hubScreen,
-  getChatMessages: () => document.querySelector("#chat-messages"),
-  reinit: init,
-  gradeArrest,
-  getEvidence,
-});
-initNavigation({
-  getNpcs: () => npcs,
-  getConversations: () => conversations,
-  getActiveNpcId: () => activeNpcId,
-  getHubScreen: () => hubScreen,
-  leaveChat,
-  selectNpc,
-  portraitUrl,
-  npcRole,
-  renderStringBoard,
-  renderEvidence,
-  clearCaseBoardBadges,
-  getNpcsWithNewDiscoveries,
-  openAccusationModal,
-});
-initSettings({
-  clearState,
-  seedStartingEvidence,
-  removeNpcTab,
-  renderEvidence,
-  renderNpcGrid,
-  renderMessages,
-  activateTab,
-  getActiveNpcId: () => activeNpcId,
-  getSending: () => getSending(),
-  getGameId: () => gameId,
-  npcRole,
-  getHubScreen: () => hubScreen,
-  getChatMessages: () => document.querySelector("#chat-messages"),
-  getPortraitRole: () => document.querySelector("#portrait-role"),
-  getPortraitStatus: () => document.querySelector("#portrait-status"),
-  setBriefingOpen: (v) => { briefingOpen = v; },
-});
-initTutorial({
-  activateTab,
-  leaveChat,
-  removeNpcTab,
-  closeSettings,
-  partnerNpcId: PARTNER_NPC_ID,
-  getActiveNpcId: () => activeNpcId,
-});
-initLanguage();
-initVoice({
-  getSending: () => getSending(),
-  getActiveNpcId: () => activeNpcId,
-  sendMessage,
-  autoResize,
-  showCancelBtn,
-  hideCancelBtn,
-  scrollToBottom,
-});
-updateAudioToggle();
-initAuth({
-  renderNpcGrid,
-  renderEvidence,
-  resetLocalState,
-  removeNpcTab,
-  leaveChat,
-  showHubOnCaseboard,
-  isTutorialDone,
-  setChatTutorialPending,
-  startTutorial,
-  buildStateObject,
-  applyStateObject,
-  saveState,
-  stateRichness,
-  getHubScreen: () => hubScreen,
-  getTitleCard: () => titleCard,
-  getActiveNpcId: () => activeNpcId,
-});
-initAuthUI();
-
-setCloudMergePromise(checkSupabaseStatus().then(async configured => {
-  if (!configured) {
-    const accountRow = document.getElementById("settings-account-row");
-    if (accountRow) accountRow.style.display = "none";
-    return;
-  }
-  const restored = await restoreAuthSession();
-  if (restored) {
-    console.log("[auth] Session restored for", getAuthUser().email);
-    await mergeCloudState();
-  }
-}));
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden" && getAuthUser() && isCloudSavePending()) {
-    cloudSaveBeacon();
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-  if (getAuthUser() && isCloudSavePending()) {
-    cloudSaveBeacon();
-  }
-});
-
-function enterGame() {
-  titleCard.classList.add("dismissed");
-  localStorage.setItem(TITLE_STORAGE_KEY, "1");
-  document.getElementById("auth-prompt").classList.add("hidden");
-  setTimeout(() => {
-    titleCard.classList.add("hidden");
-    showHubOnCaseboard();
-    if (!isTutorialDone()) {
-      setChatTutorialPending(true);
-      setTimeout(() => startTutorial("hub"), 500);
-    }
-  }, 500);
-}
+/* ── Title Card → Case Selector ────────────────────────── */
 
 titleCardBtn.addEventListener("click", () => {
-  if (isSupabaseConfigured() && !getAuthUser()) {
-    titleCard.classList.add("dismissed");
-    localStorage.setItem(TITLE_STORAGE_KEY, "1");
-    setTimeout(() => {
-      titleCard.classList.add("hidden");
-      document.getElementById("auth-prompt").classList.remove("hidden");
-    }, 500);
-    return;
-  }
-  enterGame();
+  titleCard.classList.add("dismissed");
+  localStorage.setItem(TITLE_STORAGE_KEY, "1");
+  setTimeout(() => {
+    titleCard.classList.add("hidden");
+    showCaseSelector();
+  }, 500);
 });
 
+/* ── Auth Prompt handlers ──────────────────────────────── */
+
 document.getElementById("auth-prompt-skip").addEventListener("click", () => {
-  document.getElementById("auth-prompt").classList.add("hidden");
-  showHubOnCaseboard();
-  if (!isTutorialDone()) {
-    setChatTutorialPending(true);
-    setTimeout(() => startTutorial("hub"), 500);
-  }
+  enterGame();
 });
 
 function authPromptFlow(tab) {
@@ -554,11 +628,111 @@ function authPromptFlow(tab) {
 document.getElementById("auth-prompt-signin").addEventListener("click", () => authPromptFlow("login"));
 document.getElementById("auth-prompt-signup").addEventListener("click", () => authPromptFlow("signup"));
 
-init().then(() => {
-  const hasConversations = Object.keys(conversations).length > 0;
+/* ── Settings: Back to Cases ───────────────────────────── */
+
+const backToCasesBtn = document.getElementById("settings-back-to-cases");
+if (backToCasesBtn) {
+  backToCasesBtn.addEventListener("click", () => {
+    closeSettings();
+    backToCases();
+  });
+}
+
+/* ── Shell Boot (runs immediately) ─────────────────────── */
+
+async function initShell() {
+  // Migrate old localStorage keys (one-time)
+  if (!localStorage.getItem("sad_migrated")) {
+    migrateOldState();
+  }
+
+  // Init case-agnostic modules
+  initSettings({
+    clearState,
+    seedStartingEvidence,
+    removeNpcTab,
+    renderEvidence,
+    renderNpcGrid,
+    renderMessages,
+    activateTab,
+    getActiveNpcId: () => activeNpcId,
+    getSending: () => getSending(),
+    getGameId: () => gameId,
+    npcRole,
+    getHubScreen: () => hubScreen,
+    getChatMessages: () => document.querySelector("#chat-messages"),
+    getPortraitRole: () => document.querySelector("#portrait-role"),
+    getPortraitStatus: () => document.querySelector("#portrait-status"),
+    setBriefingOpen: (v) => { briefingOpen = v; },
+  });
+  initLanguage();
+
+  initAuth({
+    renderNpcGrid,
+    renderEvidence,
+    resetLocalState,
+    removeNpcTab,
+    leaveChat,
+    showHubOnCaseboard,
+    isTutorialDone,
+    setChatTutorialPending,
+    startTutorial,
+    buildStateObject,
+    applyStateObject,
+    saveState,
+    stateRichness,
+    getHubScreen: () => hubScreen,
+    getTitleCard: () => titleCard,
+    getActiveNpcId: () => activeNpcId,
+    onAuthEnterGame: () => enterGame(),
+  });
+  initAuthUI();
+
+  // Check Supabase and restore auth session
+  setCloudMergePromise(checkSupabaseStatus().then(async configured => {
+    if (!configured) {
+      const accountRow = document.getElementById("settings-account-row");
+      if (accountRow) accountRow.style.display = "none";
+      return;
+    }
+    const restored = await restoreAuthSession();
+    if (restored) {
+      console.log("[auth] Session restored for", getAuthUser().email);
+      await mergeCloudState();
+    }
+  }));
+
+  // Init case selector
+  await initCaseSelector({
+    onCaseSelected,
+  });
+
+  // Decide what to show
   const titleSeen = localStorage.getItem(TITLE_STORAGE_KEY);
-  if (titleSeen && !isTutorialDone() && !hasConversations) {
-    setChatTutorialPending(true);
-    setTimeout(() => startTutorial("hub"), 600);
+
+  if (!titleSeen) {
+    // New player: show title card
+    titleCard.classList.remove("hidden");
+  } else {
+    // Returning player: show case selector directly
+    titleCard.classList.add("hidden");
+    showCaseSelector();
+  }
+}
+
+/* ── Cloud save on page hide/close ─────────────────────── */
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && getAuthUser() && isCloudSavePending()) {
+    cloudSaveBeacon();
   }
 });
+
+window.addEventListener("beforeunload", () => {
+  if (getAuthUser() && isCloudSavePending()) {
+    cloudSaveBeacon();
+  }
+});
+
+/* ── Start ─────────────────────────────────────────────── */
+initShell();

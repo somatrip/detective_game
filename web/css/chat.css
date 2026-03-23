@@ -75,8 +75,8 @@
       top: 0.5rem; right: 0.5rem;
       width: 28px; height: 28px;
       border-radius: 50%;
-      border: 1px solid rgba(212,160,80,0.25);
-      background: rgba(26,21,16,0.6);
+      border: 1px solid var(--info-btn-border, rgba(212,160,80,0.25));
+      background: var(--info-btn-bg, rgba(26,21,16,0.6));
       color: var(--text-dim);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -86,14 +86,14 @@
       -webkit-backdrop-filter: blur(4px);
     }
     .portrait-info-btn:hover {
-      background: rgba(26,21,16,0.8);
+      background: var(--info-btn-bg-hover, rgba(26,21,16,0.8));
       color: var(--text);
     }
     .portrait-bio-tooltip {
       display: none;
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(26,21,16,0.92);
+      background: var(--bio-tooltip-bg, rgba(26,21,16,0.92));
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       color: var(--text-dim);
@@ -134,7 +134,7 @@
       gap: 1.1rem;
       background:
         linear-gradient(180deg, var(--noir-warm) 0%, transparent 120px, transparent calc(100% - 120px), var(--noir-warm) 100%),
-        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(212,160,80,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 15% 10%, var(--msg-bg-glow, rgba(212,160,80,0.06)) 0%, transparent 70%),
         url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 60L60 0M-5 5L5 -5M55 65L65 55' stroke='%23ffffff' stroke-opacity='0.02' stroke-width='0.5' fill='none'/%3E%3C/svg%3E"),
         url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='1' y='1' fill='%23ffffff' fill-opacity='0.015'/%3E%3C/svg%3E"),
         var(--noir-warm);
@@ -152,11 +152,11 @@
     .msg.user {
       align-self: flex-end;
       max-width: 72%;
-      background: linear-gradient(135deg, rgba(42,35,25,0.9), rgba(50,40,28,0.85));
-      border: 1px solid rgba(212,160,80,0.18);
-      border-right: 3px solid rgba(212,160,80,0.25);
+      background: var(--msg-user-bg, linear-gradient(135deg, rgba(42,35,25,0.9), rgba(50,40,28,0.85)));
+      border: 1px solid var(--msg-border, rgba(212,160,80,0.18));
+      border-right: 3px solid var(--msg-user-accent, rgba(212,160,80,0.25));
       border-radius: 10px 2px 2px 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      box-shadow: var(--msg-shadow, 0 2px 10px rgba(0,0,0,0.35));
       font-family: var(--font-typewriter);
       color: var(--noir-text-dim);
       font-size: 0.88rem;
@@ -170,18 +170,18 @@
       position: absolute;
       top: 0; right: 0;
       width: 12px; height: 12px;
-      background: linear-gradient(225deg, var(--noir-warm) 50%, rgba(212,160,80,0.15) 50%);
+      background: linear-gradient(225deg, var(--noir-warm) 50%, var(--msg-corner, rgba(212,160,80,0.15)) 50%);
       border-radius: 0 2px 0 0;
       pointer-events: none;
     }
     .msg.assistant {
       align-self: flex-start;
       max-width: 78%;
-      background: linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9));
-      border: 1px solid rgba(212,160,80,0.12);
+      background: var(--msg-npc-bg, linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9)));
+      border: 1px solid var(--msg-border, rgba(212,160,80,0.12));
       border-left: 3px solid var(--noir-amber-border);
       border-radius: 2px 10px 10px 2px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 20px rgba(212,160,80,0.03);
+      box-shadow: var(--msg-npc-shadow, 0 2px 12px rgba(0,0,0,0.4));
       font-family: var(--font-body-serif);
       color: var(--noir-text);
       font-size: 0.9rem;
@@ -194,7 +194,7 @@
       font-size: 0.72rem; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.14em;
       margin-bottom: 0.5rem; padding-bottom: 0.35rem;
-      border-bottom: 1px solid rgba(212,160,80,0.15);
+      border-bottom: 1px solid var(--msg-border, rgba(212,160,80,0.15));
       color: var(--noir-text-faint);
       display: flex; align-items: center; gap: 0.4rem;
     }
@@ -204,25 +204,25 @@
     }
     .msg.assistant .msg-sender::before {
       content: "\2014";
-      color: rgba(212,160,80,0.4);
+      color: var(--noir-amber-border);
       font-weight: 400;
     }
     .msg.user .msg-sender {
-      color: rgba(232,220,200,0.5);
-      border-bottom-color: rgba(232,220,200,0.1);
+      color: var(--msg-user-sender, rgba(232,220,200,0.5));
+      border-bottom-color: var(--msg-user-sender-border, rgba(232,220,200,0.1));
     }
     .msg.user .msg-sender::before {
       content: "\270E";
       font-size: 0.8rem;
-      color: rgba(232,220,200,0.3);
+      color: var(--msg-user-sender-icon, rgba(232,220,200,0.3));
     }
     /* ── Detective's Intuition bubble ── */
     .msg.intuition {
       align-self: flex-start;
       max-width: 78%;
-      background: linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9));
-      border: 1px solid rgba(212,160,80,0.12);
-      border-left: 3px solid rgba(212,160,80,0.25);
+      background: var(--msg-intuition-bg, linear-gradient(135deg, rgba(44,36,25,0.95), rgba(35,30,23,0.9)));
+      border: 1px solid var(--msg-border, rgba(212,160,80,0.12));
+      border-left: 3px solid var(--msg-intuition-accent, rgba(212,160,80,0.25));
       color: var(--noir-text);
       font-size: 0.85rem;
       line-height: 1.7;
@@ -233,11 +233,11 @@
     }
     .msg.intuition .msg-sender {
       color: var(--gold);
-      border-bottom-color: rgba(212,160,80,0.12);
+      border-bottom-color: var(--msg-border, rgba(212,160,80,0.12));
     }
     .msg.intuition .msg-sender::before {
       content: "\2727";
-      color: rgba(212,160,80,0.5);
+      color: var(--msg-intuition-icon, rgba(212,160,80,0.5));
       font-weight: 400;
     }
 
@@ -245,8 +245,8 @@
     .typing-indicator {
       align-self: flex-start;
       padding: 0.75rem 1.1rem;
-      background: rgba(44,36,25,0.8);
-      border: 1px solid rgba(212,160,80,0.12);
+      background: var(--msg-typing-bg, rgba(44,36,25,0.8));
+      border: 1px solid var(--msg-border, rgba(212,160,80,0.12));
       border-left: 3px solid var(--noir-amber-border);
       border-radius: 2px 10px 10px 2px;
       display: none;

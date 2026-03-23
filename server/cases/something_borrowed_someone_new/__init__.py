@@ -63,4 +63,5 @@ case_data = CaseData(
     locked_secret_descriptions=LOCKED_SECRET_DESCRIPTIONS,
     expressions=("neutral", "angry", "nervous", "sad", "smug", "surprised"),
     intuition_prompt=INTUITION_PROMPT,
+    tagline="A wedding weekend with secrets to keep",
 )

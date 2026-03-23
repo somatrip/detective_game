@@ -57,7 +57,7 @@ export function closeFeedback() {
 
 /* ── Language Toggle ─────────────────────────────────────── */
 export function initLanguage() {
-  const saved = localStorage.getItem("echoes_lang") || "en";
+  const saved = localStorage.getItem("sad_lang") || localStorage.getItem("echoes_lang") || "en";
   window.currentLang = saved;
   window.applyLanguage(saved);
 }

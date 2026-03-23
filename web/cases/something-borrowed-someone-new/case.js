@@ -23,8 +23,8 @@
       "sam-deluca":    { initials: "SD", order: 1 },
       "devon-james":   { initials: "DJ", order: 2 },
       "rafi-ansari":   { initials: "RA", order: 3 },
-      "val-park":      { initials: "VP", order: 4 },
-      "marco-delgado": { initials: "MD", order: 5 },
+      "val-park":      { initials: "VP", order: 5 },
+      "marco-delgado": { initials: "MD", order: 4 },
       "tanya-rhodes":  { initials: "TR", order: 6 },
     },
 
@@ -143,5 +143,68 @@
 
     /* ── Asset paths ───────────────────────────────────────── */
     portraitBasePath: "cases/something-borrowed-someone-new/portraits",
+
+    /* ── Case theme (CSS variable overrides applied when this case loads) */
+    /* Notebook / diary aesthetic: ruled paper, pen ink, warm cream */
+    theme: {
+      /* Backgrounds — lined notebook paper tones */
+      "--noir-warm":         "#f7f4ef",
+      "--noir-panel":        "#f0ece4",
+      "--noir-panel-alt":    "#e8e3d8",
+      "--noir-input":        "#ece7de",
+      "--bg-dark":           "#f7f4ef",
+      "--bg-panel":          "#f0ece4",
+      "--bg-panel-alt":      "#e8e3d8",
+      "--bg-input":          "#ece7de",
+      /* Text — dark ink on paper */
+      "--noir-text":         "#1a1714",
+      "--noir-text-dim":     "#4a4540",
+      "--noir-text-faint":   "#8a847c",
+      "--text":              "#1a1714",
+      "--text-dim":          "#4a4540",
+      "--text-faint":        "#8a847c",
+      /* Accent — coral/rose pen ink */
+      "--noir-amber":        "#c2476b",
+      "--noir-amber-glow":   "rgba(194,71,107,0.12)",
+      "--noir-amber-border": "rgba(194,71,107,0.3)",
+      "--accent":            "#c2476b",
+      "--accent-glow":       "rgba(194,71,107,0.12)",
+      "--gold":              "#c2476b",
+      "--gold-dim":          "rgba(194,71,107,0.1)",
+      "--gold-border":       "rgba(194,71,107,0.25)",
+      "--border":            "rgba(26,23,20,0.12)",
+      "--border-active":     "#c2476b",
+      /* Overlays */
+      "--noir-smoke":        "rgba(247,244,239,0.92)",
+      "--noir-shadow":       "rgba(0,0,0,0.12)",
+      /* Manila folder palette — darker against light bg */
+      "--manila-bg":         "#e8e3d8",
+      "--manila-tab":        "#ddd7c8",
+      "--manila-tab-active": "#e8e3d8",
+      "--manila-tab-text":   "#1a1714",
+      "--manila-tab-inactive-text": "#6b6055",
+      "--manila-border":     "#b8a88a",
+      /* Chat message bubbles — light notebook style */
+      "--msg-user-bg":       "linear-gradient(135deg, rgba(240,236,228,0.95), rgba(232,227,216,0.9))",
+      "--msg-npc-bg":        "linear-gradient(135deg, rgba(247,244,239,0.98), rgba(240,236,228,0.95))",
+      "--msg-border":        "rgba(194,71,107,0.15)",
+      "--msg-user-accent":   "rgba(194,71,107,0.3)",
+      "--msg-shadow":        "0 2px 8px rgba(0,0,0,0.08)",
+      "--msg-npc-shadow":    "0 2px 8px rgba(0,0,0,0.06)",
+      "--msg-corner":        "rgba(194,71,107,0.1)",
+      "--msg-user-sender":   "rgba(26,23,20,0.45)",
+      "--msg-user-sender-border": "rgba(26,23,20,0.1)",
+      "--msg-user-sender-icon":   "rgba(26,23,20,0.3)",
+      "--msg-intuition-bg":  "linear-gradient(135deg, rgba(247,244,239,0.95), rgba(240,236,228,0.9))",
+      "--msg-intuition-accent": "rgba(194,71,107,0.25)",
+      "--msg-intuition-icon": "rgba(194,71,107,0.5)",
+      "--msg-typing-bg":     "rgba(240,236,228,0.9)",
+      "--msg-bg-glow":       "rgba(194,71,107,0.04)",
+      /* Info button / bio tooltip — light notebook */
+      "--info-btn-bg":       "rgba(240,236,228,0.9)",
+      "--info-btn-border":   "rgba(194,71,107,0.2)",
+      "--info-btn-bg-hover": "rgba(232,227,216,0.95)",
+      "--bio-tooltip-bg":    "rgba(247,244,239,0.98)",
+    },
   };
 })();

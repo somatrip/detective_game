@@ -16,11 +16,10 @@ from slowapi.errors import RateLimitExceeded
 from .admin_routes import router as admin_router
 from .auth_routes import router as auth_router
 from .auth_routes import state_router
-from .cases import load_case
+from .cases import load_all_cases, get_active_case, get_all_cases, get_case
 from .chat_routes import limiter, router as chat_router
 from .config import settings
 from .feedback_routes import router as feedback_router
-from .cases import get_active_case
 from .supabase_client import get_supabase
 from .tracking_routes import router as tracking_router
 
@@ -39,9 +38,9 @@ _WEB_DIR = pathlib.Path(__file__).resolve().parent.parent / "web"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load case data at startup; cleanup (if any) on shutdown."""
-    case = load_case(settings.case_id)
-    log.info("Loaded case '%s' (%s)", case.case_id, case.title)
+    """Load all case data at startup; cleanup (if any) on shutdown."""
+    cases = load_all_cases()
+    log.info("Loaded %d case(s): %s", len(cases), ", ".join(cases.keys()))
     yield
 
 
@@ -104,19 +103,43 @@ app.include_router(admin_router)
 app.include_router(chat_router)
 
 
+@app.get("/api/cases")
+async def list_cases() -> dict:
+    """Return all available cases."""
+    cases = get_all_cases()
+    return {
+        "cases": [
+            {
+                "case_id": c.case_id,
+                "frontend_dir": c.frontend_dir or c.case_id.replace("_", "-"),
+                "title": c.title,
+                "tagline": c.tagline,
+                "npc_count": len(c.npc_profiles),
+            }
+            for c in cases.values()
+        ]
+    }
+
+
 @app.get("/api/case")
-async def get_case_info() -> dict:
-    """Return the active case identifier so the frontend can load the right assets."""
-    case = get_active_case()
+async def get_case_info(case_id: str | None = None) -> dict:
+    """Return a case identifier so the frontend can load the right assets."""
+    if case_id:
+        case = get_case(case_id)
+    else:
+        case = get_active_case()
     frontend_dir = case.frontend_dir or case.case_id.replace("_", "-")
     return {"case_id": case.case_id, "frontend_dir": frontend_dir}
 
 
 @app.get("/api/npcs")
-async def list_available_npcs() -> dict:
+async def list_available_npcs(case_id: str | None = None) -> dict:
     """Return the NPCs available for conversation."""
-
-    profiles = get_active_case().npc_profiles
+    if case_id:
+        case = get_case(case_id)
+    else:
+        case = get_active_case()
+    profiles = case.npc_profiles
     return {
         "npcs": [
             {
@@ -166,6 +189,17 @@ async def admin_page():
     if not admin_html.is_file():
         raise HTTPException(status_code=404, detail="Admin page not found")
     return FileResponse(str(admin_html))
+
+
+# Middleware: add Cache-Control: no-cache for JS/CSS assets so browsers always
+# revalidate against the server instead of using stale heuristic-cached copies.
+@app.middleware("http")
+async def no_cache_js(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.endswith((".js", ".css")):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 # Serve the web frontend as static files (must be mounted last so API routes

@@ -14,7 +14,7 @@ from openai import AsyncOpenAI
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from .cases import get_active_case
+from .cases import get_active_case, get_case
 from .config import settings
 from .errors import ClassifierError, LLMServiceError
 from .interrogation import (
@@ -172,7 +172,9 @@ async def chat(
     6. Return everything to the client
     """
 
-    case = get_active_case()
+    # Normalize case_id: frontend uses kebab-case, server stores underscore-format
+    case_id_normalized = body.case_id.replace("-", "_") if body.case_id else None
+    case = get_case(case_id_normalized) if case_id_normalized else get_active_case()
     npc_profile = case.npc_profiles.get(body.npc_id)
     if npc_profile is None:
         raise HTTPException(status_code=404, detail=f"Unknown NPC id '{body.npc_id}'.")
@@ -479,16 +481,16 @@ _stringboard_store: dict[str, Any] = {}
 
 
 @router.post("/api/state/stringboard")
-async def save_stringboard(state: StringboardState):
+async def save_stringboard(state: StringboardState, case_id: str = "default"):
     """Save the string board state (card positions + links)."""
-    _stringboard_store["default"] = state.model_dump(by_alias=True)
+    _stringboard_store[case_id] = state.model_dump(by_alias=True)
     return {"ok": True}
 
 
 @router.get("/api/state/stringboard")
-async def load_stringboard():
+async def load_stringboard(case_id: str = "default"):
     """Load the string board state."""
-    state = _stringboard_store.get("default")
+    state = _stringboard_store.get(case_id)
     if state is None:
         return {"cardPositions": {}, "links": []}
     return state

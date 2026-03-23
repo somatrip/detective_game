@@ -343,6 +343,7 @@ export async function sendMessage(overrideText, displayText) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         npc_id: activeNpcId,
+        case_id: _case()?.id,
         message: text,
         history: historyForApi,
         language: window.currentLang || "en",

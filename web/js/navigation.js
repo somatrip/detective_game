@@ -137,8 +137,8 @@ export function renderNpcGrid() {
 
     card.addEventListener("click", () => _cb.selectNpc(npc.npc_id));
 
-    // First 5 go to row 1, rest to row 2
-    if (i < 5) {
+    // Balanced split: ceil(n/2) in row 1, remainder in row 2
+    if (i < Math.ceil(npcs.length / 2)) {
       row1.appendChild(card);
     } else {
       row2.appendChild(card);

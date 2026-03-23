@@ -59,6 +59,7 @@ class CaseData:
     frontend_dir: str | None = (
         None  # kebab-case directory name under web/cases/; defaults to case_id with _ → -
     )
+    tagline: str = ""
 
     def validate(self) -> None:
         """Check referential integrity across all case data maps.
@@ -120,8 +121,11 @@ class CaseData:
         log.info("[case-validate] %s: all references OK", self.case_id)
 
 
-# Module-level singleton, set at startup
-_active_case: CaseData | None = None
+# Module-level cache of loaded cases, keyed by case_id
+_loaded_cases: dict[str, CaseData] = {}
+
+# Known case IDs (hardcoded for now)
+_KNOWN_CASE_IDS = ["echoes_in_the_atrium", "something_borrowed_someone_new"]
 
 
 def _fetch_npcs(sb: object, case_id_db: str) -> tuple[
@@ -353,6 +357,8 @@ def _load_case_from_db(case_slug: str) -> CaseData | None:
         discovery_gates=discovery_gates,
         locked_secret_descriptions=locked_secret_descriptions,
         intuition_prompt=case.get("intuition_prompt") or None,
+        frontend_dir=case.get("frontend_dir") or None,
+        tagline=case.get("tagline") or "",
     )
 
 
@@ -362,29 +368,67 @@ def load_case(case_id: str) -> CaseData:
     Tries to load from Supabase first.  If the case doesn't exist in the
     database (or Supabase is not configured), falls back to importing the
     Python sub-package under ``server.cases``.
+
+    Loaded cases are cached in ``_loaded_cases`` so repeated calls are free.
     """
-    global _active_case
+    if case_id in _loaded_cases:
+        return _loaded_cases[case_id]
+
+    # Always import the Python module for metadata (frontend_dir, tagline)
+    module = importlib.import_module(f".{case_id}", package=__name__)
+    py_case = module.case_data
 
     # Try database first
     db_case = _load_case_from_db(case_id)
     if db_case is not None:
-        _active_case = db_case
-        _active_case.validate()
+        # Augment DB-loaded case with Python module metadata not stored in DB
+        if not db_case.frontend_dir or not db_case.tagline:
+            from dataclasses import replace
+            db_case = replace(
+                db_case,
+                frontend_dir=db_case.frontend_dir or py_case.frontend_dir,
+                tagline=db_case.tagline or py_case.tagline,
+            )
+        db_case.validate()
+        _loaded_cases[case_id] = db_case
         log.info("[load-case] Loaded '%s' from database", case_id)
-        return _active_case
+        return db_case
 
     # Fall back to Python module
     log.info(
         "[load-case] Loading '%s' from Python modules (DB not available or case not found)", case_id
     )
-    module = importlib.import_module(f".{case_id}", package=__name__)
-    _active_case = module.case_data
-    _active_case.validate()
-    return _active_case
+    case = py_case
+    case.validate()
+    _loaded_cases[case_id] = case
+    return case
+
+
+def load_all_cases() -> dict[str, CaseData]:
+    """Load all known cases and return the loaded cases dict."""
+    for case_id in _KNOWN_CASE_IDS:
+        try:
+            load_case(case_id)
+        except Exception:
+            log.exception("[load-all-cases] Failed to load case '%s'", case_id)
+    return _loaded_cases
+
+
+def get_case(case_id: str) -> CaseData:
+    """Return a loaded case by ID.  Raises if not loaded."""
+    case = _loaded_cases.get(case_id)
+    if case is None:
+        raise RuntimeError(f"Case '{case_id}' not loaded. Call load_case('{case_id}') first.")
+    return case
+
+
+def get_all_cases() -> dict[str, CaseData]:
+    """Return all loaded cases."""
+    return _loaded_cases
 
 
 def get_active_case() -> CaseData:
-    """Return the currently loaded case.  Raises if none loaded."""
-    if _active_case is None:
+    """Return the first loaded case for backward compatibility.  Raises if none loaded."""
+    if not _loaded_cases:
         raise RuntimeError("No case loaded. Call load_case() at startup.")
-    return _active_case
+    return next(iter(_loaded_cases.values()))

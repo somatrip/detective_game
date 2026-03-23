@@ -9,7 +9,7 @@
     // Section: What Happened
     "intro.section_situation": "What Happened",
     "intro.setting": "Last night was the big pre-wedding weekend. The guys had a bachelor party at a rented lake house outside town. The girls went bar-hopping downtown for the bachelorette. You and Nadia left the bachelorette early \u2014 but apparently some of the girls ended up at the lake house later that night.",
-    "intro.nadia_suspicion": "<strong>The problem:</strong> Nadia\u2019s boyfriend Devon disappeared for about 30 minutes at the bachelor party around 11 PM. Nobody knew where he was. When he got home at 2 AM, he smelled like someone else\u2019s cologne \u2014 something expensive and musky, definitely not his. He claimed he \u201chad a headache\u201d and \u201cwent to lie down.\u201d At a bachelor party. At 11 PM.",
+    "intro.nadia_suspicion": "<strong>The problem:</strong> Nadia\u2019s boyfriend Devon disappeared for about 30 minutes at the bachelor party around 1 AM. Nobody knew where he was. When he got home at 4 AM, he smelled like someone else\u2019s cologne \u2014 something expensive and musky, definitely not his. He claimed he \u201chad a headache\u201d and \u201cwent to lie down.\u201d At a bachelor party. At 1 AM.",
 
     // Section: What We Know
     "intro.section_starting_evidence": "What We Know",
@@ -41,8 +41,8 @@
     "evidence.crime_scene": "Noticed by Nadia after the party.",
 
     // ── Evidence descriptions ──
-    "evidence.devon-missing-30min_desc": "Devon vanished for about 30 minutes at the bachelor party around 11 PM. Nobody at the party knew where he went. Nadia heard this from Jess\u2019s roommate who was texting people there.",
-    "evidence.mystery-cologne_desc": "When Devon got home at 2 AM, he smelled like someone else\u2019s cologne \u2014 expensive, musky, possibly Tom Ford Oud Wood. Definitely not his.",
+    "evidence.devon-missing-30min_desc": "Devon vanished for about 30 minutes at the bachelor party around 1 AM. Nobody at the party knew where he went. Nadia heard this from Jess\u2019s roommate who was texting people there.",
+    "evidence.mystery-cologne_desc": "When Devon got home at 4 AM, he smelled like someone else\u2019s cologne \u2014 expensive, musky, possibly Tom Ford Oud Wood. Definitely not his.",
 
     // ── Evidence labels ──
     "evidence.devon-missing-30min_label":     "Devon\u2019s Missing Half Hour",
@@ -66,9 +66,9 @@
     "evidence.group_receipts":  "Receipts",
 
     // ── Discovery texts ──
-    "discovery.sam-saw-devon-upstairs":     "Sam saw Devon go upstairs around 10:45 PM, saying he had a headache.",
+    "discovery.sam-saw-devon-upstairs":     "Sam saw Devon go upstairs around 12:45 AM, saying he had a headache.",
     "discovery.sam-saw-rafi-upstairs":      "Sam noticed Rafi heading upstairs around the same time as Devon.",
-    "discovery.sam-devon-sweaty":           "Sam says Devon came back downstairs around 11:15 PM looking kind of sweaty.",
+    "discovery.sam-devon-sweaty":           "Sam says Devon came back downstairs around 1:15 AM looking kind of sweaty.",
     "discovery.sam-saw-val-marco":          "Sam saw Val and Marco getting cozy after the bachelorette girls showed up.",
     "discovery.devon-admits-upstairs":      "Devon admits he went upstairs at the lake house, not just \u201cresting in the living room.\u201d",
     "discovery.devon-admits-rafi":          "Devon admits he and Rafi knew each other from a dating app before the party.",
@@ -76,19 +76,19 @@
     "discovery.devon-saw-val-disheveled":   "Devon saw Val leaving a bedroom with her top on inside-out.",
     "discovery.rafi-dating-app":            "Rafi reveals he and Devon matched on a dating app a few weeks before the bachelor party.",
     "discovery.rafi-admits-hookup":         "Rafi admits he and Devon hooked up upstairs during the bachelor party.",
-    "discovery.rafi-saw-val-marco":         "Rafi saw Marco and Val making out in the kitchen around midnight.",
+    "discovery.rafi-saw-val-marco":         "Rafi saw Marco and Val making out in the kitchen around 2 AM.",
     "discovery.val-admits-lake-house":      "Val admits she went to the lake house from the bachelorette party late that night.",
     "discovery.val-admits-hookup":          "Val confesses she and Marco hooked up in a guest bedroom at the lake house.",
     "discovery.val-has-bf-blake":           "Val reveals she has a boyfriend named Blake who wasn\u2019t at either party.",
     "discovery.val-saw-devon-rafi-chatty":  "Val saw Devon and Rafi talking intensely early in the evening, like they already knew each other.",
-    "discovery.val-deleted-story":          "Val admits she posted and then deleted an Instagram story from the lake house at 1 AM.",
+    "discovery.val-deleted-story":          "Val admits she posted and then deleted an Instagram story from the lake house at 3 AM.",
     "discovery.marco-admits-hookup":        "Marco confesses he and Val hooked up in a guest bedroom at the lake house.",
     "discovery.marco-val-has-bf":           "Marco admits he knew Val has a boyfriend when they hooked up.",
-    "discovery.marco-saw-devon-rafi-stairs": "Marco saw Devon and Rafi going upstairs together around 10:50 PM while he was getting a beer.",
-    "discovery.marco-deleted-insta":        "Marco saw Val post and then delete an Instagram story from the lake house around 1 AM.",
-    "discovery.tanya-saw-devon-flushed":    "Tanya saw Devon coming downstairs around 11:15 PM looking flushed and rattled \u2014 before the bachelorette girls even arrived.",
+    "discovery.marco-saw-devon-rafi-stairs": "Marco saw Devon and Rafi going upstairs together around 12:50 AM while he was getting a beer.",
+    "discovery.marco-deleted-insta":        "Marco saw Val post and then delete an Instagram story from the lake house around 3 AM.",
+    "discovery.tanya-saw-devon-flushed":    "Tanya saw Devon coming downstairs around 1:15 AM looking flushed and rattled \u2014 before the bachelorette girls even arrived.",
     "discovery.tanya-saw-rafi-quiet":       "Tanya noticed Rafi acting weird and quiet when she arrived at the lake house, like he was avoiding eye contact.",
-    "discovery.tanya-saw-val-marco-bedroom": "Tanya saw Val and Marco disappear into a guest bedroom together around 12:30 AM.",
+    "discovery.tanya-saw-val-marco-bedroom": "Tanya saw Val and Marco disappear into a guest bedroom together around 2:30 AM.",
     "discovery.tanya-val-top":              "Tanya noticed Val\u2019s top was inside-out when she came out of the bedroom.",
     "discovery.tanya-devon-texting":        "Tanya heard from someone at the bachelorette that Devon was texting intensely all evening at the bachelor party.",
     "discovery.tanya-val-bf":              "Tanya confirms Val has a boyfriend named Blake \u2014 they\u2019ve been together for over a year.",

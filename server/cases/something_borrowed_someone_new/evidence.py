@@ -77,7 +77,7 @@ SMOKING_GUN_MAP: dict[str, list[str]] = {
 EVIDENCE_CATALOG_DESCRIPTIONS: dict[str, str] = {
     "devon-missing-30min": (
         "Devon disappeared for approximately 30 minutes during the bachelor party "
-        "around 10:45-11:15 PM. Nobody knew where he was"
+        "around 12:45-1:15 AM. Nobody knew where he was"
     ),
     "mystery-cologne": (
         "When Devon got home, he smelled like someone else's cologne -- expensive, "
@@ -85,12 +85,12 @@ EVIDENCE_CATALOG_DESCRIPTIONS: dict[str, str] = {
         "signature cologne"
     ),
     "devon-upstairs": (
-        "Devon went upstairs at the lake house around 10:45 PM, claiming he had "
+        "Devon went upstairs at the lake house around 12:45 AM, claiming he had "
         "a headache"
     ),
     "rafi-upstairs": (
         "Rafi Ansari was also upstairs at the lake house around the same time as "
-        "Devon (~10:45-11:15 PM)"
+        "Devon (~12:45-1:15 AM)"
     ),
     "dating-app-connection": (
         "Devon and Rafi matched on a dating app (Hinge) three weeks before the "
@@ -106,7 +106,7 @@ EVIDENCE_CATALOG_DESCRIPTIONS: dict[str, str] = {
     ),
     "val-marco-bedroom": (
         "Val Park and Marco Delgado were seen going into or coming out of a guest "
-        "bedroom together at the lake house around 12:30 AM"
+        "bedroom together at the lake house around 2:30 AM"
     ),
     "val-inside-out-top": (
         "Val's top was inside-out when she came out of the bedroom, physical "
@@ -121,7 +121,7 @@ EVIDENCE_CATALOG_DESCRIPTIONS: dict[str, str] = {
     ),
     "deleted-instagram": (
         "Val posted then immediately deleted an Instagram story from the lake "
-        "house at approximately 1 AM"
+        "house at approximately 3 AM"
     ),
     "garden-deck-hookup": (
         "Evidence that Val went to the lake house from the bachelorette and "
@@ -142,7 +142,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "npc_id": "sam-deluca",
         "evidence_id": "devon-upstairs",
         "description": (
-            "Sam saw Devon go upstairs around 10:45 PM saying he had a headache"
+            "Sam saw Devon go upstairs around 12:45 AM saying he had a headache"
         ),
     },
     "sam-saw-rafi-upstairs": {
@@ -157,7 +157,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "npc_id": "sam-deluca",
         "evidence_id": "devon-missing-30min",
         "description": (
-            "Sam saw Devon come back downstairs around 11:15 PM looking sweaty "
+            "Sam saw Devon come back downstairs around 1:15 AM looking sweaty "
             "and flushed"
         ),
     },
@@ -219,7 +219,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "npc_id": "rafi-ansari",
         "evidence_id": "val-marco-bedroom",
         "description": (
-            "Rafi saw Marco and Val making out in the kitchen around midnight"
+            "Rafi saw Marco and Val making out in the kitchen around 2 AM"
         ),
     },
     # Val Park (proud, deflects)
@@ -279,14 +279,14 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "npc_id": "marco-delgado",
         "evidence_id": "devon-upstairs",
         "description": (
-            "Marco saw Devon and Rafi going upstairs together around 10:50 PM"
+            "Marco saw Devon and Rafi going upstairs together around 12:50 AM"
         ),
     },
     "marco-deleted-insta": {
         "npc_id": "marco-delgado",
         "evidence_id": "deleted-instagram",
         "description": (
-            "Marco saw Val post and delete an Instagram story at around 1 AM"
+            "Marco saw Val post and delete an Instagram story at around 3 AM"
         ),
     },
     # Tanya Rhodes (gatekeeps, needs justification)
@@ -294,7 +294,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "npc_id": "tanya-rhodes",
         "evidence_id": "devon-phone-alibi-false",
         "description": (
-            "Tanya saw Devon coming downstairs looking flushed around 11:15 PM"
+            "Tanya saw Devon coming downstairs looking flushed around 1:15 AM"
         ),
     },
     "tanya-saw-rafi-quiet": {
@@ -310,7 +310,7 @@ DISCOVERY_CATALOG: dict[str, dict[str, str]] = {
         "evidence_id": "val-marco-bedroom",
         "description": (
             "Tanya saw Val and Marco disappear into a guest bedroom together "
-            "around 12:30 AM"
+            "around 2:30 AM"
         ),
     },
     "tanya-val-top": {
@@ -453,7 +453,7 @@ LOCKED_SECRET_DESCRIPTIONS: dict[str, str] = {
         "Do NOT volunteer that you saw Devon and Rafi go upstairs together. This "
         "is something you noticed but it's not your business. Only bring it up if "
         "the player specifically asks about Devon's movements or what you saw "
-        "around 10:45-11 PM AND applies some pressure or has built rapport."
+        "around 12:45-1 AM AND applies some pressure or has built rapport."
     ),
     "val-admits-hookup": (
         "Do NOT admit to hooking up with Marco. If asked, you talked to him on "

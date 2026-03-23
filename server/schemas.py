@@ -58,6 +58,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Client-generated session UUID for gameplay tracking.",
     )
+    case_id: str | None = Field(
+        default=None,
+        description="Active case identifier, used to look up NPC profiles.",
+    )
 
     @field_validator("history")
     @classmethod

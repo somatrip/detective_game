@@ -48,6 +48,40 @@ class TestNpcsEndpoint:
         assert "display_name" in npc
 
 
+class TestCasesEndpoint:
+    def test_cases_returns_list(self, api_client):
+        resp = api_client.get("/api/cases")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "cases" in data
+        assert isinstance(data["cases"], list)
+        assert len(data["cases"]) >= 2
+
+    def test_cases_have_required_fields(self, api_client):
+        resp = api_client.get("/api/cases")
+        data = resp.json()
+        for case in data["cases"]:
+            assert "case_id" in case
+            assert "frontend_dir" in case
+            assert "title" in case
+            assert "tagline" in case
+            assert "npc_count" in case
+            assert case["npc_count"] > 0
+
+    def test_case_info_with_case_id(self, api_client):
+        resp = api_client.get("/api/case?case_id=echoes_in_the_atrium")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["case_id"] == "echoes_in_the_atrium"
+        assert data["frontend_dir"] == "echoes-in-atrium"
+
+    def test_npcs_with_case_id(self, api_client):
+        resp = api_client.get("/api/npcs?case_id=something_borrowed_someone_new")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["npcs"]) == 7
+
+
 class TestChatEndpoint:
     def test_chat_with_local_provider(self, api_client):
         # Get a valid NPC ID from the registry

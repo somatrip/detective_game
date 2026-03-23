@@ -162,5 +162,35 @@
     evidenceRenderers: {
       "keycard-logs": "keycard-modal",
     },
+
+    /* ── Case theme (CSS variable overrides applied when this case loads) */
+    theme: {
+      "--noir-warm":         "#1a1510",
+      "--noir-panel":        "#1c1712",
+      "--noir-panel-alt":    "#231e17",
+      "--noir-input":        "#2a2319",
+      "--noir-text":         "#e8dcc8",
+      "--noir-text-dim":     "#b8a88e",
+      "--noir-text-faint":   "#7a6b55",
+      "--noir-amber":        "#d4a050",
+      "--noir-amber-glow":   "rgba(212,160,80,0.15)",
+      "--noir-amber-border": "rgba(212,160,80,0.35)",
+      "--noir-smoke":        "rgba(26,21,16,0.85)",
+      "--bg-dark":           "#1a1510",
+      "--bg-panel":          "#1c1712",
+      "--bg-panel-alt":      "#231e17",
+      "--bg-input":          "#2a2319",
+      "--border":            "rgba(212,160,80,0.15)",
+      "--border-active":     "#d4a050",
+      "--text":              "#e8dcc8",
+      "--text-dim":          "#b8a88e",
+      "--text-faint":        "#7a6b55",
+      "--accent":            "#d4a050",
+      "--accent-glow":       "rgba(212,160,80,0.15)",
+      "--gold":              "#d4a050",
+      "--gold-dim":          "rgba(212,160,80,0.12)",
+      "--gold-border":       "rgba(212,160,80,0.3)",
+      "--noir-shadow":       "rgba(0,0,0,0.4)",
+    },
   };
 })();

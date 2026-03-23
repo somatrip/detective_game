@@ -89,6 +89,152 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
+    /* ── Case Selector ─────────────────────────────────────── */
+    #case-selector {
+      position: fixed; inset: 0; z-index: 148;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        linear-gradient(160deg, rgba(62,48,34,0.97), rgba(52,40,28,0.95)),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23c4a96a08' fill='none'/%3E%3C/svg%3E");
+      animation: fadeIn 0.3s ease;
+    }
+    #case-selector.hidden { display: none; }
+    .case-selector-inner {
+      max-width: 800px; width: 92vw;
+      text-align: center;
+    }
+    .case-selector-heading {
+      font-family: var(--font-typewriter);
+      font-size: 1rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--manila-tab);
+      margin-bottom: 2rem;
+    }
+    .case-selector-desk {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .case-folder {
+      position: relative;
+      width: 280px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-align: left;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .case-folder:hover {
+      transform: translateY(-6px) rotate(-0.5deg);
+    }
+    .case-folder-tab {
+      display: inline-block;
+      background: var(--manila-tab);
+      color: var(--manila-tab-text);
+      font-family: var(--font-typewriter);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.35rem 1.2rem 0.25rem;
+      border-radius: 4px 4px 0 0;
+      margin-left: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .case-folder-body {
+      position: relative;
+      background: var(--manila-bg);
+      border: 2px solid var(--manila-border);
+      border-radius: 2px 4px 4px 4px;
+      padding: 2rem 1.5rem 1.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 var(--manila-fold-highlight);
+      min-height: 200px;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(196,169,106,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse at 80% 20%, rgba(139,115,63,0.08) 0%, transparent 60%),
+        linear-gradient(180deg, var(--manila-fold-highlight) 0%, var(--manila-bg) 8%, var(--manila-tab) 100%);
+    }
+    .case-folder:hover .case-folder-body {
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), inset 0 1px 0 var(--manila-fold-highlight);
+    }
+    .case-folder-classified {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      font-family: var(--font-typewriter);
+      font-size: 3rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(200, 50, 50, 0.06);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .case-folder-title {
+      font-family: var(--font-typewriter);
+      font-size: 1.1rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #2a1f12;
+      margin-bottom: 0.5rem;
+      position: relative; z-index: 1;
+    }
+    .case-folder-tagline {
+      font-family: var(--font-body-serif);
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #6b5b3e;
+      margin-bottom: 1rem;
+      position: relative; z-index: 1;
+    }
+    .case-folder-meta {
+      font-family: var(--font-typewriter);
+      font-size: 0.7rem;
+      color: #8b7340;
+      margin-bottom: 0.75rem;
+      position: relative; z-index: 1;
+    }
+    .case-folder-badge {
+      display: inline-block;
+      font-family: var(--font-typewriter);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      position: relative; z-index: 1;
+    }
+    .badge-new {
+      background: rgba(196,169,106,0.2);
+      color: #8b7340;
+      border: 1px solid rgba(196,169,106,0.3);
+    }
+    .badge-in-progress {
+      background: rgba(212,160,80,0.2);
+      color: #9a7030;
+      border: 1px solid rgba(212,160,80,0.4);
+    }
+    .badge-solved {
+      background: rgba(168,184,142,0.25);
+      color: #5a6b45;
+      border: 1px solid rgba(168,184,142,0.4);
+    }
+
+    @media (max-width: 640px) {
+      .case-selector-desk {
+        flex-direction: column;
+        align-items: center;
+      }
+      .case-folder { width: 90vw; max-width: 320px; }
+    }
+
     /* ── Auth Prompt Screen (between title card and game) ── */
     #auth-prompt {
       position: fixed; inset: 0; z-index: 145;
