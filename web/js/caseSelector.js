@@ -4,6 +4,7 @@
  * @module caseSelector
  */
 import { API_BASE } from "./api.js";
+import { escapeHtml } from "./utils.js";
 
 /* ── DOM refs ─────────────────────────────────────────────── */
 const caseSelector = document.querySelector("#case-selector");
@@ -24,8 +25,8 @@ export function hideCaseSelector() {
 }
 
 /* ── Progress Detection ───────────────────────────────────── */
-function getCaseProgress(caseId) {
-  const frontendId = caseId.replace(/_/g, "-");
+function getCaseProgress(caseObj) {
+  const frontendId = caseObj.frontend_dir || caseObj.case_id.replace(/_/g, "-");
   const stateKey = `sad_${frontendId}_state_v2`;
   const raw = localStorage.getItem(stateKey);
   if (!raw) {
@@ -48,7 +49,7 @@ function updateProgressBadges() {
   for (const c of _cases) {
     const badge = caseSelectorDesk.querySelector(`[data-case-id="${c.case_id}"] .case-folder-badge`);
     if (badge) {
-      const progress = getCaseProgress(c.case_id);
+      const progress = getCaseProgress(c);
       badge.textContent = progress === "solved" ? "SOLVED" : progress === "in-progress" ? "IN PROGRESS" : "NEW";
       badge.className = `case-folder-badge badge-${progress}`;
     }
@@ -59,7 +60,7 @@ function updateProgressBadges() {
 function renderFolders() {
   caseSelectorDesk.innerHTML = "";
   for (const c of _cases) {
-    const progress = getCaseProgress(c.case_id);
+    const progress = getCaseProgress(c);
     const badgeText = progress === "solved" ? "SOLVED" : progress === "in-progress" ? "IN PROGRESS" : "NEW";
 
     const folder = document.createElement("button");
@@ -79,12 +80,6 @@ function renderFolders() {
     });
     caseSelectorDesk.appendChild(folder);
   }
-}
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 /* ── Init ─────────────────────────────────────────────────── */

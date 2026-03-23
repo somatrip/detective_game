@@ -126,6 +126,7 @@ function trackEvent(endpoint, payload) {
 const titleCard         = document.querySelector("#title-card");
 const titleCardBtn      = document.querySelector("#title-card-btn");
 const hubScreen         = document.querySelector("#hub-screen");
+const chatMessagesEl    = document.querySelector("#chat-messages");
 const TITLE_STORAGE_KEY = "sad_title_seen";
 
 /* ── Helpers ────────────────────────────────────────────── */
@@ -261,8 +262,11 @@ function clearTheme() {
 async function loadCaseAssets(frontendDir) {
   const lang = window.currentLang || "en";
   const base = `cases/${frontendDir}/`;
-  await window.loadScript(base + "case.js");
-  await window.loadScript(base + `i18n-${lang}.js`);
+  // case.js sets window.CASE, i18n script sets window.t overrides — independent, load in parallel
+  await Promise.all([
+    window.loadScript(base + "case.js"),
+    window.loadScript(base + `i18n-${lang}.js`),
+  ]);
   // Re-apply translations so data-i18n elements pick up case-specific overrides
   window.applyLanguage(lang);
 }
@@ -522,7 +526,7 @@ function initGameModules() {
     renderStringBoard,
     renderNpcGrid,
     getActiveNpcId: () => activeNpcId,
-    getChatMessages: () => document.querySelector("#chat-messages"),
+    getChatMessages: () => chatMessagesEl,
     openAccusationModal,
     trackEvent,
     getGameId: () => gameId,
@@ -538,7 +542,7 @@ function initGameModules() {
     setBriefingOpen: (v) => { briefingOpen = v; },
     removeNpcTab,
     getHubScreen: () => hubScreen,
-    getChatMessages: () => document.querySelector("#chat-messages"),
+    getChatMessages: () => chatMessagesEl,
     reinit: () => initGameState(),
     gradeArrest,
     getEvidence,
@@ -660,7 +664,7 @@ async function initShell() {
     getGameId: () => gameId,
     npcRole,
     getHubScreen: () => hubScreen,
-    getChatMessages: () => document.querySelector("#chat-messages"),
+    getChatMessages: () => chatMessagesEl,
     getPortraitRole: () => document.querySelector("#portrait-role"),
     getPortraitStatus: () => document.querySelector("#portrait-status"),
     setBriefingOpen: (v) => { briefingOpen = v; },

@@ -87,7 +87,8 @@ export function applyStateObject(saved, opts) {
 
   if (saved.gameId) {
     result.gameId = saved.gameId;
-    localStorage.setItem("sad_game_id", saved.gameId);
+    const prefix = opts.caseId ? `sad_${opts.caseId}` : "sad";
+    localStorage.setItem(`${prefix}_game_id`, saved.gameId);
   }
 
   if (saved.audioEnabled !== undefined) {

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import pathlib
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, TypedDict
@@ -124,8 +125,13 @@ class CaseData:
 # Module-level cache of loaded cases, keyed by case_id
 _loaded_cases: dict[str, CaseData] = {}
 
-# Known case IDs (hardcoded for now)
-_KNOWN_CASE_IDS = ["echoes_in_the_atrium", "something_borrowed_someone_new"]
+def _discover_case_ids() -> list[str]:
+    """Auto-discover case sub-packages by scanning for directories with __init__.py."""
+    cases_dir = pathlib.Path(__file__).parent
+    return sorted(
+        d.name for d in cases_dir.iterdir()
+        if d.is_dir() and (d / "__init__.py").exists() and not d.name.startswith("_")
+    )
 
 
 def _fetch_npcs(sb: object, case_id_db: str) -> tuple[
@@ -374,16 +380,14 @@ def load_case(case_id: str) -> CaseData:
     if case_id in _loaded_cases:
         return _loaded_cases[case_id]
 
-    # Always import the Python module for metadata (frontend_dir, tagline)
-    module = importlib.import_module(f".{case_id}", package=__name__)
-    py_case = module.case_data
-
     # Try database first
     db_case = _load_case_from_db(case_id)
     if db_case is not None:
         # Augment DB-loaded case with Python module metadata not stored in DB
         if not db_case.frontend_dir or not db_case.tagline:
             from dataclasses import replace
+            module = importlib.import_module(f".{case_id}", package=__name__)
+            py_case = module.case_data
             db_case = replace(
                 db_case,
                 frontend_dir=db_case.frontend_dir or py_case.frontend_dir,
@@ -398,7 +402,8 @@ def load_case(case_id: str) -> CaseData:
     log.info(
         "[load-case] Loading '%s' from Python modules (DB not available or case not found)", case_id
     )
-    case = py_case
+    module = importlib.import_module(f".{case_id}", package=__name__)
+    case = module.case_data
     case.validate()
     _loaded_cases[case_id] = case
     return case
@@ -406,7 +411,7 @@ def load_case(case_id: str) -> CaseData:
 
 def load_all_cases() -> dict[str, CaseData]:
     """Load all known cases and return the loaded cases dict."""
-    for case_id in _KNOWN_CASE_IDS:
+    for case_id in _discover_case_ids():
         try:
             load_case(case_id)
         except Exception:
@@ -414,11 +419,17 @@ def load_all_cases() -> dict[str, CaseData]:
     return _loaded_cases
 
 
+def _normalize_case_id(case_id: str) -> str:
+    """Normalize a case ID from kebab-case or mixed format to underscore format."""
+    return case_id.replace("-", "_")
+
+
 def get_case(case_id: str) -> CaseData:
-    """Return a loaded case by ID.  Raises if not loaded."""
-    case = _loaded_cases.get(case_id)
+    """Return a loaded case by ID.  Accepts both kebab and underscore formats."""
+    normalized = _normalize_case_id(case_id)
+    case = _loaded_cases.get(normalized)
     if case is None:
-        raise RuntimeError(f"Case '{case_id}' not loaded. Call load_case('{case_id}') first.")
+        raise RuntimeError(f"Case '{case_id}' not loaded. Call load_case('{normalized}') first.")
     return case
 
 

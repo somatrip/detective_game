@@ -172,9 +172,7 @@ async def chat(
     6. Return everything to the client
     """
 
-    # Normalize case_id: frontend uses kebab-case, server stores underscore-format
-    case_id_normalized = body.case_id.replace("-", "_") if body.case_id else None
-    case = get_case(case_id_normalized) if case_id_normalized else get_active_case()
+    case = get_case(body.case_id) if body.case_id else get_active_case()
     npc_profile = case.npc_profiles.get(body.npc_id)
     if npc_profile is None:
         raise HTTPException(status_code=404, detail=f"Unknown NPC id '{body.npc_id}'.")
