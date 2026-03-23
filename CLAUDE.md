@@ -1,6 +1,6 @@
-# Project: Echoes in the Atrium
+# Project: Solved After Dark
 
-LLM-powered detective mystery game. Players interrogate nine AI-driven suspects at a luxury hotel gala to solve a murder. Vanilla ES6 frontend served by a FastAPI backend.
+Multi-case LLM-powered detective mystery game. Players interrogate AI-driven suspects to solve mysteries. Ships with two cases: *Echoes in the Atrium* (noir murder mystery, 9 NPCs) and *Something Borrowed, Someone New* (wedding gossip investigation, 7 NPCs). Vanilla ES6 frontend served by a FastAPI backend.
 
 ## Tech Stack
 
@@ -24,12 +24,16 @@ server/
   app.py              # FastAPI application + static file serving
   interrogation.py    # Core chat engine (NPC personality + game logic)
   llm/                # LLM provider abstraction (Anthropic, OpenAI, local stub)
-  cases/              # Case data packages (NPCs, evidence, prompts)
+  cases/              # Case data packages (auto-discovered at startup)
+    echoes_in_the_atrium/       # Noir murder mystery case
+    something_borrowed_someone_new/  # Wedding gossip case
   auth_routes.py      # Supabase auth endpoints
+  chat_routes.py      # Chat, voice, stringboard state endpoints
   config.py           # Environment config
 web/
   js/
     main.js           # Orchestrator — boot sequence, state, wiring
+    caseSelector.js   # Case selection UI (fetches /api/cases)
     chat.js           # NPC conversation, portraits, message rendering
     auth.js           # Authentication, cloud save/load
     evidence.js       # Evidence collection, discovery tracking
@@ -45,6 +49,8 @@ web/
     store.js          # Shared state defaults (not yet wired)
     events.js         # Pub/sub event bus (not yet wired)
   cases/              # Case-specific content (i18n, portraits, case.js)
+    echoes-in-atrium/           # Noir case frontend assets
+    something-borrowed-someone-new/  # Wedding case frontend assets
 tests/                # Backend test suite (pytest)
 ```
 
@@ -52,8 +58,10 @@ tests/                # Backend test suite (pytest)
 
 - **Module wiring:** Modules export `initXxx(callbacks)`. The orchestrator (`main.js`) wires them together by passing callbacks, avoiding circular imports.
 - **State:** Module-level variables hold runtime state. Shared state accessed via getter/setter callbacks from `main.js`.
-- **Case data:** All case-specific content loaded from `window.CASE`, set by `web/cases/echoes-in-atrium/case.js`.
-- **i18n:** `t(key)` resolves translations (exported from `utils.js`, backed by `window.t`). Language files in `web/cases/echoes-in-atrium/i18n-*.js`.
+- **Multi-case architecture:** The backend auto-discovers case sub-packages in `server/cases/`. The frontend fetches `/api/cases` to populate the case selector, then dynamically loads `case.js` + `i18n-*.js` from `web/cases/<frontend_dir>/`.
+- **Case data:** All case-specific content loaded from `window.CASE`, set by each case's `case.js`. Per-case state is isolated in localStorage via `sad_<caseId>_state_v2` keys.
+- **Case theming:** Each case defines a `theme` object in `case.js` with CSS variable overrides. Chat, tooltip, and UI colors use `var(--custom-prop, fallback)` so cases can override the default noir palette.
+- **i18n:** `t(key)` resolves translations (exported from `utils.js`, backed by `window.t`). Language files in `web/cases/<case-dir>/i18n-*.js`.
 - **Named exports only** in frontend modules — no default exports.
 - **No build system** — plain ES6 modules, `<script type="module">` in HTML.
 
@@ -61,8 +69,12 @@ tests/                # Backend test suite (pytest)
 
 - IMPORTANT: `store.js` and `events.js` exist but are **not yet wired** as canonical state sources. All runtime state currently lives in module-level variables. Don't assume modules read from `store.js`.
 - IMPORTANT: Frontend modules must not import each other in circles. Use the callback injection pattern via `main.js` to break circular dependencies.
+- IMPORTANT: On Vercel, ASGI `lifespan` events do not run. Case loading is handled lazily via `_ensure_all_loaded()` in `server/cases/__init__.py`. Any new startup-dependent code must also work without lifespan.
+- IMPORTANT: Chat CSS uses `var(--prop, fallback)` pattern for themeable colors. When adding new hardcoded colors to chat/tooltip/info elements, always wrap them in CSS variables so cases can override them via their `theme` object.
 - All new backend endpoints need tests in `tests/`.
-- The `server/cases/` directory is case-agnostic — case content lives in `web/cases/` and is loaded client-side.
+- Backend case sub-packages are auto-discovered (any directory with `__init__.py` under `server/cases/`). No need to register new cases manually.
+- The `server/cases/` directory holds backend case data. Frontend case content lives in `web/cases/` and is loaded client-side.
+- String board state is per-case: the `/api/state/stringboard` endpoint accepts a `case_id` query param, and `resetStringBoard()` is called on each case init.
 
 ## Git Workflow
 

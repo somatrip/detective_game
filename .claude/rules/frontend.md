@@ -17,6 +17,13 @@
 - Runtime state lives in module-level variables, not in `store.js` (yet).
 - Modules expose getters/setters for state that other modules need.
 - `saveState()` serializes everything to localStorage + schedules cloud save. Debounce if calling from high-frequency events (e.g., input handlers).
+- State is per-case: localStorage keys use `sad_<caseId>_state_v2` prefix. String board server state uses `case_id` query param.
+
+## Theming
+
+- CSS colors in chat, tooltips, and info elements use `var(--custom-prop, dark-fallback)` pattern.
+- Each case's `case.js` defines a `theme` object with CSS variable overrides applied at case load.
+- When adding new UI colors, always use CSS variables with dark noir fallback defaults so both themed and unthemed cases work.
 
 ## DOM & Performance
 
@@ -31,3 +38,5 @@
 - [ ] No circular imports between modules
 - [ ] `saveState()` calls debounced if triggered by user input
 - [ ] New module follows the `initXxx(callbacks)` pattern
+- [ ] New hardcoded colors wrapped in `var(--prop, fallback)` for per-case theming
+- [ ] Per-case state uses `stateKeyPrefix()` not bare localStorage keys

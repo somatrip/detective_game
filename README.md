@@ -1,6 +1,10 @@
-# Echoes in the Atrium
+# Solved After Dark
 
-An LLM-powered detective mystery game. Interrogate nine AI-driven suspects at a luxury hotel gala to solve a murder. Each NPC has a unique personality, hidden secrets, and a realistic pressure/rapport system that governs how they respond to your questioning.
+A multi-case LLM-powered detective mystery game. Interrogate AI-driven suspects to solve mysteries — each NPC has a unique personality, hidden secrets, and a realistic pressure/rapport system that governs how they respond to your questioning.
+
+**Included cases:**
+- **Echoes in the Atrium** — A luxury gala turns deadly. Interrogate 9 suspects in a noir murder mystery.
+- **Something Borrowed, Someone New** — A wedding weekend with secrets to keep. Question 7 friends to uncover what really happened at the bachelor party.
 
 ## Quick Start
 
@@ -25,15 +29,17 @@ uvicorn server.app:app --port 8000
 
 ## How to Play
 
-1. Read the case briefing on the title card and click **Begin Investigation**.
-2. Select a person of interest from the Hub to start an interrogation.
-3. Ask questions — NPCs guard secrets and will only reveal them under the right pressure or rapport.
-4. Evidence is automatically tracked in the Case Board as NPCs mention key details.
-5. Switch between NPCs freely; conversation history and pressure/rapport are preserved per character.
-6. When all key evidence is collected, click **Make Arrest** and select who you think is the killer.
-7. Your arrest is graded based on the evidence you gathered.
+1. Choose a case from the case selector.
+2. Read the case briefing and click **Begin Investigation**.
+3. Select a person of interest from the Hub to start an interrogation.
+4. Ask questions — NPCs guard secrets and will only reveal them under the right pressure or rapport.
+5. Evidence is automatically tracked in the Case Board as NPCs mention key details.
+6. Use the String Board to connect suspects and evidence visually.
+7. Switch between NPCs freely; conversation history and pressure/rapport are preserved per character.
+8. When ready, click **Make Arrest** and select who you think is guilty.
+9. Your arrest is graded based on the evidence you gathered.
 
-**Tip:** Start with Detective Lila Chen (your partner) for an overview of the case. Use the hint button when talking to her for investigative guidance.
+**Tip:** Start with your partner NPC for an overview of the case. Use the hint button when talking to them for investigative guidance.
 
 ## Features
 
@@ -45,23 +51,46 @@ uvicorn server.app:app --port 8000
 - **Interactive evidence** — keycard log viewer for investigating suspect movements
 - **Cloud saves** — optional Supabase auth with local-first persistence and cloud sync
 - **Bilingual** — full English and Serbian support with gender-correct grammar
-- **Case-agnostic engine** — the engine reads everything from a case package, making it possible to build new mysteries
+- **Multi-case engine** — the engine reads everything from case packages with per-case theming, state isolation, and auto-discovery of new cases
 
 ## Repository Layout
 
 ```
-web/                              Frontend (single HTML file + case assets)
-├── index.html                    All CSS, HTML, and JS (~5000 lines)
+web/                              Frontend (vanilla ES6 modules)
+├── index.html                    Shell HTML
+├── css/                          Modular stylesheets
+│   ├── main.css                  Import hub (base, layout, components, chat, game)
+│   └── chat.css                  Chat UI (uses CSS var() for per-case theming)
+├── js/                           ES6 modules
+│   ├── main.js                   Orchestrator (~740 lines) — boot, state, wiring
+│   ├── caseSelector.js           Case picker UI (fetches /api/cases)
+│   ├── chat.js                   NPC conversation + portraits
+│   ├── evidence.js               Evidence tracking + discovery
+│   ├── stringboard.js            Deduction board (drag, link, pan, zoom)
+│   ├── state.js                  Save/load serialization (per-case localStorage)
+│   ├── auth.js                   Authentication + cloud sync
+│   ├── voice.js                  TTS, STT, recording
+│   ├── tutorial.js               Onboarding coach marks
+│   ├── navigation.js             Tab switching, NPC grid
+│   ├── settings.js               Settings, feedback, language
+│   ├── accusation.js             Arrest flow + outcome grading
+│   ├── api.js                    Authenticated fetch wrapper
+│   └── utils.js                  escapeHtml, npcDisplayName, t()
 ├── icons/                        Pressure/rapport gauge icons
-└── cases/echoes-in-atrium/       Case-specific assets
-    ├── case.js                   Case manifest (evidence maps, grading config)
-    ├── i18n-en.js                English strings
-    ├── i18n-sr.js                Serbian strings
-    ├── data/keycard_logs.json    Interactive keycard evidence
-    └── portraits/                NPC portraits (6 expressions each)
+└── cases/                        Case-specific frontend assets
+    ├── echoes-in-atrium/         Noir murder mystery
+    │   ├── case.js               Case manifest + theme overrides
+    │   ├── i18n-en.js / i18n-sr.js
+    │   ├── data/keycard_logs.json
+    │   └── portraits/            NPC portraits (6 expressions each)
+    └── something-borrowed-someone-new/  Wedding gossip mystery
+        ├── case.js               Case manifest + notebook theme
+        ├── i18n-en.js
+        └── portraits/
 
 server/                           FastAPI backend
-├── app.py                        Main app, chat pipeline, API routes
+├── app.py                        App setup, /api/cases, /api/case, static serving
+├── chat_routes.py                Chat, voice, stringboard state endpoints
 ├── interrogation.py              Deterministic pressure/rapport engine
 ├── config.py                     Environment variable configuration
 ├── schemas.py                    Pydantic request/response models
@@ -76,15 +105,13 @@ server/                           FastAPI backend
 │   ├── openai_client.py          OpenAI implementation
 │   ├── anthropic_client.py       Anthropic implementation
 │   └── local_stub.py             Echo bot for offline testing
-└── cases/                        Case data packages
-    ├── __init__.py               CaseData dataclass + loader
-    └── echoes_in_the_atrium/     Active case
-        ├── __init__.py            Case assembly
-        ├── world_context.py       Shared world knowledge (all NPCs)
-        ├── npc_profiles.py        Per-NPC personality + secrets
-        ├── timelines.py           Per-NPC story bible timelines
-        ├── archetypes.py          NPC → archetype mapping
-        └── evidence.py            Evidence catalog, discoveries, scoring
+└── cases/                        Case data packages (auto-discovered)
+    ├── __init__.py               CaseData dataclass, loader, lazy init
+    ├── echoes_in_the_atrium/     Noir case data
+    └── something_borrowed_someone_new/  Wedding case data
+
+api/                              Vercel serverless entry point
+├── index.py                      Imports server.app for Vercel deployment
 
 docs/                             Documentation
 ├── case-creation-guide.md        How to build a new case from scratch
@@ -118,7 +145,7 @@ Each provider uses a cheaper model for turn classification and discovery detecti
 | `ECHO_OPENAI_CLASSIFIER_MODEL` | Classifier OpenAI model | `gpt-4o-mini` |
 | `ECHO_OPENAI_TTS_MODEL` | Text-to-speech model | `gpt-4o-mini-tts` |
 | `ECHO_OPENAI_STT_MODEL` | Speech-to-text model | `whisper-1` |
-| `ECHO_CASE_ID` | Active case package | `echoes_in_the_atrium` |
+| `ECHO_CASE_ID` | Default case (legacy; all cases now auto-load) | `echoes_in_the_atrium` |
 | `SUPABASE_URL` | Supabase project URL (optional) | — |
 | `SUPABASE_KEY` | Supabase anon key (optional) | — |
 
