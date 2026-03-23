@@ -409,14 +409,25 @@ def load_case(case_id: str) -> CaseData:
     return case
 
 
+_all_loaded = False
+
+
 def load_all_cases() -> dict[str, CaseData]:
     """Load all known cases and return the loaded cases dict."""
+    global _all_loaded
     for case_id in _discover_case_ids():
         try:
             load_case(case_id)
         except Exception:
             log.exception("[load-all-cases] Failed to load case '%s'", case_id)
+    _all_loaded = True
     return _loaded_cases
+
+
+def _ensure_all_loaded() -> None:
+    """Lazily load all cases if not yet done (e.g. Vercel where lifespan doesn't run)."""
+    if not _all_loaded:
+        load_all_cases()
 
 
 def _normalize_case_id(case_id: str) -> str:
@@ -426,6 +437,7 @@ def _normalize_case_id(case_id: str) -> str:
 
 def get_case(case_id: str) -> CaseData:
     """Return a loaded case by ID.  Accepts both kebab and underscore formats."""
+    _ensure_all_loaded()
     normalized = _normalize_case_id(case_id)
     case = _loaded_cases.get(normalized)
     if case is None:
@@ -435,11 +447,13 @@ def get_case(case_id: str) -> CaseData:
 
 def get_all_cases() -> dict[str, CaseData]:
     """Return all loaded cases."""
+    _ensure_all_loaded()
     return _loaded_cases
 
 
 def get_active_case() -> CaseData:
     """Return the first loaded case for backward compatibility.  Raises if none loaded."""
+    _ensure_all_loaded()
     if not _loaded_cases:
         raise RuntimeError("No case loaded. Call load_case() at startup.")
     return next(iter(_loaded_cases.values()))
