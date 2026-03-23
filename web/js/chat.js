@@ -11,7 +11,8 @@ import { API_BASE } from "./api.js";
 function _case() { return window.CASE; }
 
 // ── Module state ────────────────────────────────────────────────
-const VALID_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
+const DEFAULT_EXPRESSIONS = ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"];
+function validExpressions() { return _case().expressions || DEFAULT_EXPRESSIONS; }
 const _preloadedNpcs = new Set();
 let currentExpression = {};  // npcId → last known expression
 let sending = false;
@@ -51,7 +52,7 @@ export function buildPortraitImg(npcId, expression = "neutral", size = 36) {
 
 /** Update the chat portrait to the given expression. */
 function setHeaderExpression(npcId, expression) {
-  if (!VALID_EXPRESSIONS.includes(expression)) expression = "neutral";
+  if (!validExpressions().includes(expression)) expression = "neutral";
   currentExpression[npcId] = expression;
   if (npcId === _cb.getActiveNpcId() && chatPortraitImg) {
     chatPortraitImg.src = portraitUrl(npcId, expression);
@@ -128,7 +129,7 @@ export function selectNpc(npcId) {
   // Preload all expressions for smooth transitions (once per NPC)
   if (!_preloadedNpcs.has(npcId)) {
     _preloadedNpcs.add(npcId);
-    for (const ex of VALID_EXPRESSIONS) {
+    for (const ex of validExpressions()) {
       new Image().src = portraitUrl(npcId, ex);
     }
   }

@@ -138,7 +138,7 @@ _DETECT_EVIDENCE_SYSTEM = """You are analyzing an NPC's dialogue response in a d
    - A typical conversation has 10+ exchanges before any discovery is revealed.
 
 2. **expression** — The NPC's emotional state in this response. Exactly one of:
-   neutral, guarded, distressed, angry, contemplative, smirking
+   {expression_labels}
 
 3. **discovery_summaries** — For EACH discovery ID you tag, write a single sentence (max 30 words)
    summarizing ONLY what the NPC actually stated or revealed in this specific response.
@@ -363,12 +363,20 @@ async def detect_evidence(
         catalog_lines.append(f"- {did}: {info['description']}")
     catalog_text = "\n".join(catalog_lines)
 
+    # Determine valid expressions from the active case (if loaded)
+    try:
+        from ..cases import get_active_case
+        case_expressions = set(get_active_case().expressions)
+    except Exception:
+        case_expressions = VALID_EXPRESSIONS
+
     system_prompt = _DETECT_EVIDENCE_SYSTEM.format(
         npc_id=npc_id,
         npc_name=npc_name,
         discovery_catalog=catalog_text,
         player_discovery_ids=", ".join(player_discovery_ids) if player_discovery_ids else "(none)",
         language_name=language_name,
+        expression_labels=", ".join(case_expressions),
     )
 
     user_prompt = _DETECT_EVIDENCE_USER.format(
@@ -407,9 +415,9 @@ async def detect_evidence(
         if isinstance(s, str) and len(s) > 5:
             discovery_summaries[did] = s[:300]
 
-    # Validate expression
+    # Validate expression against case-specific set
     expression = result.get("expression", "neutral")
-    if expression not in VALID_EXPRESSIONS:
+    if expression not in case_expressions:
         expression = "neutral"
 
     return DetectionResult(

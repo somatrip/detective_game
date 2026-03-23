@@ -50,8 +50,14 @@ class CaseData:
     locked_secret_descriptions: dict[str, str] = field(
         default_factory=dict
     )  # discovery_id → locked prompt text
+    expressions: tuple[str, ...] = (
+        "neutral", "guarded", "distressed", "angry", "contemplative", "smirking",
+    )  # valid NPC expression labels; order doesn't matter
     intuition_prompt: str | None = (
         None  # per-case system prompt for detective intuition; None disables intuition
+    )
+    frontend_dir: str | None = (
+        None  # kebab-case directory name under web/cases/; defaults to case_id with _ → -
     )
 
     def validate(self) -> None:

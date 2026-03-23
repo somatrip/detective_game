@@ -367,9 +367,37 @@
 </div>
 
 <script src="i18n.js?v=13"></script>
-<script src="cases/echoes-in-atrium/case.js"></script>
-<script src="cases/echoes-in-atrium/i18n-en.js"></script>
-<script src="cases/echoes-in-atrium/i18n-sr.js"></script>
-<script type="module" src="js/main.js"></script>
+<script>
+// Dynamically load case assets based on server config, then boot main.js
+(async function() {
+  try {
+    const resp = await fetch('/api/case');
+    const { frontend_dir } = await resp.json();
+    const base = 'cases/' + frontend_dir + '/';
+
+    // Load case.js first (sets window.CASE), then i18n, then main.js
+    await loadScript(base + 'case.js');
+    await loadScript(base + 'i18n-en.js');
+    await loadScript('js/main.js', true);
+  } catch (e) {
+    console.error('Failed to load case assets:', e);
+    // Fallback to default case
+    await loadScript('cases/echoes-in-atrium/case.js');
+    await loadScript('cases/echoes-in-atrium/i18n-en.js');
+    await loadScript('js/main.js', true);
+  }
+
+  function loadScript(src, isModule) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      if (isModule) s.type = 'module';
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.body.appendChild(s);
+    });
+  }
+})();
+</script>
 </body>
 </html>

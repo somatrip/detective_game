@@ -104,6 +104,14 @@ app.include_router(admin_router)
 app.include_router(chat_router)
 
 
+@app.get("/api/case")
+async def get_case_info() -> dict:
+    """Return the active case identifier so the frontend can load the right assets."""
+    case = get_active_case()
+    frontend_dir = case.frontend_dir or case.case_id.replace("_", "-")
+    return {"case_id": case.case_id, "frontend_dir": frontend_dir}
+
+
 @app.get("/api/npcs")
 async def list_available_npcs() -> dict:
     """Return the NPCs available for conversation."""
