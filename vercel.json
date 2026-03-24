@@ -1,4 +1,11 @@
 {
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb", "installCommand": "pip install -r requirements.txt" }
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/health", "destination": "/api/index.py" },
