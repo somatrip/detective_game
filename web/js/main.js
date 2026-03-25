@@ -379,6 +379,10 @@ function backToCases() {
   // Save current state
   if (CASE) saveState();
 
+  // Clean up NPC state from current case
+  removeNpcTab();
+  activeNpcId = null;
+
   // Clear case theme
   clearTheme();
 
