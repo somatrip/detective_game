@@ -59,6 +59,7 @@ tests/                # Backend test suite (pytest)
 - **Module wiring:** Modules export `initXxx(callbacks)`. The orchestrator (`main.js`) wires them together by passing callbacks, avoiding circular imports.
 - **State:** Module-level variables hold runtime state. Shared state accessed via getter/setter callbacks from `main.js`.
 - **Multi-case architecture:** The backend auto-discovers case sub-packages in `server/cases/`. The frontend fetches `/api/cases` to populate the case selector, then dynamically loads `case.js` + `i18n-*.js` from `web/cases/<frontend_dir>/`.
+- **Case data loading (DB-first):** In production, case data loads from Supabase first (`_load_case_from_db` in `server/cases/__init__.py`), falling back to Python modules only if the case isn't in the DB. All cases must be seeded to Supabase via `python -m scripts.seed_case_data`. When updating Python module case data (prompts, evidence, NPCs), always re-seed with the script.
 - **Case data:** All case-specific content loaded from `window.CASE`, set by each case's `case.js`. Per-case state is isolated in localStorage via `sad_<caseId>_state_v2` keys.
 - **Case theming:** Each case defines a `theme` object in `case.js` with CSS variable overrides. Chat, tooltip, and UI colors use `var(--custom-prop, fallback)` so cases can override the default noir palette.
 - **i18n:** `t(key)` resolves translations (exported from `utils.js`, backed by `window.t`). Language files in `web/cases/<case-dir>/i18n-*.js`.
@@ -73,7 +74,8 @@ tests/                # Backend test suite (pytest)
 - IMPORTANT: Chat CSS uses `var(--prop, fallback)` pattern for themeable colors. When adding new hardcoded colors to chat/tooltip/info elements, always wrap them in CSS variables so cases can override them via their `theme` object.
 - All new backend endpoints need tests in `tests/`.
 - Backend case sub-packages are auto-discovered (any directory with `__init__.py` under `server/cases/`). No need to register new cases manually.
-- The `server/cases/` directory holds backend case data. Frontend case content lives in `web/cases/` and is loaded client-side.
+- IMPORTANT: After adding or modifying case data in Python modules, re-seed to Supabase: `python -m scripts.seed_case_data` (all cases) or `python -m scripts.seed_case_data <case_id>` (specific case). Production loads from DB, not Python modules.
+- The `server/cases/` directory holds backend case data (Python modules = source of truth, DB = production runtime). Frontend case content lives in `web/cases/` and is loaded client-side.
 - String board state is per-case: the `/api/state/stringboard` endpoint accepts a `case_id` query param, and `resetStringBoard()` is called on each case init.
 
 ## Git Workflow

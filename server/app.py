@@ -52,14 +52,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.exception_handler(Exception)
 async def _global_exception_handler(request: Request, exc: Exception):
-    """Catch-all: ensure every error returns JSON so the client can parse it.
-
-    Internal details are logged server-side but NOT sent to the client.
-    """
+    """Catch-all: ensure every error returns JSON so the client can parse it."""
     log.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    # Include exception summary to aid remote debugging (no secrets leaked)
+    exc_type = type(exc).__name__
+    exc_msg = str(exc)[:200] if str(exc) else ""
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={"detail": f"Internal server error: {exc_type}: {exc_msg}"},
     )
 
 
