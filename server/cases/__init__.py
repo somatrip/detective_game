@@ -436,10 +436,17 @@ def _normalize_case_id(case_id: str) -> str:
 
 
 def get_case(case_id: str) -> CaseData:
-    """Return a loaded case by ID.  Accepts both kebab and underscore formats."""
+    """Return a loaded case by ID.  Accepts case_id, kebab, or frontend_dir formats."""
     _ensure_all_loaded()
     normalized = _normalize_case_id(case_id)
     case = _loaded_cases.get(normalized)
+    if case is None:
+        # Try matching by frontend_dir (the frontend sends this as the case id)
+        for c in _loaded_cases.values():
+            fdir = c.frontend_dir or c.case_id.replace("_", "-")
+            if _normalize_case_id(fdir) == normalized:
+                case = c
+                break
     if case is None:
         raise RuntimeError(f"Case '{case_id}' not loaded. Call load_case('{normalized}') first.")
     return case
