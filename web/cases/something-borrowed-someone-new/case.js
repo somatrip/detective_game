@@ -139,7 +139,7 @@
     ],
 
     /* ── NPC expressions (must match portrait filenames) ──── */
-    expressions: ["neutral", "angry", "nervous", "sad", "smug", "surprised"],
+    expressions: ["neutral", "guarded", "distressed", "angry", "contemplative", "smirking"],
 
     /* ── Asset paths ───────────────────────────────────────── */
     portraitBasePath: "cases/something-borrowed-someone-new/portraits",

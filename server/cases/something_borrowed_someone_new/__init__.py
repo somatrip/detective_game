@@ -61,7 +61,7 @@ case_data = CaseData(
     discovery_catalog=DISCOVERY_CATALOG,
     discovery_gates=DISCOVERY_GATES,
     locked_secret_descriptions=LOCKED_SECRET_DESCRIPTIONS,
-    expressions=("neutral", "angry", "nervous", "sad", "smug", "surprised"),
+    expressions=("neutral", "guarded", "distressed", "angry", "contemplative", "smirking"),
     intuition_prompt=INTUITION_PROMPT,
     tagline="A wedding weekend with secrets to keep",
 )
