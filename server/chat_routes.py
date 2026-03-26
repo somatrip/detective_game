@@ -302,6 +302,7 @@ async def chat(
             language=body.language,
             npc_name=npc_profile.display_name,
             discovery_catalog=case.discovery_catalog,
+            case_expressions=case.expressions,
         )
     except Exception as exc:
         log.exception("[chat] Step 5 FAILED: detect_evidence")

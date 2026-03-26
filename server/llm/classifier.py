@@ -325,6 +325,7 @@ async def detect_evidence(
     *,
     npc_name: str,
     discovery_catalog: dict[str, Any],
+    case_expressions: tuple[str, ...] | None = None,
 ) -> DetectionResult:
     """Detect discoveries revealed and expression in the NPC's response.
 
@@ -363,12 +364,16 @@ async def detect_evidence(
         catalog_lines.append(f"- {did}: {info['description']}")
     catalog_text = "\n".join(catalog_lines)
 
-    # Determine valid expressions from the active case (if loaded)
-    try:
-        from ..cases import get_active_case
-        case_expressions = set(get_active_case().expressions)
-    except Exception:
-        case_expressions = VALID_EXPRESSIONS
+    # Determine valid expressions from the active case
+    if case_expressions:
+        valid_exprs = set(case_expressions)
+    else:
+        try:
+            from ..cases import get_active_case
+            valid_exprs = set(get_active_case().expressions)
+        except Exception:
+            valid_exprs = VALID_EXPRESSIONS
+    case_expressions = valid_exprs
 
     system_prompt = _DETECT_EVIDENCE_SYSTEM.format(
         npc_id=npc_id,
