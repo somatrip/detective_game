@@ -200,6 +200,10 @@
       "--msg-intuition-icon": "rgba(194,71,107,0.5)",
       "--msg-typing-bg":     "rgba(240,236,228,0.9)",
       "--msg-bg-glow":       "rgba(194,71,107,0.04)",
+      /* Toast / card backgrounds — dark card on light theme for contrast */
+      "--bg-card":           "#2a2520",
+      "--toast-text":        "#e8dcc8",
+      "--toast-border":      "rgba(194,71,107,0.5)",
       /* Info button / bio tooltip — light notebook */
       "--info-btn-bg":       "rgba(240,236,228,0.9)",
       "--info-btn-border":   "rgba(194,71,107,0.2)",

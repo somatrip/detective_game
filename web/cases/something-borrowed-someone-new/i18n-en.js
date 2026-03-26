@@ -148,6 +148,12 @@
     "chat.hint_display.8": "I need a fresh perspective. What are we not seeing?",
     "chat.hint_display.9": "Talk me through it \u2014 what have we figured out?",
 
+    // ── Accusation modal overrides (wedding-specific) ──
+    "sidebar.accuse": "Make an Accusation",
+    "accuse.title": "Formal Accusation",
+    "accuse.description": "This is irreversible. Things are about to get messy at brunch. Choose carefully \u2014 an incorrect accusation can end in tears and broken friendships.",
+    "accuse.confirm": "Confirm Accusation",
+
     // ── Endgame ──
     "endgame.title": "We\u2019ve Got Enough Tea",
     "endgame.description": "You\u2019ve gathered enough evidence to confront Devon at brunch. Review what you\u2019ve got, make the confrontation, or keep digging for more details.",
